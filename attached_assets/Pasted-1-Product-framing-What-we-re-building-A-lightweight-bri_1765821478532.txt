@@ -1,0 +1,526 @@
+1) Product framing
+What we’re building
+A lightweight “brief → submissions → select winner(s) → pay bounty (manual)” portal.
+HR (admin users) can post a creative brief with a clearly stated bounty (cash / bonus bets / other).
+Influencers (public users) can open a brief link and submit a video (and basic metadata).
+HR reviews submissions, and when they select a video for use, that creator becomes eligible for the bounty.
+Bounty payout is tracked manually (mark as Paid, add notes), with a clean audit trail and easy export.
+MVP philosophy
+Rock-solid foundation, great UI/UX, minimal moving parts:
+No automated payments in v1.
+No influencer marketplace, discovery, or negotiation in v1.
+One primary deliverable per submission: a video (with optional notes + social handle).
+Build in a way that can become multi-tenant later (case study with HR now, monetize elsewhere later) without introducing enterprise complexity.
+
+2) Roles & core user stories
+Roles
+Admin (HR team)
+Create / edit / publish briefs
+View and filter submissions
+Review video + metadata
+Select video(s) to use
+Track payout status manually (Pending → Paid)
+Export submissions and payout report
+Influencer (public submitter)
+Open brief URL
+Read requirements + bounty details
+Submit video + contact info
+Receive confirmation email
+(Optional but recommended) View submission status via “magic link”
+
+3) Functional requirements
+3.1 Briefs
+A Brief is a page you can share externally.
+Brief fields (MVP):
+Title
+Brand / Org (initially one org, but data model supports many)
+Brief overview (short)
+Detailed requirements (markdown)
+Do/Don’t / compliance notes (markdown)
+Deliverable specs:
+Video aspect ratio guidance (e.g., 9:16 preferred)
+Length range (e.g., 10–30s)
+Required talking points (bullets)
+Optional script section
+Submission deadline (optional, but strongly recommended)
+Max submissions per creator (optional; default 1)
+Bounty
+Reward type: CASH | BONUS_BETS | OTHER
+Reward amount (number) + currency OR just a text descriptor for non-cash
+“If we use your video, you’ll receive X” language (system-generated + override)
+Status:
+Draft
+Published
+Archived
+Admin actions:
+Create brief (draft)
+Preview
+Publish (generates shareable URL)
+Archive (removes from public discovery but keeps existing links optionally returning “Archived”)
+Public access:
+Brief page is accessible by anyone with the link (unless you later add invite-only / password gates).
+
+3.2 Submissions
+A Submission ties a creator to a brief + an uploaded video.
+Submission fields (MVP):
+Brief ID
+Creator name
+Email
+Social handle(s) (TikTok/IG/YouTube; store as text fields or a single “handle” field)
+Optional message / notes
+Uploaded video:
+videoUrl (stored in blob storage)
+fileName, sizeBytes, mimeType
+Optional captured metadata: duration, width, height (best-effort)
+Submission status:
+RECEIVED (default)
+IN_REVIEW
+SELECTED (used / winner)
+NOT_SELECTED
+NEEDS_CHANGES (optional, if you want a “resubmit” loop)
+Selection metadata:
+selectedAt
+selectedByUserId
+Payout tracking (manual):
+payoutStatus: NOT_APPLICABLE | PENDING | PAID
+payoutAmount (defaults to brief bounty amount; editable)
+payoutNotes
+paidAt
+Influencer UX:
+Clean form, minimal friction
+Direct video upload with progress + clear constraints
+Confirmation screen with what happens next
+Admin UX:
+Table view with filters (status, date, selected)
+Submission detail view with:
+Video player (fast, responsive)
+Creator info
+Status actions (one-click)
+Payout status controls
+
+3.3 Notifications (email)
+Keep it simple, but professional.
+Emails (MVP):
+To influencer:
+“We got your submission” confirmation
+If selected: “Your video was selected — next steps for bounty”
+(Optional) If not selected: “Thanks — not selected this time”
+To admin:
+“New submission received” (digest optional later)
+Provider recommendation: Resend (simple on Vercel), with React Email templates.
+
+4) Non-functional requirements
+Performance
+Public brief pages must load quickly on mobile.
+Video playback should be smooth; use optimized streaming from blob storage.
+Avoid server-heavy uploads: use direct-to-blob uploads.
+Security & abuse prevention
+Validate file types + max file size.
+Basic anti-spam:
+Honeypot field
+Rate limit by IP/email/brief (lightweight)
+Optional: Cloudflare Turnstile toggle (recommended if spam appears)
+Reliability & maintainability
+Typed end-to-end (TypeScript)
+Schema-driven validation (Zod)
+Minimal dependencies, avoid overengineering
+Accessibility
+Keyboard navigable UI
+Proper labels, error messages, focus management
+High contrast, responsive layouts
+
+5) Recommended stack (Vercel-first, minimal ops)
+Frontend
+Next.js (App Router) + TypeScript
+Tailwind CSS
+shadcn/ui components (Radix primitives)
+React Hook Form + Zod for forms
+react-markdown for brief content rendering (sanitized)
+Backend / data
+Vercel Postgres (PostgreSQL)
+Prisma ORM + migrations
+Auth (admin)
+Auth.js (NextAuth) with Email magic link (or Google OAuth if you want)
+Restrict admin signup by allowlist or email domain(s)
+File storage (video uploads)
+Vercel Blob with client uploads
+Store only metadata + blob URL in Postgres
+Email
+Resend + React Email templates
+Observability (optional but recommended)
+Sentry for error reporting
+Vercel Analytics (basic)
+
+6) Information architecture & routes
+Use route groups for clean separation:
+app/
+  (public)/
+    b/[slug]/page.tsx                // Brief landing + details
+    b/[slug]/submit/page.tsx         // Submission form (or same as landing)
+    s/[token]/page.tsx               // Optional: submission status page via magic token
+  (admin)/
+    admin/
+      layout.tsx                     // Admin shell (sidebar)
+      page.tsx                       // Dashboard summary
+      briefs/
+        page.tsx                     // Brief list
+        new/page.tsx                 // Create brief
+        [briefId]/
+          page.tsx                   // Brief overview + share link
+          edit/page.tsx              // Edit brief
+          submissions/page.tsx       // Submissions list for brief
+          submissions/[submissionId]/page.tsx // Submission detail
+      payouts/page.tsx               // Cross-brief payout tracking (optional)
+      settings/page.tsx              // Org settings (optional)
+  api/
+    auth/[...nextauth]/route.ts
+    blob/upload-token/route.ts       // generate client upload token
+
+7) UI/UX spec (shadcn-first, impeccable polish)
+Design principles
+Mobile-first: influencers will submit on phones.
+Zero confusion: always show bounty clearly and what “selected” means.
+Fast feedback: upload progress, success states, email confirmation.
+Review speed: admins can triage quickly, then deep-dive.
+7.1 Public brief page (/b/[slug])
+Layout:
+Header:
+Brand logo + brief title
+Bounty badge (prominent)
+Deadline badge (if set)
+Content sections (Cards with clear headings):
+Overview
+Requirements (bullets)
+Deliverable specs (duration, aspect ratio, file type)
+Do/Don’t + compliance
+Submission CTA
+Components (shadcn):
+Card, Badge, Separator, Button, Accordion (for detailed sections), Callout (custom using Card styles), Tooltip for microcopy.
+CTA behavior:
+Primary button “Submit your video”
+Secondary “Questions?” mailto link or contact email
+7.2 Submission form (/b/[slug]/submit)
+Form sections:
+Contact
+Name (required)
+Email (required)
+Social handle (required)
+Upload
+Drag-and-drop zone + “Choose file”
+Supported formats text
+Max size text
+Progress bar
+Preview after upload (HTML5 video)
+Notes (optional)
+Terms
+Checkbox: “I confirm I own rights to this video and grant permission…” (required)
+Form UX details:
+Inline validation messages (Zod-driven)
+Disable submit until upload complete + required fields valid
+On submit:
+Optimistic “Submitting…” state
+Success page: summary + what happens next
+Components:
+Form, Input, Textarea, Checkbox, Progress, Alert, Button, Dialog (for terms details).
+7.3 Admin shell (/admin/*)
+Admin layout:
+Left sidebar:
+Briefs
+Submissions (optional aggregated)
+Payouts
+Settings
+Top bar:
+Search (optional)
+User menu
+Main content area:
+Page title + primary action button
+Use shadcn:
+Sidebar pattern (shadcn examples)
+DropdownMenu, Avatar, Breadcrumb (optional)
+7.4 Admin briefs list
+Table columns:
+Title
+Status (badge)
+Bounty
+Deadline
+Submissions count
+Created date
+Row actions:
+View
+Edit
+Copy link
+Archive
+7.5 Admin submissions list (per brief)
+Filters:
+Status dropdown
+Selected only toggle
+Date range (optional)
+Search by email/handle
+Table columns:
+Submitted at
+Creator (name + handle)
+Status badge
+Video (thumbnail optional)
+Payout status (badge)
+Actions: View
+7.6 Submission detail view
+Two-column layout (desktop), single-column (mobile):
+Left: Video player card
+Right: Creator info + status controls
+Bottom: Notes + timeline
+Actions:
+Set status: Received / In Review / Selected / Not Selected
+When selecting:
+Confirmation dialog: “Selecting means they’re eligible for bounty. Continue?”
+Auto-set payout status to Pending
+Payout controls:
+Mark Paid (date auto)
+Notes field
+Editable amount (optional; defaults to bounty)
+
+8) Data model (Prisma)
+Key design goals
+Multi-tenant ready (Organization table), but can operate with a single org in practice.
+Simple enums for state machines.
+Store video in blob storage, not DB.
+Enums
+enum BriefStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum RewardType {
+  CASH
+  BONUS_BETS
+  OTHER
+}
+
+enum SubmissionStatus {
+  RECEIVED
+  IN_REVIEW
+  SELECTED
+  NOT_SELECTED
+  NEEDS_CHANGES
+}
+
+enum PayoutStatus {
+  NOT_APPLICABLE
+  PENDING
+  PAID
+}
+Tables
+Organization
+id (cuid)
+name
+slug
+logoUrl (optional)
+createdAt / updatedAt
+User
+id
+organizationId
+name
+email (unique)
+role: ADMIN (keep simple; add REVIEWER later)
+createdAt / updatedAt
+Brief
+id
+organizationId
+createdByUserId
+title
+slug (unique per org)
+overview (string)
+requirementsMarkdown (text)
+complianceMarkdown (text)
+deliverableMarkdown (text)
+rewardType
+rewardAmount (decimal nullable if OTHER)
+rewardCurrency (string, default “USD”, nullable)
+rewardDescription (string; used for OTHER or extra detail)
+deadlineAt (datetime nullable)
+maxSubmissionsPerEmail (int default 1)
+status (BriefStatus)
+publishedAt (datetime nullable)
+createdAt / updatedAt
+Submission
+id
+briefId
+creatorName
+creatorEmail
+creatorHandle
+message (text nullable)
+videoUrl
+videoFileName
+videoMimeType
+videoSizeBytes
+videoDurationSeconds (nullable)
+videoWidth (nullable)
+videoHeight (nullable)
+status (SubmissionStatus)
+selectedAt (nullable)
+selectedByUserId (nullable)
+payoutStatus (PayoutStatus default NOT_APPLICABLE)
+payoutAmount (decimal nullable)
+payoutCurrency (string nullable)
+payoutNotes (text nullable)
+paidAt (nullable)
+createdAt / updatedAt
+index on (briefId, creatorEmail)
+index on (briefId, status)
+SubmissionAccessToken (optional but recommended)
+id
+submissionId
+tokenHash
+expiresAt
+createdAt
+Minimal alternative: skip SubmissionAccessToken, and only notify by email. But the status page reduces back-and-forth.
+
+9) Backend design (Next.js App Router)
+Pattern choice: Server Actions + a few API routes
+Use Server Actions for CRUD operations where payloads are small (brief creation, status updates).
+Use API route for blob upload token issuance because the blob client flow typically needs a dedicated endpoint.
+9.1 Video upload flow (direct-to-blob)
+Client requests an upload token from /api/blob/upload-token.
+Client uploads video directly to Vercel Blob, showing progress.
+Blob returns a public URL (or tokenized URL).
+Client submits the form to a server action with the blob URL + metadata.
+Validation:
+Client: accept only allowed mime types; enforce max size
+Server: verify mime type and blob URL origin; enforce max submissions per email per brief
+9.2 Submission creation
+Server action responsibilities:
+Validate payload with Zod
+Enforce business rules:
+Brief must be PUBLISHED
+Deadline not passed (if set)
+Max submissions not exceeded
+Insert submission
+Send emails:
+Confirmation to creator
+Notification to admin(s)
+Return:
+Success + optional submission status token link
+9.3 Admin review actions
+Server actions:
+Update submission status
+If status becomes SELECTED:
+Set selectedAt, selectedByUserId
+Set payout status to PENDING and copy bounty amount/currency into submission payout fields
+Send “selected” email
+9.4 Payout tracking
+Server action:
+Mark paid:
+Set payoutStatus=PAID
+paidAt=now
+persist notes
+Optional export:
+CSV export route (admin only)
+
+10) Auth & authorization
+Admin auth (required)
+Auth.js with Email magic links (simple) or Google OAuth
+Restrict access:
+Allowlist emails (stored in env/config) or
+Allow certain domains (@hardrock.com, etc.)
+Authorization checks:
+Middleware protecting /admin/*
+Server-side checks in every server action:
+user authenticated
+user belongs to org
+user has ADMIN role
+Influencer access (public)
+No login required to submit.
+If implementing submission status pages, only accessible via secret token link.
+
+11) Validation & error handling
+Zod schemas
+Create explicit schemas for:
+BriefCreateSchema
+BriefUpdateSchema
+SubmissionCreateSchema
+SubmissionStatusUpdateSchema
+PayoutUpdateSchema
+UX for errors
+Public:
+File too large → clear inline message
+Deadline passed → friendly “This brief is closed”
+Upload failed → retry with preserved form state
+Admin:
+Toast notifications for updates
+Inline errors for form fields
+Use shadcn:
+Toast system (sonner or shadcn toaster)
+Alert components for page-level errors
+
+12) Implementation details: project setup
+12.1 Repository & tooling
+Next.js + TS + ESLint + Prettier
+Tailwind + shadcn/ui
+Prisma
+React Hook Form + Zod
+Resend + React Email
+12.2 Environment variables
+Minimum:
+DATABASE_URL (Vercel Postgres)
+NEXTAUTH_URL
+NEXTAUTH_SECRET
+RESEND_API_KEY
+RESEND_FROM_EMAIL
+BLOB_READ_WRITE_TOKEN (or Vercel-managed)
+ADMIN_EMAIL_ALLOWLIST or ADMIN_DOMAIN_ALLOWLIST
+12.3 Deploy on Vercel
+Use Vercel Postgres integration
+Use Vercel Blob integration
+Configure env vars in Vercel
+Run Prisma migrations on deploy (Vercel build step) or via CI
+Recommended:
+Separate Preview vs Production environments with different DBs/blobs
+
+13) UX copy (suggested defaults)
+Brief bounty block
+Title: “Bounty”
+Copy:
+“If we use your video, you’ll receive $X (or Bonus Bets: X)”
+“We’ll contact you via email if selected.”
+Submission terms checkbox
+“I confirm this content is original and I have rights to submit it. If selected, I grant [Org] permission to use it in marketing materials subject to the brief’s terms.”
+(Keep legal text minimal; add a link to full terms if needed.)
+
+14) MVP build plan (small, safe steps)
+Scaffold app + shadcn + layout
+Public layout + admin layout
+Database + Prisma models
+Org, User, Brief, Submission
+Admin auth
+Protect /admin
+Brief CRUD
+Create/edit/publish + public page rendering
+Video upload
+Blob upload token route + uploader component with progress
+Submission creation
+Server action + confirmation UX + emails
+Admin submissions review
+Table, filters, detail page, status updates
+Selection + payout tracking
+Mark selected, auto payout pending, mark paid
+Polish
+Empty states, skeleton loaders, accessibility pass, mobile QA
+Export (optional)
+CSV export for payouts
+
+15) Edge cases & decisions (explicitly handled)
+Brief closed (deadline passed): hide submit CTA, show “Closed”
+Draft brief accessed via URL: show “Not published”
+Duplicate submissions: enforce max submissions per email per brief (configurable)
+Upload canceled mid-way: preserve form state, allow retry
+Large uploads on mobile: provide recommended max size + wifi warning
+Admin changes bounty after submissions: selected submissions should snapshot payout amount at selection time
+
+16) Open questions (only where ambiguity affects build)
+Public vs invite-only briefs: should anyone with the link submit, or do you want a simple gate (password / invite list / unique influencer codes)?
+One winner or multiple winners per brief: can multiple submissions be “SELECTED” and earn the bounty, or exactly one?
+Bounty representation: do you need both “cash” and “bonus bets” on the same brief, or always one reward type per brief?
+Submission limits: should creators be allowed to submit multiple versions (e.g., up to 3), or strictly one?
+Internal users: will there be multiple HR reviewers with different permissions (Admin vs Reviewer), or is “Admin” sufficient for v1?
+If you answer those, the spec can be tightened further (especially around gating + selection rules).
+
