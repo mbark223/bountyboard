@@ -12,6 +12,7 @@ import BriefSubmitPage from "@/pages/public/BriefSubmitPage";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminBriefs from "@/pages/admin/AdminBriefs";
 import AdminBriefDetail from "@/pages/admin/AdminBriefDetail";
+import CreateBriefPage from "@/pages/admin/CreateBriefPage";
 
 function Router() {
   return (
@@ -24,7 +25,7 @@ function Router() {
       {/* Admin Routes */}
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/briefs" component={AdminBriefs} />
-      <Route path="/admin/briefs/new" component={() => <div>Create Brief Placeholder</div>} />
+      <Route path="/admin/briefs/new" component={CreateBriefPage} />
       <Route path="/admin/briefs/:id" component={AdminBriefDetail} />
       
       {/* Fallback */}
