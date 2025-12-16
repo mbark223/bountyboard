@@ -1,7 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { pool } from "./db";
+import connectPgSimple from "connect-pg-simple";
 
 const app = express();
 const httpServer = createServer(app);
@@ -21,6 +24,27 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false }));
+
+// Configure session with PostgreSQL store for production
+const PgSession = connectPgSimple(session);
+app.use(
+  session({
+    store: new PgSession({
+      pool,
+      tableName: "session",
+      createTableIfMissing: true,
+    }),
+    secret: process.env.SESSION_SECRET || "bountyboard-secret-change-in-production",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    },
+  }),
+);
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -60,39 +84,81 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  await registerRoutes(httpServer, app);
+  try {
+    log("Initializing server...");
+    
+    // Test database connection
+    try {
+      await pool.query("SELECT NOW()");
+      log("Database connection successful");
+    } catch (dbError) {
+      log(`Database connection failed: ${dbError}`, "error");
+      throw dbError;
+    }
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    await registerRoutes(httpServer, app);
+    log("Routes registered");
 
-    res.status(status).json({ message });
-    throw err;
-  });
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (process.env.NODE_ENV === "production") {
-    serveStatic(app);
-  } else {
-    const { setupVite } = await import("./vite");
-    await setupVite(httpServer, app);
+      log(`Error: ${message}`, "error");
+      res.status(status).json({ message });
+    });
+
+    // importantly only setup vite in development and after
+    // setting up all the other routes so the catch-all route
+    // doesn't interfere with the other routes
+    if (process.env.NODE_ENV === "production") {
+      serveStatic(app);
+      log("Serving static files");
+    } else {
+      const { setupVite } = await import("./vite");
+      await setupVite(httpServer, app);
+      log("Vite development server configured");
+    }
+
+    // ALWAYS serve the app on the port specified in the environment variable PORT
+    // Other ports are firewalled. Default to 5000 if not specified.
+    // this serves both the API and the client.
+    // It is the only port that is not firewalled.
+    const port = parseInt(process.env.PORT || "5000", 10);
+    
+    await new Promise<void>((resolve, reject) => {
+      const server = httpServer.listen(
+        {
+          port,
+          host: "0.0.0.0",
+          reusePort: true,
+        },
+        () => {
+          log(`Server successfully started on port ${port}`);
+          resolve();
+        },
+      );
+      
+      server.on("error", (err) => {
+        log(`Failed to start server: ${err}`, "error");
+        reject(err);
+      });
+    });
+  } catch (error) {
+    log(`Fatal error during startup: ${error}`, "error");
+    console.error(error);
+    process.exit(1);
   }
-
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
-    },
-  );
 })();
+
+// Handle uncaught errors
+process.on("uncaughtException", (error) => {
+  log(`Uncaught exception: ${error}`, "error");
+  console.error(error);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  log(`Unhandled rejection at ${promise}: ${reason}`, "error");
+  console.error(reason);
+  process.exit(1);
+});
