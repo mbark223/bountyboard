@@ -1,11 +1,13 @@
-import { Switch, Route, Link } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
+import { useAuth } from "@/hooks/use-auth";
 
-// Pages
+import LandingPage from "@/pages/LandingPage";
+import OnboardingPage from "@/pages/OnboardingPage";
 import BriefsListPage from "@/pages/public/BriefsListPage";
 import BriefPublicPage from "@/pages/public/BriefPublicPage";
 import BriefSubmitPage from "@/pages/public/BriefSubmitPage";
@@ -14,21 +16,63 @@ import AdminBriefs from "@/pages/admin/AdminBriefs";
 import AdminBriefDetail from "@/pages/admin/AdminBriefDetail";
 import CreateBriefPage from "@/pages/admin/CreateBriefPage";
 
+function LoadingSpinner() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center">
+      <div className="animate-pulse text-slate-400">Loading...</div>
+    </div>
+  );
+}
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!user) {
+    return <Redirect to="/welcome" />;
+  }
+
+  if (!user.isOnboarded) {
+    return <OnboardingPage user={user} />;
+  }
+
+  return <>{children}</>;
+}
+
 function Router() {
   return (
     <Switch>
-      {/* Public Routes - Home is now the Briefs Board */}
       <Route path="/" component={BriefsListPage} />
       <Route path="/b/:slug" component={BriefPublicPage} />
       <Route path="/b/:slug/submit" component={BriefSubmitPage} />
+      <Route path="/welcome" component={LandingPage} />
       
-      {/* Admin Routes */}
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/briefs" component={AdminBriefs} />
-      <Route path="/admin/briefs/new" component={CreateBriefPage} />
-      <Route path="/admin/briefs/:id" component={AdminBriefDetail} />
+      <Route path="/admin">
+        <ProtectedRoute>
+          <AdminDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/briefs">
+        <ProtectedRoute>
+          <AdminBriefs />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/briefs/new">
+        <ProtectedRoute>
+          <CreateBriefPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/briefs/:id">
+        {(params) => (
+          <ProtectedRoute>
+            <AdminBriefDetail />
+          </ProtectedRoute>
+        )}
+      </Route>
       
-      {/* Fallback */}
       <Route component={NotFound} />
     </Switch>
   );
