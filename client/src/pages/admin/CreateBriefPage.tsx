@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as z from "zod";
 import { AdminLayout } from "@/components/layout/AdminLayout";
+import { createBrief } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +30,6 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
 
-// Schema matching the Brief interface roughly
 const briefSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
   orgName: z.string().min(2, "Organization name is required"),
@@ -41,7 +42,7 @@ const briefSchema = z.object({
   }),
   reward: z.object({
     type: z.enum(["CASH", "BONUS_BETS", "OTHER"]),
-    amount: z.string().min(1, "Amount is required"), // keeping as string for input, parse later
+    amount: z.string().min(1, "Amount is required"),
     currency: z.string().default("USD"),
     description: z.string().optional(),
   }),
@@ -50,10 +51,17 @@ const briefSchema = z.object({
 
 type BriefFormValues = z.infer<typeof briefSchema>;
 
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 export default function CreateBriefPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   const form = useForm<BriefFormValues>({
     resolver: zodResolver(briefSchema),
@@ -61,7 +69,7 @@ export default function CreateBriefPage() {
       title: "",
       orgName: "",
       overview: "",
-      requirements: [{ value: "" }, { value: "" }, { value: "" }], // Start with 3 empty rows
+      requirements: [{ value: "" }, { value: "" }, { value: "" }],
       deliverables: {
         ratio: "9:16 (Vertical)",
         length: "15-30 seconds",
@@ -82,21 +90,45 @@ export default function CreateBriefPage() {
     control: form.control,
   });
 
+  const createMutation = useMutation({
+    mutationFn: createBrief,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["briefs"] });
+      toast({
+        title: "Brief Created",
+        description: "Your brief has been published successfully.",
+      });
+      setLocation("/admin/briefs");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create brief. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   async function onSubmit(data: BriefFormValues) {
-    setIsSubmitting(true);
+    const slug = generateSlug(data.title);
+    const requirements = data.requirements.map(r => r.value).filter(v => v.length > 0);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    console.log("Submitted Brief:", data);
-    
-    toast({
-      title: "Brief Created",
-      description: "Your brief has been saved as a draft.",
+    createMutation.mutate({
+      slug,
+      title: data.title,
+      orgName: data.orgName,
+      overview: data.overview,
+      requirements,
+      deliverableRatio: data.deliverables.ratio,
+      deliverableLength: data.deliverables.length,
+      deliverableFormat: data.deliverables.format,
+      rewardType: data.reward.type,
+      rewardAmount: data.reward.amount,
+      rewardCurrency: data.reward.currency,
+      rewardDescription: data.reward.description,
+      deadline: new Date(data.deadline),
+      status: "PUBLISHED",
     });
-    
-    setIsSubmitting(false);
-    setLocation("/admin/briefs");
   }
 
   return (
@@ -328,10 +360,10 @@ export default function CreateBriefPage() {
                       <FormItem>
                         <FormLabel>Amount / Value</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. 500" type="number" {...field} />
+                          <Input placeholder="e.g. 500" {...field} />
                         </FormControl>
                         <FormDescription>
-                          Enter numeric value or estimate.
+                          Enter numeric value or text description.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -359,8 +391,8 @@ export default function CreateBriefPage() {
               <Button type="button" variant="outline" onClick={() => setLocation("/admin/briefs")}>
                 Cancel
               </Button>
-              <Button type="submit" size="lg" disabled={isSubmitting}>
-                {isSubmitting ? (
+              <Button type="submit" size="lg" disabled={createMutation.isPending}>
+                {createMutation.isPending ? (
                   <>Saving...</>
                 ) : (
                   <>

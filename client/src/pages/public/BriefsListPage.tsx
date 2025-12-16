@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { PublicLayout } from "@/components/layout/PublicLayout";
-import { MOCK_BRIEFS } from "@/lib/mockData";
+import { fetchBriefs } from "@/lib/api";
+import { transformBrief } from "@/lib/transformers";
 import { formatCurrency } from "@/lib/utils";
 import { 
   Card, 
@@ -19,7 +21,8 @@ import {
   Clock, 
   Video, 
   ArrowRight,
-  Filter
+  Filter,
+  Loader2
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -27,11 +30,17 @@ export default function BriefsListPage() {
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Only show published briefs on the public board
-  const activeBriefs = MOCK_BRIEFS.filter(b => 
-    b.status === 'PUBLISHED' && 
-    (b.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-     b.orgName.toLowerCase().includes(searchTerm.toLowerCase()))
+  const { data: briefsData, isLoading, error } = useQuery({
+    queryKey: ["briefs"],
+    queryFn: fetchBriefs,
+  });
+
+  const briefs = briefsData?.map(transformBrief) || [];
+  
+  // Filter briefs based on search term
+  const activeBriefs = briefs.filter(b => 
+    b.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    b.orgName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -69,14 +78,23 @@ export default function BriefsListPage() {
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-heading font-semibold flex items-center gap-2">
             Active Briefs 
-            <Badge variant="secondary" className="rounded-full ml-2">{activeBriefs.length}</Badge>
+            {!isLoading && <Badge variant="secondary" className="rounded-full ml-2">{activeBriefs.length}</Badge>}
           </h2>
           <Button variant="outline" size="sm" className="gap-2 hidden sm:flex">
             <Filter className="h-4 w-4" /> Filter
           </Button>
         </div>
 
-        {activeBriefs.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : error ? (
+          <div className="text-center py-20 bg-muted/20 rounded-xl border border-dashed border-border">
+            <h3 className="text-lg font-medium mb-2 text-destructive">Failed to load briefs</h3>
+            <p className="text-muted-foreground">Please try again later.</p>
+          </div>
+        ) : activeBriefs.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {activeBriefs.map((brief, index) => (
               <motion.div
@@ -165,7 +183,9 @@ export default function BriefsListPage() {
         ) : (
           <div className="text-center py-20 bg-muted/20 rounded-xl border border-dashed border-border">
             <h3 className="text-lg font-medium mb-2">No active briefs found</h3>
-            <p className="text-muted-foreground">Try adjusting your search terms or check back later.</p>
+            <p className="text-muted-foreground">
+              {searchTerm ? "Try adjusting your search terms." : "Check back later for new opportunities."}
+            </p>
           </div>
         )}
       </section>
