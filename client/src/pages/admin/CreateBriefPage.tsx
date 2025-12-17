@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as z from "zod";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { createBrief } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,10 +26,28 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, FileText, ChevronDown, Bookmark } from "lucide-react";
+import type { PromptTemplate } from "@shared/schema";
 
 const briefSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
@@ -47,6 +66,8 @@ const briefSchema = z.object({
     description: z.string().optional(),
   }),
   deadline: z.string().min(1, "Deadline is required"),
+  maxWinners: z.number().min(1).default(1),
+  maxSubmissionsPerCreator: z.number().min(1).default(3),
 });
 
 type BriefFormValues = z.infer<typeof briefSchema>;
@@ -58,16 +79,49 @@ function generateSlug(title: string): string {
     .replace(/^-|-$/g, '');
 }
 
+async function fetchTemplates(): Promise<PromptTemplate[]> {
+  const response = await fetch("/api/templates", { credentials: "include" });
+  if (!response.ok) return [];
+  return response.json();
+}
+
+async function createTemplate(data: Partial<PromptTemplate>): Promise<PromptTemplate> {
+  const response = await fetch("/api/templates", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    credentials: "include",
+  });
+  if (!response.ok) throw new Error("Failed to save template");
+  return response.json();
+}
+
+async function deleteTemplate(id: number): Promise<void> {
+  const response = await fetch(`/api/templates/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!response.ok) throw new Error("Failed to delete template");
+}
+
 export default function CreateBriefPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+
+  const { data: templates = [] } = useQuery({
+    queryKey: ["templates"],
+    queryFn: fetchTemplates,
+  });
 
   const form = useForm<BriefFormValues>({
     resolver: zodResolver(briefSchema),
     defaultValues: {
       title: "",
-      orgName: "",
+      orgName: user?.orgName || "",
       overview: "",
       requirements: [{ value: "" }, { value: "" }, { value: "" }],
       deliverables: {
@@ -82,10 +136,12 @@ export default function CreateBriefPage() {
         description: "",
       },
       deadline: "",
+      maxWinners: 1,
+      maxSubmissionsPerCreator: 3,
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     name: "requirements",
     control: form.control,
   });
@@ -109,6 +165,81 @@ export default function CreateBriefPage() {
     },
   });
 
+  const saveTemplateMutation = useMutation({
+    mutationFn: createTemplate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast({
+        title: "Template Saved",
+        description: "Your prompt template has been saved for future use.",
+      });
+      setSaveDialogOpen(false);
+      setTemplateName("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save template.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteTemplateMutation = useMutation({
+    mutationFn: deleteTemplate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast({
+        title: "Template Deleted",
+        description: "The template has been removed.",
+      });
+    },
+  });
+
+  function loadTemplate(template: PromptTemplate) {
+    if (template.overview) form.setValue("overview", template.overview);
+    if (template.requirements && template.requirements.length > 0) {
+      replace(template.requirements.map(r => ({ value: r })));
+    }
+    if (template.deliverableRatio) form.setValue("deliverables.ratio", template.deliverableRatio);
+    if (template.deliverableLength) form.setValue("deliverables.length", template.deliverableLength);
+    if (template.deliverableFormat) form.setValue("deliverables.format", template.deliverableFormat);
+    if (template.rewardType) form.setValue("reward.type", template.rewardType as any);
+    if (template.rewardAmount) form.setValue("reward.amount", template.rewardAmount);
+    if (template.rewardCurrency) form.setValue("reward.currency", template.rewardCurrency);
+    if (template.rewardDescription) form.setValue("reward.description", template.rewardDescription);
+    
+    toast({
+      title: "Template Loaded",
+      description: `"${template.name}" has been applied to the form.`,
+    });
+  }
+
+  function saveAsTemplate() {
+    if (!templateName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter a name for your template.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const values = form.getValues();
+    saveTemplateMutation.mutate({
+      name: templateName,
+      overview: values.overview,
+      requirements: values.requirements.map(r => r.value).filter(v => v.length > 0),
+      deliverableRatio: values.deliverables.ratio,
+      deliverableLength: values.deliverables.length,
+      deliverableFormat: values.deliverables.format,
+      rewardType: values.reward.type,
+      rewardAmount: values.reward.amount,
+      rewardCurrency: values.reward.currency,
+      rewardDescription: values.reward.description,
+    });
+  }
+
   async function onSubmit(data: BriefFormValues) {
     const slug = generateSlug(data.title);
     const requirements = data.requirements.map(r => r.value).filter(v => v.length > 0);
@@ -128,27 +259,106 @@ export default function CreateBriefPage() {
       rewardDescription: data.reward.description,
       deadline: new Date(data.deadline),
       status: "PUBLISHED",
+      ownerId: user?.id || "",
+      maxWinners: data.maxWinners,
+      maxSubmissionsPerCreator: data.maxSubmissionsPerCreator,
     });
   }
 
   return (
     <AdminLayout>
       <div className="max-w-3xl mx-auto">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="sm" className="pl-0 hover:bg-transparent hover:text-primary" onClick={() => setLocation("/admin/briefs")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-3xl font-heading font-bold tracking-tight">Create New Brief</h1>
-            <p className="text-muted-foreground">Define the requirements and bounty for your new campaign.</p>
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" className="pl-0 hover:bg-transparent hover:text-primary" onClick={() => setLocation("/admin/briefs")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+            <div>
+              <h1 className="text-3xl font-heading font-bold tracking-tight">Create New Brief</h1>
+              <p className="text-muted-foreground">Define the requirements and bounty for your new campaign.</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" data-testid="button-load-template">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Templates
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Saved Templates</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {templates.length === 0 ? (
+                  <div className="px-2 py-3 text-sm text-muted-foreground text-center">
+                    No saved templates yet
+                  </div>
+                ) : (
+                  templates.map((template) => (
+                    <DropdownMenuItem 
+                      key={template.id} 
+                      className="flex items-center justify-between"
+                      onSelect={() => loadTemplate(template)}
+                    >
+                      <span className="truncate">{template.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 ml-2 text-muted-foreground hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteTemplateMutation.mutate(template.id);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuItem>
+                  ))
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" data-testid="button-save-template">
+                  <Bookmark className="mr-2 h-4 w-4" />
+                  Save as Template
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Save as Template</DialogTitle>
+                  <DialogDescription>
+                    Save the current form values as a reusable template for future briefs.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <Input
+                    placeholder="Template name (e.g., 'Standard UGC Brief')"
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                    data-testid="input-template-name"
+                  />
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={saveAsTemplate} disabled={saveTemplateMutation.isPending}>
+                    {saveTemplateMutation.isPending ? "Saving..." : "Save Template"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             
-            {/* General Information */}
             <Card>
               <CardHeader>
                 <CardTitle>General Information</CardTitle>
@@ -162,7 +372,7 @@ export default function CreateBriefPage() {
                     <FormItem>
                       <FormLabel>Campaign Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Summer Vibes 2025" {...field} />
+                        <Input placeholder="e.g. Summer Vibes 2025" {...field} data-testid="input-title" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -177,7 +387,7 @@ export default function CreateBriefPage() {
                       <FormItem>
                         <FormLabel>Organization / Brand</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Glow Energy" {...field} />
+                          <Input placeholder="e.g. Glow Energy" {...field} data-testid="input-org-name" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -190,7 +400,7 @@ export default function CreateBriefPage() {
                       <FormItem>
                         <FormLabel>Deadline</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <Input type="date" {...field} data-testid="input-deadline" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -209,6 +419,7 @@ export default function CreateBriefPage() {
                           placeholder="Describe what you're looking for..." 
                           className="resize-y min-h-[100px]"
                           {...field} 
+                          data-testid="input-overview"
                         />
                       </FormControl>
                       <FormMessage />
@@ -218,7 +429,6 @@ export default function CreateBriefPage() {
               </CardContent>
             </Card>
 
-            {/* Requirements & Deliverables */}
             <Card>
               <CardHeader>
                 <CardTitle>Requirements & Deliverables</CardTitle>
@@ -247,7 +457,7 @@ export default function CreateBriefPage() {
                           render={({ field }) => (
                             <FormItem className="flex-1">
                               <FormControl>
-                                <Input placeholder={`Requirement ${index + 1}`} {...field} />
+                                <Input placeholder={`Requirement ${index + 1}`} {...field} data-testid={`input-requirement-${index}`} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -277,7 +487,7 @@ export default function CreateBriefPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Aspect Ratio</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select ratio" />
@@ -323,7 +533,6 @@ export default function CreateBriefPage() {
               </CardContent>
             </Card>
 
-            {/* Bounty / Reward */}
             <Card>
               <CardHeader>
                 <CardTitle>Bounty & Reward</CardTitle>
@@ -337,7 +546,7 @@ export default function CreateBriefPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Reward Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select type" />
@@ -360,10 +569,58 @@ export default function CreateBriefPage() {
                       <FormItem>
                         <FormLabel>Amount / Value</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. 500" {...field} />
+                          <Input placeholder="e.g. 500" {...field} data-testid="input-reward-amount" />
                         </FormControl>
                         <FormDescription>
                           Enter numeric value or text description.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="maxWinners"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Maximum Winners</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min={1} 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                            data-testid="input-max-winners"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          How many winners can be selected for this brief?
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="maxSubmissionsPerCreator"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Submissions per Creator</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min={1} 
+                            max={10}
+                            {...field} 
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 3)}
+                            data-testid="input-max-submissions"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Max entries allowed per creator (1-10).
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -391,7 +648,7 @@ export default function CreateBriefPage() {
               <Button type="button" variant="outline" onClick={() => setLocation("/admin/briefs")}>
                 Cancel
               </Button>
-              <Button type="submit" size="lg" disabled={createMutation.isPending}>
+              <Button type="submit" size="lg" disabled={createMutation.isPending} data-testid="button-publish">
                 {createMutation.isPending ? (
                   <>Saving...</>
                 ) : (

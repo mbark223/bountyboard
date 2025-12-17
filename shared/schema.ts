@@ -98,3 +98,29 @@ export const insertReviewerSchema = createInsertSchema(reviewers).omit({
 });
 export type InsertReviewer = z.infer<typeof insertReviewerSchema>;
 export type Reviewer = typeof reviewers.$inferSelect;
+
+// Saved prompt templates for quick brief creation
+export const promptTemplates = pgTable("prompt_templates", {
+  id: serial("id").primaryKey(),
+  ownerId: text("owner_id").notNull(),
+  name: text("name").notNull(),
+  overview: text("overview"),
+  requirements: text("requirements").array(),
+  deliverableRatio: text("deliverable_ratio"),
+  deliverableLength: text("deliverable_length"),
+  deliverableFormat: text("deliverable_format"),
+  rewardType: text("reward_type"),
+  rewardAmount: text("reward_amount"),
+  rewardCurrency: text("reward_currency"),
+  rewardDescription: text("reward_description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertPromptTemplateSchema = createInsertSchema(promptTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPromptTemplate = z.infer<typeof insertPromptTemplateSchema>;
+export type PromptTemplate = typeof promptTemplates.$inferSelect;

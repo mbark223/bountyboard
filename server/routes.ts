@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertBriefSchema, insertSubmissionSchema } from "@shared/schema";
+import { insertBriefSchema, insertSubmissionSchema, insertPromptTemplateSchema } from "@shared/schema";
+import { isAuthenticated } from "./replit_integrations/auth";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -110,6 +111,93 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating payout:", error);
       res.status(500).json({ error: "Failed to update payout" });
+    }
+  });
+
+  // GET /api/templates - Get all templates for current user
+  app.get("/api/templates", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const templates = await storage.getTemplatesByOwnerId(userId);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      res.status(500).json({ error: "Failed to fetch templates" });
+    }
+  });
+
+  // GET /api/templates/:id - Get a single template
+  app.get("/api/templates/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getTemplateById(id);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      if (template.ownerId !== req.user.claims.sub) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error("Error fetching template:", error);
+      res.status(500).json({ error: "Failed to fetch template" });
+    }
+  });
+
+  // POST /api/templates - Create a new template
+  app.post("/api/templates", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertPromptTemplateSchema.parse({
+        ...req.body,
+        ownerId: userId,
+      });
+      const template = await storage.createTemplate(validatedData);
+      res.status(201).json(template);
+    } catch (error: any) {
+      console.error("Error creating template:", error);
+      if (error.name === "ZodError") {
+        return res.status(400).json({ error: "Validation failed", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create template" });
+    }
+  });
+
+  // PATCH /api/templates/:id - Update a template
+  app.patch("/api/templates/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getTemplateById(id);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      if (template.ownerId !== req.user.claims.sub) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
+      const updated = await storage.updateTemplate(id, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating template:", error);
+      res.status(500).json({ error: "Failed to update template" });
+    }
+  });
+
+  // DELETE /api/templates/:id - Delete a template
+  app.delete("/api/templates/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getTemplateById(id);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      if (template.ownerId !== req.user.claims.sub) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
+      await storage.deleteTemplate(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      res.status(500).json({ error: "Failed to delete template" });
     }
   });
 

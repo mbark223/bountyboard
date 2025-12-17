@@ -4,9 +4,12 @@ import {
   type InsertBrief,
   type Submission,
   type InsertSubmission,
+  type PromptTemplate,
+  type InsertPromptTemplate,
   users,
   briefs,
-  submissions
+  submissions,
+  promptTemplates
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -187,6 +190,43 @@ export class DatabaseStorage implements IStorage {
       .where(eq(submissions.briefId, briefId));
     
     return results.filter(s => s.creatorEmail.toLowerCase() === email.toLowerCase()).length;
+  }
+
+  async getTemplatesByOwnerId(ownerId: string): Promise<PromptTemplate[]> {
+    return await db
+      .select()
+      .from(promptTemplates)
+      .where(eq(promptTemplates.ownerId, ownerId))
+      .orderBy(desc(promptTemplates.updatedAt));
+  }
+
+  async getTemplateById(id: number): Promise<PromptTemplate | undefined> {
+    const [template] = await db
+      .select()
+      .from(promptTemplates)
+      .where(eq(promptTemplates.id, id));
+    return template || undefined;
+  }
+
+  async createTemplate(template: InsertPromptTemplate): Promise<PromptTemplate> {
+    const [created] = await db
+      .insert(promptTemplates)
+      .values(template)
+      .returning();
+    return created;
+  }
+
+  async updateTemplate(id: number, data: Partial<InsertPromptTemplate>): Promise<PromptTemplate> {
+    const [updated] = await db
+      .update(promptTemplates)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(promptTemplates.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTemplate(id: number): Promise<void> {
+    await db.delete(promptTemplates).where(eq(promptTemplates.id, id));
   }
 }
 
