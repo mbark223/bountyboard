@@ -46,8 +46,9 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Save, FileText, ChevronDown, Bookmark } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, FileText, ChevronDown, Bookmark, Video, DollarSign, Calculator } from "lucide-react";
 import type { PromptTemplate } from "@shared/schema";
+import { formatCurrency } from "@/lib/utils";
 
 const briefSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
@@ -77,6 +78,66 @@ function generateSlug(title: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+function BountySummary({ 
+  maxWinners, 
+  rewardAmount, 
+  rewardType,
+  currency 
+}: { 
+  maxWinners: number; 
+  rewardAmount: string;
+  rewardType: string;
+  currency: string;
+}) {
+  const numericAmount = parseFloat(rewardAmount) || 0;
+  const totalValue = numericAmount * maxWinners;
+  const isCash = rewardType === "CASH" || rewardType === "BONUS_BETS";
+
+  return (
+    <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-5 border border-primary/20">
+      <h4 className="text-sm font-semibold text-primary mb-4 flex items-center gap-2">
+        <Calculator className="h-4 w-4" />
+        Campaign Summary
+      </h4>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <Video className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="text-2xl font-bold text-foreground" data-testid="text-videos-count">
+            {maxWinners}
+          </div>
+          <div className="text-xs text-muted-foreground">Videos to Approve</div>
+        </div>
+        <div className="text-center border-x border-primary/20">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="text-2xl font-bold text-foreground" data-testid="text-per-video">
+            {isCash && numericAmount > 0 
+              ? formatCurrency(numericAmount, currency)
+              : rewardAmount || "—"
+            }
+          </div>
+          <div className="text-xs text-muted-foreground">Per Video</div>
+        </div>
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <DollarSign className="h-4 w-4 text-green-500" />
+          </div>
+          <div className="text-2xl font-bold text-green-600" data-testid="text-total-value">
+            {isCash && totalValue > 0
+              ? formatCurrency(totalValue, currency)
+              : rewardAmount ? `${maxWinners}x` : "—"
+            }
+          </div>
+          <div className="text-xs text-muted-foreground">Total Campaign Value</div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 async function fetchTemplates(): Promise<PromptTemplate[]> {
@@ -640,6 +701,15 @@ export default function CreateBriefPage() {
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+
+                <Separator className="my-4" />
+
+                <BountySummary 
+                  maxWinners={form.watch("maxWinners")} 
+                  rewardAmount={form.watch("reward.amount")}
+                  rewardType={form.watch("reward.type")}
+                  currency={form.watch("reward.currency")}
                 />
               </CardContent>
             </Card>
