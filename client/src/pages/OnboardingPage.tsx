@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Building2, Globe, FileText, ArrowRight } from "lucide-react";
+import { Zap, Building2, Globe, FileText, ArrowRight, Loader2, Wand2 } from "lucide-react";
 import type { User } from "@shared/models/auth";
 
 interface OnboardingFormData {
@@ -14,6 +14,7 @@ interface OnboardingFormData {
   orgSlug: string;
   orgWebsite: string;
   orgDescription: string;
+  orgLogoUrl: string;
 }
 
 export default function OnboardingPage({ user }: { user: User }) {
@@ -34,6 +35,48 @@ export default function OnboardingPage({ user }: { user: User }) {
     orgSlug: user.orgSlug || "",
     orgWebsite: user.orgWebsite || "",
     orgDescription: user.orgDescription || "",
+    orgLogoUrl: user.orgLogoUrl || "",
+  });
+
+  const fetchBrandMutation = useMutation({
+    mutationFn: async (url: string) => {
+      const response = await fetch("/api/fetch-brand", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to fetch brand info");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      const updates: Partial<OnboardingFormData> = {};
+      if (data.title && !formData.orgName) {
+        updates.orgName = data.title;
+        updates.orgSlug = generateSlug(data.title);
+      }
+      if (data.description && !formData.orgDescription) {
+        updates.orgDescription = data.description;
+      }
+      if (data.logo || data.favicon) {
+        updates.orgLogoUrl = data.logo || data.favicon;
+      }
+      setFormData((prev) => ({ ...prev, ...updates }));
+      toast({
+        title: "Brand info loaded!",
+        description: "We found your brand details. Review and adjust as needed.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Couldn't fetch brand info",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   useEffect(() => {
@@ -158,16 +201,61 @@ export default function OnboardingPage({ user }: { user: User }) {
               <Label htmlFor="orgWebsite" className="text-slate-200 flex items-center gap-2">
                 <Globe className="w-4 h-4" /> Website
               </Label>
-              <Input
-                id="orgWebsite"
-                type="url"
-                value={formData.orgWebsite}
-                onChange={(e) => setFormData((prev) => ({ ...prev, orgWebsite: e.target.value }))}
-                placeholder="https://acme.com"
-                className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500"
-                data-testid="input-org-website"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="orgWebsite"
+                  type="url"
+                  value={formData.orgWebsite}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, orgWebsite: e.target.value }))}
+                  placeholder="https://acme.com"
+                  className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 flex-1"
+                  data-testid="input-org-website"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={!formData.orgWebsite || fetchBrandMutation.isPending}
+                  onClick={() => fetchBrandMutation.mutate(formData.orgWebsite)}
+                  className="shrink-0"
+                  data-testid="button-fetch-brand"
+                >
+                  {fetchBrandMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4 mr-1" /> Fetch Info
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-slate-500">Enter your website URL and click "Fetch Info" to auto-fill your brand details.</p>
             </div>
+
+            {formData.orgLogoUrl && (
+              <div className="space-y-2">
+                <Label className="text-slate-200">Brand Logo (from website)</Label>
+                <div className="flex items-center gap-4 p-3 bg-slate-900 border border-slate-600 rounded-lg">
+                  <img 
+                    src={formData.orgLogoUrl} 
+                    alt="Brand logo" 
+                    className="w-12 h-12 object-contain rounded"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                  <span className="text-sm text-slate-400 truncate flex-1">{formData.orgLogoUrl}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setFormData((prev) => ({ ...prev, orgLogoUrl: "" }))}
+                    className="text-slate-400 hover:text-slate-200"
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="orgDescription" className="text-slate-200 flex items-center gap-2">

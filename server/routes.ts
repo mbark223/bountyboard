@@ -4,6 +4,72 @@ import { storage } from "./storage";
 import { insertBriefSchema, insertSubmissionSchema, insertPromptTemplateSchema } from "@shared/schema";
 import { isAuthenticated } from "./replit_integrations/auth";
 
+async function fetchBrandMetadata(url: string): Promise<{
+  title?: string;
+  description?: string;
+  logo?: string;
+  favicon?: string;
+  ogImage?: string;
+}> {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; BountyBoard/1.0)',
+        'Accept': 'text/html',
+      },
+      signal: AbortSignal.timeout(10000),
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch URL');
+    
+    const html = await response.text();
+    
+    const getMetaContent = (name: string): string | undefined => {
+      const patterns = [
+        new RegExp(`<meta[^>]*(?:name|property)=["']${name}["'][^>]*content=["']([^"']+)["']`, 'i'),
+        new RegExp(`<meta[^>]*content=["']([^"']+)["'][^>]*(?:name|property)=["']${name}["']`, 'i'),
+      ];
+      for (const pattern of patterns) {
+        const match = html.match(pattern);
+        if (match) return match[1];
+      }
+      return undefined;
+    };
+    
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const title = getMetaContent('og:site_name') || getMetaContent('og:title') || (titleMatch ? titleMatch[1].trim() : undefined);
+    
+    const description = getMetaContent('og:description') || getMetaContent('description');
+    
+    const ogImage = getMetaContent('og:image');
+    
+    const baseUrl = new URL(url);
+    const faviconPatterns = [
+      /<link[^>]*rel=["'](?:icon|shortcut icon|apple-touch-icon)["'][^>]*href=["']([^"']+)["']/i,
+      /<link[^>]*href=["']([^"']+)["'][^>]*rel=["'](?:icon|shortcut icon|apple-touch-icon)["']/i,
+    ];
+    
+    let favicon: string | undefined;
+    for (const pattern of faviconPatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        favicon = match[1].startsWith('http') ? match[1] : new URL(match[1], baseUrl.origin).href;
+        break;
+      }
+    }
+    if (!favicon) {
+      favicon = `${baseUrl.origin}/favicon.ico`;
+    }
+    
+    const logo = ogImage?.startsWith('http') ? ogImage : ogImage ? new URL(ogImage, baseUrl.origin).href : undefined;
+    
+    return { title, description, logo, favicon, ogImage: logo };
+  } catch (error) {
+    console.error('Error fetching brand metadata:', error);
+    throw error;
+  }
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -111,6 +177,33 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating payout:", error);
       res.status(500).json({ error: "Failed to update payout" });
+    }
+  });
+
+  // POST /api/fetch-brand - Fetch brand metadata from URL
+  app.post("/api/fetch-brand", async (req, res) => {
+    try {
+      const { url } = req.body;
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ error: "URL is required" });
+      }
+      
+      let normalizedUrl = url.trim();
+      if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+        normalizedUrl = 'https://' + normalizedUrl;
+      }
+      
+      try {
+        new URL(normalizedUrl);
+      } catch {
+        return res.status(400).json({ error: "Invalid URL format" });
+      }
+      
+      const metadata = await fetchBrandMetadata(normalizedUrl);
+      res.json(metadata);
+    } catch (error) {
+      console.error("Error fetching brand metadata:", error);
+      res.status(500).json({ error: "Failed to fetch brand information from this URL" });
     }
   });
 
