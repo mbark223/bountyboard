@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Search, 
   DollarSign, 
@@ -22,7 +23,9 @@ import {
   Video, 
   ArrowRight,
   Filter,
-  Loader2
+  Loader2,
+  Building2,
+  Users
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -37,7 +40,6 @@ export default function BriefsListPage() {
 
   const briefs = briefsData?.map(transformBrief) || [];
   
-  // Filter briefs based on search term
   const activeBriefs = briefs.filter(b => 
     b.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
     b.orgName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -45,7 +47,6 @@ export default function BriefsListPage() {
 
   return (
     <PublicLayout>
-      {/* Hero / Header Section */}
       <section className="bg-background border-b border-border/40 py-16 relative overflow-hidden">
         <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
         <div className="container mx-auto px-4 relative z-10">
@@ -66,6 +67,7 @@ export default function BriefsListPage() {
                   placeholder="Search by brand or campaign..." 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  data-testid="input-search"
                 />
               </div>
             </div>
@@ -73,7 +75,6 @@ export default function BriefsListPage() {
         </div>
       </section>
 
-      {/* Board Grid */}
       <section className="container mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-heading font-semibold flex items-center gap-2">
@@ -104,13 +105,27 @@ export default function BriefsListPage() {
                 transition={{ duration: 0.3, delay: index * 0.1 }}
               >
                 <Link href={`/b/${brief.slug}`}>
-                  <a className="block h-full group">
+                  <a className="block h-full group" data-testid={`card-brief-${brief.id}`}>
                     <Card className="h-full flex flex-col border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden bg-card">
                       <CardHeader className="pb-3 space-y-3">
                         <div className="flex justify-between items-start">
-                          <Badge variant="outline" className="font-medium text-xs uppercase tracking-wider bg-secondary/50">
-                            {brief.orgName}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            {brief.organization.logoUrl ? (
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={brief.organization.logoUrl} alt={brief.orgName} />
+                                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                  {brief.orgName.slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            ) : (
+                              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                <Building2 className="h-4 w-4 text-primary" />
+                              </div>
+                            )}
+                            <Badge variant="outline" className="font-medium text-xs uppercase tracking-wider bg-secondary/50">
+                              {brief.orgName}
+                            </Badge>
+                          </div>
                           {brief.reward.type === 'CASH' ? (
                             <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
                               <DollarSign className="h-3 w-3 mr-1" />
@@ -165,6 +180,15 @@ export default function BriefsListPage() {
                             </div>
                             <span>Due {new Date(brief.deadline).toLocaleDateString()}</span>
                           </div>
+
+                          {brief.maxWinners && brief.maxWinners > 1 && (
+                            <div className="flex items-center text-sm text-foreground/80">
+                              <div className="w-8 flex justify-center shrink-0">
+                                <Users className="h-4 w-4 text-indigo-500" />
+                              </div>
+                              <span>Up to {brief.maxWinners} winners</span>
+                            </div>
+                          )}
                         </div>
                       </CardContent>
 

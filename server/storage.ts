@@ -1,6 +1,5 @@
 import { 
   type User, 
-  type InsertUser,
   type Brief,
   type InsertBrief,
   type Submission,
@@ -10,64 +9,88 @@ import {
   submissions
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
+
+export interface BriefWithOrg extends Brief {
+  organization: {
+    name: string;
+    slug: string | null;
+    logoUrl: string | null;
+    website: string | null;
+    description: string | null;
+  };
+}
 
 export interface IStorage {
-  // User methods
   getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
   
-  // Brief methods
-  getAllPublishedBriefs(): Promise<Brief[]>;
-  getBriefBySlug(slug: string): Promise<Brief | undefined>;
+  getAllPublishedBriefs(): Promise<BriefWithOrg[]>;
+  getBriefBySlug(slug: string): Promise<BriefWithOrg | undefined>;
   getBriefById(id: number): Promise<Brief | undefined>;
+  getBriefsByOwnerId(ownerId: string): Promise<Brief[]>;
   createBrief(brief: InsertBrief): Promise<Brief>;
   updateBriefStatus(id: number, status: string): Promise<Brief>;
   
-  // Submission methods
   getSubmissionsByBriefId(briefId: number): Promise<Submission[]>;
   getSubmissionById(id: number): Promise<Submission | undefined>;
   createSubmission(submission: InsertSubmission): Promise<Submission>;
   updateSubmissionStatus(id: number, status: string, selectedAt?: Date): Promise<Submission>;
   updateSubmissionPayout(id: number, payoutStatus: string, paidAt?: Date, notes?: string): Promise<Submission>;
+  countSubmissionsByCreatorEmail(briefId: number, email: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
-  // User methods
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user || undefined;
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(insertUser)
-      .returning();
-    return user;
-  }
-
-  // Brief methods
-  async getAllPublishedBriefs(): Promise<Brief[]> {
-    return await db
-      .select()
+  async getAllPublishedBriefs(): Promise<BriefWithOrg[]> {
+    const results = await db
+      .select({
+        brief: briefs,
+        user: users,
+      })
       .from(briefs)
+      .leftJoin(users, eq(briefs.ownerId, users.id))
       .where(eq(briefs.status, "PUBLISHED"))
       .orderBy(desc(briefs.createdAt));
+
+    return results.map((r) => ({
+      ...r.brief,
+      organization: {
+        name: r.user?.orgName || r.brief.orgName,
+        slug: r.user?.orgSlug || null,
+        logoUrl: r.user?.orgLogoUrl || null,
+        website: r.user?.orgWebsite || null,
+        description: r.user?.orgDescription || null,
+      },
+    }));
   }
 
-  async getBriefBySlug(slug: string): Promise<Brief | undefined> {
-    const [brief] = await db
-      .select()
+  async getBriefBySlug(slug: string): Promise<BriefWithOrg | undefined> {
+    const results = await db
+      .select({
+        brief: briefs,
+        user: users,
+      })
       .from(briefs)
+      .leftJoin(users, eq(briefs.ownerId, users.id))
       .where(eq(briefs.slug, slug));
-    return brief || undefined;
+
+    if (results.length === 0) return undefined;
+
+    const r = results[0];
+    return {
+      ...r.brief,
+      organization: {
+        name: r.user?.orgName || r.brief.orgName,
+        slug: r.user?.orgSlug || null,
+        logoUrl: r.user?.orgLogoUrl || null,
+        website: r.user?.orgWebsite || null,
+        description: r.user?.orgDescription || null,
+      },
+    };
   }
 
   async getBriefById(id: number): Promise<Brief | undefined> {
@@ -76,6 +99,14 @@ export class DatabaseStorage implements IStorage {
       .from(briefs)
       .where(eq(briefs.id, id));
     return brief || undefined;
+  }
+
+  async getBriefsByOwnerId(ownerId: string): Promise<Brief[]> {
+    return await db
+      .select()
+      .from(briefs)
+      .where(eq(briefs.ownerId, ownerId))
+      .orderBy(desc(briefs.createdAt));
   }
 
   async createBrief(insertBrief: InsertBrief): Promise<Brief> {
@@ -95,7 +126,6 @@ export class DatabaseStorage implements IStorage {
     return brief;
   }
 
-  // Submission methods
   async getSubmissionsByBriefId(briefId: number): Promise<Submission[]> {
     return await db
       .select()
@@ -124,7 +154,6 @@ export class DatabaseStorage implements IStorage {
     const updateData: any = { status };
     if (selectedAt) {
       updateData.selectedAt = selectedAt;
-      // If selected, set payout to pending
       if (status === "SELECTED") {
         updateData.payoutStatus = "PENDING";
       }
@@ -149,6 +178,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(submissions.id, id))
       .returning();
     return submission;
+  }
+
+  async countSubmissionsByCreatorEmail(briefId: number, email: string): Promise<number> {
+    const results = await db
+      .select()
+      .from(submissions)
+      .where(eq(submissions.briefId, briefId));
+    
+    return results.filter(s => s.creatorEmail.toLowerCase() === email.toLowerCase()).length;
   }
 }
 
