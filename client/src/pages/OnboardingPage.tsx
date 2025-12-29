@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Guitar, Building2, Globe, FileText, ArrowRight, Loader2, Wand2 } from "lucide-react";
+import { Building2, Globe, FileText, ArrowRight, Loader2, Wand2 } from "lucide-react";
 import type { User } from "@shared/models/auth";
 
 interface OnboardingFormData {
@@ -150,12 +150,10 @@ export default function OnboardingPage({ user }: { user: User }) {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-6">
-      <div className="absolute inset-0 bg-gradient-to-b from-[#D4AF37]/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#7B5CFA]/5 to-transparent pointer-events-none" />
       <div className="w-full max-w-lg relative z-10">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center mx-auto mb-4">
-            <Guitar className="w-8 h-8 text-black" />
-          </div>
+          <img src="/hrb-logo.png" alt="Hard Rock Bet" className="w-16 h-16 rounded-2xl mx-auto mb-4" />
           <h1 className="text-3xl font-heading text-white mb-2 tracking-wide">
             SET UP YOUR ORGANIZATION
           </h1>
@@ -168,14 +166,14 @@ export default function OnboardingPage({ user }: { user: User }) {
           <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6 space-y-5">
             <div className="space-y-2">
               <Label htmlFor="orgName" className="text-gray-200 flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-[#D4AF37]" /> Organization Name *
+                <Building2 className="w-4 h-4 text-[#7B5CFA]" /> Organization Name *
               </Label>
               <Input
                 id="orgName"
                 value={formData.orgName}
                 onChange={(e) => handleOrgNameChange(e.target.value)}
                 placeholder="Acme Inc."
-                className="bg-[#0F0F0F] border-[#2A2A2A] text-white placeholder:text-gray-600 focus:border-[#D4AF37]"
+                className="bg-[#0F0F0F] border-[#2A2A2A] text-white placeholder:text-gray-600 focus:border-[#7B5CFA]"
                 data-testid="input-org-name"
               />
             </div>
@@ -191,7 +189,7 @@ export default function OnboardingPage({ user }: { user: User }) {
                   value={formData.orgSlug}
                   onChange={(e) => setFormData((prev) => ({ ...prev, orgSlug: generateSlug(e.target.value) }))}
                   placeholder="acme-inc"
-                  className="bg-[#0F0F0F] border-[#2A2A2A] text-white placeholder:text-gray-600 focus:border-[#D4AF37]"
+                  className="bg-[#0F0F0F] border-[#2A2A2A] text-white placeholder:text-gray-600 focus:border-[#7B5CFA]"
                   data-testid="input-org-slug"
                 />
               </div>
@@ -200,7 +198,7 @@ export default function OnboardingPage({ user }: { user: User }) {
 
             <div className="space-y-2">
               <Label htmlFor="orgWebsite" className="text-gray-200 flex items-center gap-2">
-                <Globe className="w-4 h-4 text-[#D4AF37]" /> Website
+                <Globe className="w-4 h-4 text-[#7B5CFA]" /> Website
               </Label>
               <div className="flex gap-2">
                 <Input
@@ -209,7 +207,7 @@ export default function OnboardingPage({ user }: { user: User }) {
                   value={formData.orgWebsite}
                   onChange={(e) => setFormData((prev) => ({ ...prev, orgWebsite: e.target.value }))}
                   placeholder="https://acme.com"
-                  className="bg-[#0F0F0F] border-[#2A2A2A] text-white placeholder:text-gray-600 focus:border-[#D4AF37] flex-1"
+                  className="bg-[#0F0F0F] border-[#2A2A2A] text-white placeholder:text-gray-600 focus:border-[#7B5CFA] flex-1"
                   data-testid="input-org-website"
                 />
                 <Button
@@ -260,7 +258,7 @@ export default function OnboardingPage({ user }: { user: User }) {
 
             <div className="space-y-2">
               <Label htmlFor="orgDescription" className="text-gray-200 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#D4AF37]" /> About Your Brand
+                <FileText className="w-4 h-4 text-[#7B5CFA]" /> About Your Brand
               </Label>
               <Textarea
                 id="orgDescription"
@@ -268,7 +266,7 @@ export default function OnboardingPage({ user }: { user: User }) {
                 onChange={(e) => setFormData((prev) => ({ ...prev, orgDescription: e.target.value }))}
                 placeholder="Tell creators about your brand, products, and the type of content you're looking for..."
                 rows={4}
-                className="bg-[#0F0F0F] border-[#2A2A2A] text-white placeholder:text-gray-600 focus:border-[#D4AF37] resize-none"
+                className="bg-[#0F0F0F] border-[#2A2A2A] text-white placeholder:text-gray-600 focus:border-[#7B5CFA] resize-none"
                 data-testid="input-org-description"
               />
             </div>
@@ -278,7 +276,7 @@ export default function OnboardingPage({ user }: { user: User }) {
             type="submit"
             size="lg"
             disabled={onboardMutation.isPending}
-            className="w-full bg-gradient-to-r from-[#D4AF37] to-[#F4D03F] hover:from-[#C4A030] hover:to-[#E4C030] text-black font-semibold text-lg"
+            className="w-full bg-gradient-to-r from-[#7B5CFA] to-[#9B7DFF] hover:from-[#6B4EE6] hover:to-[#8B6DFF] text-black font-semibold text-lg"
             data-testid="button-complete-setup"
           >
             {onboardMutation.isPending ? (

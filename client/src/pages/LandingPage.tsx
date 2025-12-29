@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Guitar, Users, Trophy, ArrowRight, DollarSign, Video, Star } from "lucide-react";
+import { Users, ArrowRight, DollarSign, Video, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function LandingPage() {
@@ -8,11 +8,9 @@ export default function LandingPage() {
       <header className="border-b border-[#1A1A1A]">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center">
-              <Guitar className="w-6 h-6 text-black" />
-            </div>
+            <img src="/hrb-logo.png" alt="Hard Rock Bet" className="w-10 h-10 rounded-lg" />
             <div className="flex flex-col">
-              <span className="font-heading text-2xl tracking-wider text-[#D4AF37] leading-none">
+              <span className="font-heading text-2xl tracking-wider text-[#7B5CFA] leading-none">
                 HARD ROCK BET
               </span>
               <span className="text-[10px] text-gray-500 tracking-widest uppercase">
@@ -23,7 +21,7 @@ export default function LandingPage() {
           <a href="/api/login">
             <Button 
               variant="outline" 
-              className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black transition-colors"
+              className="border-[#7B5CFA] text-[#7B5CFA] hover:bg-[#7B5CFA] hover:text-black transition-colors"
               data-testid="button-login"
             >
               Sign In
@@ -34,8 +32,8 @@ export default function LandingPage() {
 
       <main className="container mx-auto px-6">
         <section className="py-20 md:py-32 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#D4AF37]/5 to-transparent pointer-events-none" />
-          <div className="absolute top-20 left-1/4 w-64 h-64 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#7B5CFA]/5 to-transparent pointer-events-none" />
+          <div className="absolute top-20 left-1/4 w-64 h-64 bg-[#7B5CFA]/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-20 right-1/4 w-48 h-48 bg-[#00D4FF]/10 rounded-full blur-3xl pointer-events-none" />
           
           <motion.div
@@ -44,15 +42,15 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
             className="relative z-10"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 mb-8">
-              <Star className="w-4 h-4 text-[#D4AF37]" />
-              <span className="text-sm text-[#D4AF37] tracking-wide uppercase font-medium">Roll With Us</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#7B5CFA]/10 border border-[#7B5CFA]/30 mb-8">
+              <Star className="w-4 h-4 text-[#7B5CFA]" />
+              <span className="text-sm text-[#7B5CFA] tracking-wide uppercase font-medium">Roll With Us</span>
             </div>
             
             <h1 className="text-5xl md:text-7xl font-heading text-white mb-6 leading-none tracking-wide">
               CREATE LEGENDARY
               <br />
-              <span className="text-gradient-gold">
+              <span className="text-gradient-purple">
                 CONTENT
               </span>
             </h1>
@@ -64,7 +62,7 @@ export default function LandingPage() {
               <a href="/api/login">
                 <Button 
                   size="lg" 
-                  className="bg-gradient-to-r from-[#D4AF37] to-[#F4D03F] hover:from-[#C4A030] hover:to-[#E4C030] text-black text-lg px-8 font-semibold glow-gold"
+                  className="bg-gradient-to-r from-[#7B5CFA] to-[#9B7DFF] hover:from-[#6B4EE6] hover:to-[#8B6DFF] text-black text-lg px-8 font-semibold glow-purple"
                   data-testid="button-get-started"
                 >
                   Get Started <ArrowRight className="ml-2 w-5 h-5" />
@@ -91,9 +89,9 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="grid md:grid-cols-3 gap-6"
           >
-            <div className="bg-gradient-to-b from-[#1A1A1A] to-[#0F0F0F] border border-[#2A2A2A] rounded-xl p-8 text-center hover:border-[#D4AF37]/50 transition-colors group">
-              <div className="w-16 h-16 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center mx-auto mb-5 group-hover:bg-[#D4AF37]/20 transition-colors">
-                <Video className="w-8 h-8 text-[#D4AF37]" />
+            <div className="bg-gradient-to-b from-[#1A1A1A] to-[#0F0F0F] border border-[#2A2A2A] rounded-xl p-8 text-center hover:border-[#7B5CFA]/50 transition-colors group">
+              <div className="w-16 h-16 rounded-xl bg-[#7B5CFA]/10 flex items-center justify-center mx-auto mb-5 group-hover:bg-[#7B5CFA]/20 transition-colors">
+                <Video className="w-8 h-8 text-[#7B5CFA]" />
               </div>
               <h3 className="text-xl font-heading text-white mb-3 tracking-wide">SUBMIT VIDEOS</h3>
               <p className="text-gray-500">
@@ -101,9 +99,9 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="bg-gradient-to-b from-[#1A1A1A] to-[#0F0F0F] border border-[#2A2A2A] rounded-xl p-8 text-center hover:border-[#D4AF37]/50 transition-colors group">
-              <div className="w-16 h-16 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center mx-auto mb-5 group-hover:bg-[#D4AF37]/20 transition-colors">
-                <Users className="w-8 h-8 text-[#D4AF37]" />
+            <div className="bg-gradient-to-b from-[#1A1A1A] to-[#0F0F0F] border border-[#2A2A2A] rounded-xl p-8 text-center hover:border-[#7B5CFA]/50 transition-colors group">
+              <div className="w-16 h-16 rounded-xl bg-[#7B5CFA]/10 flex items-center justify-center mx-auto mb-5 group-hover:bg-[#7B5CFA]/20 transition-colors">
+                <Users className="w-8 h-8 text-[#7B5CFA]" />
               </div>
               <h3 className="text-xl font-heading text-white mb-3 tracking-wide">GET REVIEWED</h3>
               <p className="text-gray-500">
@@ -111,9 +109,9 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="bg-gradient-to-b from-[#1A1A1A] to-[#0F0F0F] border border-[#2A2A2A] rounded-xl p-8 text-center hover:border-[#D4AF37]/50 transition-colors group">
-              <div className="w-16 h-16 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center mx-auto mb-5 group-hover:bg-[#D4AF37]/20 transition-colors">
-                <DollarSign className="w-8 h-8 text-[#D4AF37]" />
+            <div className="bg-gradient-to-b from-[#1A1A1A] to-[#0F0F0F] border border-[#2A2A2A] rounded-xl p-8 text-center hover:border-[#7B5CFA]/50 transition-colors group">
+              <div className="w-16 h-16 rounded-xl bg-[#7B5CFA]/10 flex items-center justify-center mx-auto mb-5 group-hover:bg-[#7B5CFA]/20 transition-colors">
+                <DollarSign className="w-8 h-8 text-[#7B5CFA]" />
               </div>
               <h3 className="text-xl font-heading text-white mb-3 tracking-wide">WIN REWARDS</h3>
               <p className="text-gray-500">
@@ -128,9 +126,9 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="bg-gradient-to-r from-[#D4AF37]/10 via-[#D4AF37]/5 to-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-2xl p-10 md:p-16"
+            className="bg-gradient-to-r from-[#7B5CFA]/10 via-[#7B5CFA]/5 to-[#7B5CFA]/10 border border-[#7B5CFA]/30 rounded-2xl p-10 md:p-16"
           >
-            <Guitar className="w-12 h-12 text-[#D4AF37] mx-auto mb-6" />
+            <img src="/hrb-logo.png" alt="Hard Rock Bet" className="w-16 h-16 rounded-xl mx-auto mb-6" />
             <h2 className="text-3xl md:text-4xl font-heading text-white mb-4 tracking-wide">
               THE SPORTSBOOK FOR EVERY KIND OF CREATOR
             </h2>
@@ -141,7 +139,7 @@ export default function LandingPage() {
             <a href="/api/login">
               <Button 
                 size="lg" 
-                className="bg-[#D4AF37] hover:bg-[#C4A030] text-black font-semibold px-10"
+                className="bg-[#7B5CFA] hover:bg-[#6B4EE6] text-black font-semibold px-10"
               >
                 Join the Stage
               </Button>
@@ -154,21 +152,19 @@ export default function LandingPage() {
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center">
-                <Guitar className="h-4 w-4 text-black" />
-              </div>
-              <span className="font-heading text-lg tracking-wider text-[#D4AF37]">
+              <img src="/hrb-logo.png" alt="Hard Rock Bet" className="h-8 w-8 rounded-lg" />
+              <span className="font-heading text-lg tracking-wider text-[#7B5CFA]">
                 HARD ROCK BET
               </span>
             </div>
             <div className="flex items-center gap-6 text-sm text-gray-500">
-              <a href="https://www.hardrock.bet/" target="_blank" rel="noopener noreferrer" className="hover:text-[#D4AF37] transition-colors">
+              <a href="https://www.hardrock.bet/" target="_blank" rel="noopener noreferrer" className="hover:text-[#7B5CFA] transition-colors">
                 Hard Rock Bet
               </a>
-              <a href="https://www.hardrock.bet/sportsbook" target="_blank" rel="noopener noreferrer" className="hover:text-[#D4AF37] transition-colors">
+              <a href="https://www.hardrock.bet/sportsbook" target="_blank" rel="noopener noreferrer" className="hover:text-[#7B5CFA] transition-colors">
                 Sportsbook
               </a>
-              <a href="https://www.hardrock.bet/casino" target="_blank" rel="noopener noreferrer" className="hover:text-[#D4AF37] transition-colors">
+              <a href="https://www.hardrock.bet/casino" target="_blank" rel="noopener noreferrer" className="hover:text-[#7B5CFA] transition-colors">
                 Casino
               </a>
             </div>

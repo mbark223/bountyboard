@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LayoutDashboard, LogOut, Guitar } from "lucide-react";
+import { LayoutDashboard, LogOut } from "lucide-react";
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -25,11 +25,9 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       <header className="border-b border-border/40 bg-[#0A0A0A] sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-              <Guitar className="h-6 w-6 text-black" />
-            </div>
+            <img src="/hrb-logo.png" alt="Hard Rock Bet" className="h-10 w-10 rounded-lg group-hover:scale-105 transition-transform duration-300" />
             <div className="flex flex-col">
-              <span className="font-heading text-2xl tracking-wider text-[#D4AF37] leading-none">
+              <span className="font-heading text-2xl tracking-wider text-[#7B5CFA] leading-none">
                 HARD ROCK BET
               </span>
               <span className="text-[10px] text-muted-foreground tracking-widest uppercase">
@@ -45,9 +43,9 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full" data-testid="button-user-menu">
-                    <Avatar className="h-9 w-9 border-2 border-[#D4AF37]/50">
+                    <Avatar className="h-9 w-9 border-2 border-[#7B5CFA]/50">
                       <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || "User"} />
-                      <AvatarFallback className="bg-[#D4AF37]/20 text-[#D4AF37]">
+                      <AvatarFallback className="bg-[#7B5CFA]/20 text-[#7B5CFA]">
                         {getInitials(user.firstName, user.lastName)}
                       </AvatarFallback>
                     </Avatar>
@@ -79,7 +77,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black transition-colors"
+                  className="border-[#7B5CFA] text-[#7B5CFA] hover:bg-[#7B5CFA] hover:text-black transition-colors"
                   data-testid="button-sign-in"
                 >
                   Sign In
@@ -98,21 +96,19 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center">
-                <Guitar className="h-4 w-4 text-black" />
-              </div>
-              <span className="font-heading text-lg tracking-wider text-[#D4AF37]">
+              <img src="/hrb-logo.png" alt="Hard Rock Bet" className="h-8 w-8 rounded-lg" />
+              <span className="font-heading text-lg tracking-wider text-[#7B5CFA]">
                 HARD ROCK BET
               </span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <a href="https://www.hardrock.bet/" target="_blank" rel="noopener noreferrer" className="hover:text-[#D4AF37] transition-colors">
+              <a href="https://www.hardrock.bet/" target="_blank" rel="noopener noreferrer" className="hover:text-[#7B5CFA] transition-colors">
                 Hard Rock Bet
               </a>
-              <a href="https://www.hardrock.bet/sportsbook" target="_blank" rel="noopener noreferrer" className="hover:text-[#D4AF37] transition-colors">
+              <a href="https://www.hardrock.bet/sportsbook" target="_blank" rel="noopener noreferrer" className="hover:text-[#7B5CFA] transition-colors">
                 Sportsbook
               </a>
-              <a href="https://www.hardrock.bet/casino" target="_blank" rel="noopener noreferrer" className="hover:text-[#D4AF37] transition-colors">
+              <a href="https://www.hardrock.bet/casino" target="_blank" rel="noopener noreferrer" className="hover:text-[#7B5CFA] transition-colors">
                 Casino
               </a>
             </div>

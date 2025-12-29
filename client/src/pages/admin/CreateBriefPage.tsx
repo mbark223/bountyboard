@@ -454,7 +454,7 @@ export default function CreateBriefPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-[#D4AF37]" />
+                          <Building2 className="h-4 w-4 text-[#7B5CFA]" />
                           Business Line
                         </FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
@@ -479,7 +479,7 @@ export default function CreateBriefPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-[#D4AF37]" />
+                          <MapPin className="h-4 w-4 text-[#7B5CFA]" />
                           State
                         </FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>

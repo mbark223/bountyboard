@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FileText, Settings, LogOut, Plus, Building2, Guitar } from "lucide-react";
+import { LayoutDashboard, FileText, Settings, LogOut, Plus, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,11 +26,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       <aside className="w-64 bg-[#0F0F0F] border-r border-[#1A1A1A] fixed h-full z-40 hidden md:flex flex-col">
         <div className="h-16 flex items-center px-6 border-b border-[#1A1A1A]">
           <Link href="/" className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center">
-              <Guitar className="h-5 w-5 text-black" />
-            </div>
+            <img src="/hrb-logo.png" alt="Hard Rock Bet" className="h-10 w-10 rounded-lg" />
             <div className="flex flex-col">
-              <span className="font-heading text-lg tracking-wider text-[#D4AF37] leading-none">
+              <span className="font-heading text-lg tracking-wider text-[#7B5CFA] leading-none">
                 HARD ROCK BET
               </span>
               <span className="text-[9px] text-gray-600 tracking-widest uppercase">
@@ -44,7 +42,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <div className="mb-6">
             <Link href="/admin/briefs/new">
               <Button 
-                className="w-full justify-start gap-2 font-medium bg-[#D4AF37] hover:bg-[#C4A030] text-black" 
+                className="w-full justify-start gap-2 font-medium bg-[#7B5CFA] hover:bg-[#6B4EE6] text-black" 
                 size="lg" 
                 data-testid="button-new-brief"
               >
@@ -64,12 +62,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
                     isActive 
-                      ? "bg-[#D4AF37]/10 text-[#D4AF37]" 
+                      ? "bg-[#7B5CFA]/10 text-[#7B5CFA]" 
                       : "text-gray-400 hover:bg-[#1A1A1A] hover:text-white"
                   )}
                   data-testid={`nav-${item.label.toLowerCase()}`}
                 >
-                  <item.icon className={cn("h-4 w-4", isActive ? "text-[#D4AF37]" : "text-gray-500")} />
+                  <item.icon className={cn("h-4 w-4", isActive ? "text-[#7B5CFA]" : "text-gray-500")} />
                   {item.label}
                 </Link>
               );
@@ -80,9 +78,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         {user && (
           <div className="p-4 border-t border-[#1A1A1A] space-y-3">
             <div className="flex items-center gap-3 px-2">
-              <Avatar className="h-9 w-9 border-2 border-[#D4AF37]/30">
+              <Avatar className="h-9 w-9 border-2 border-[#7B5CFA]/30">
                 <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || "User"} />
-                <AvatarFallback className="bg-[#D4AF37]/10 text-[#D4AF37] text-sm">
+                <AvatarFallback className="bg-[#7B5CFA]/10 text-[#7B5CFA] text-sm">
                   {getInitials(user.firstName, user.lastName)}
                 </AvatarFallback>
               </Avatar>
@@ -111,10 +109,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 md:ml-64 min-h-screen flex flex-col">
         <header className="md:hidden h-16 border-b border-[#1A1A1A] bg-[#0F0F0F] flex items-center justify-between px-4 sticky top-0 z-30">
           <Link href="/" className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center">
-              <Guitar className="h-4 w-4 text-black" />
-            </div>
-            <span className="font-heading text-lg tracking-wider text-[#D4AF37]">HARD ROCK BET</span>
+            <img src="/hrb-logo.png" alt="Hard Rock Bet" className="h-8 w-8 rounded-lg" />
+            <span className="font-heading text-lg tracking-wider text-[#7B5CFA]">HARD ROCK BET</span>
           </Link>
           <Button variant="ghost" size="sm" className="text-gray-400">Menu</Button>
         </header>

@@ -52,7 +52,7 @@ export default function AdminBriefs() {
           <p className="text-gray-400 mt-1">Manage your campaigns and bounties.</p>
         </div>
         <Link href="/admin/briefs/new">
-          <Button className="gap-2 bg-[#D4AF37] hover:bg-[#C4A030] text-black">
+          <Button className="gap-2 bg-[#7B5CFA] hover:bg-[#6B4EE6] text-black">
             <Plus className="h-4 w-4" />
             Create Brief
           </Button>
@@ -74,7 +74,7 @@ export default function AdminBriefs() {
             <div className="flex gap-3">
               <Select value={businessLineFilter} onValueChange={setBusinessLineFilter}>
                 <SelectTrigger className="w-[160px] bg-[#1A1A1A] border-[#2A2A2A] text-white" data-testid="select-business-line">
-                  <Building2 className="h-4 w-4 mr-2 text-[#D4AF37]" />
+                  <Building2 className="h-4 w-4 mr-2 text-[#7B5CFA]" />
                   <SelectValue placeholder="Business Line" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#1A1A1A] border-[#2A2A2A]">
@@ -87,7 +87,7 @@ export default function AdminBriefs() {
               
               <Select value={stateFilter} onValueChange={setStateFilter}>
                 <SelectTrigger className="w-[160px] bg-[#1A1A1A] border-[#2A2A2A] text-white" data-testid="select-state">
-                  <MapPin className="h-4 w-4 mr-2 text-[#D4AF37]" />
+                  <MapPin className="h-4 w-4 mr-2 text-[#7B5CFA]" />
                   <SelectValue placeholder="State" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#1A1A1A] border-[#2A2A2A]">
@@ -126,7 +126,7 @@ export default function AdminBriefs() {
                     <div className="text-xs text-gray-500 md:hidden">{brief.status}</div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="border-[#D4AF37]/30 text-[#D4AF37] bg-[#D4AF37]/10">
+                    <Badge variant="outline" className="border-[#7B5CFA]/30 text-[#7B5CFA] bg-[#7B5CFA]/10">
                       {(brief as any).businessLine || "Sportsbook"}
                     </Badge>
                   </TableCell>
