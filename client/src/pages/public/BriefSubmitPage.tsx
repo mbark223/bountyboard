@@ -20,7 +20,9 @@ import { motion, AnimatePresence } from "framer-motion";
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  handle: z.string().min(2, "Social handle is required"),
+  phone: z.string().optional(),
+  handle: z.string().min(2, "Instagram handle is required"),
+  bettingAccount: z.string().optional(),
   notes: z.string().optional(),
   agreeRights: z.boolean().refine((val) => val === true, "You must agree to the terms"),
 });
@@ -41,7 +43,9 @@ export default function BriefSubmitPage() {
     defaultValues: {
       name: "",
       email: "",
+      phone: "",
       handle: "",
+      bettingAccount: "",
       notes: "",
       agreeRights: false,
     },
@@ -146,26 +150,37 @@ export default function BriefSubmitPage() {
                 <h3 className="text-lg font-semibold border-b pb-2">Contact Info</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" {...form.register("name")} placeholder="Jane Doe" />
+                    <Label htmlFor="name">Full Name *</Label>
+                    <Input id="name" {...form.register("name")} placeholder="Jane Doe" data-testid="input-name" />
                     {form.formState.errors.name && (
                       <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" {...form.register("email")} placeholder="jane@example.com" />
+                    <Label htmlFor="email">Email *</Label>
+                    <Input id="email" type="email" {...form.register("email")} placeholder="jane@example.com" data-testid="input-email" />
                     {form.formState.errors.email && (
                       <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
                     )}
                   </div>
                 </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input id="phone" type="tel" {...form.register("phone")} placeholder="(555) 123-4567" data-testid="input-phone" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="handle">Instagram Handle *</Label>
+                    <Input id="handle" {...form.register("handle")} placeholder="@username" data-testid="input-handle" />
+                    {form.formState.errors.handle && (
+                      <p className="text-sm text-destructive">{form.formState.errors.handle.message}</p>
+                    )}
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Label htmlFor="handle">Social Handle (IG/TikTok)</Label>
-                  <Input id="handle" {...form.register("handle")} placeholder="@username" />
-                  {form.formState.errors.handle && (
-                    <p className="text-sm text-destructive">{form.formState.errors.handle.message}</p>
-                  )}
+                  <Label htmlFor="bettingAccount">Hard Rock Bet Account Username</Label>
+                  <Input id="bettingAccount" {...form.register("bettingAccount")} placeholder="Your HRB username (for bonus bet rewards)" data-testid="input-betting-account" />
+                  <p className="text-xs text-muted-foreground">Required if you're receiving bonus bet rewards</p>
                 </div>
               </div>
 

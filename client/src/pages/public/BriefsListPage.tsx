@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
-  Search, 
   DollarSign, 
   Gift, 
   Clock, 
@@ -47,34 +46,6 @@ export default function BriefsListPage() {
 
   return (
     <PublicLayout>
-      <section className="bg-background border-b border-border/40 py-16 relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-3xl mx-auto text-center space-y-4">
-            <h1 className="text-4xl md:text-5xl font-heading font-bold tracking-tight text-foreground">
-              Find Your Next <span className="text-primary">Bounty</span>
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Connect with top brands, create authentic content, and get paid. 
-              Browse active campaigns below.
-            </p>
-            
-            <div className="pt-6 flex max-w-md mx-auto relative">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-                <Input 
-                  className="pl-10 h-12 text-base shadow-sm border-border/60 bg-card/50 backdrop-blur-sm focus-visible:ring-primary/20" 
-                  placeholder="Search by brand or campaign..." 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  data-testid="input-search"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section className="container mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-heading font-semibold flex items-center gap-2">
