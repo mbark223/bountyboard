@@ -66,12 +66,16 @@ app.use((req, res, next) => {
     log("Initializing server...");
     
     // Test database connection
-    try {
-      await pool.query("SELECT NOW()");
-      log("Database connection successful");
-    } catch (dbError) {
-      log(`Database connection failed: ${dbError}`, "error");
-      throw dbError;
+    if (pool) {
+      try {
+        await pool.query("SELECT NOW()");
+        log("Database connection successful");
+      } catch (dbError) {
+        log(`Database connection warning: ${dbError}`, "warn");
+        log("Continuing without database - will retry on requests", "warn");
+      }
+    } else {
+      log("Database not configured - running without database", "warn");
     }
 
     // Setup Replit Auth (must be before other routes)
