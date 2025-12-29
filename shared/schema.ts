@@ -5,12 +5,18 @@ import { z } from "zod";
 // Re-export auth models
 export * from "./models/auth";
 
+// Business lines and states for filtering
+export const BUSINESS_LINES = ["PMR", "Casino", "Sportsbook"] as const;
+export const STATES = ["Florida", "New Jersey", "Michigan"] as const;
+
 // Briefs table
 export const briefs = pgTable("briefs", {
   id: serial("id").primaryKey(),
   slug: text("slug").notNull().unique(),
   title: text("title").notNull(),
   orgName: text("org_name").notNull(),
+  businessLine: text("business_line").notNull().default("Sportsbook"), // 'PMR' | 'Casino' | 'Sportsbook'
+  state: text("state").notNull().default("Florida"), // 'Florida' | 'New Jersey' | 'Michigan'
   overview: text("overview").notNull(),
   requirements: text("requirements").array().notNull(),
   deliverableRatio: text("deliverable_ratio").notNull(),
@@ -33,6 +39,8 @@ export const briefs = pgTable("briefs", {
 export const insertBriefSchema = createInsertSchema(briefs, {
   requirements: z.array(z.string().min(1)),
   rewardType: z.enum(["CASH", "BONUS_BETS", "OTHER"]),
+  businessLine: z.enum(["PMR", "Casino", "Sportsbook"]).default("Sportsbook"),
+  state: z.enum(["Florida", "New Jersey", "Michigan"]).default("Florida"),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).default("DRAFT"),
 }).omit({
   id: true,
@@ -51,7 +59,9 @@ export const submissions = pgTable("submissions", {
   creatorId: text("creator_id"), // optional - links to users.id if creator is registered
   creatorName: text("creator_name").notNull(),
   creatorEmail: text("creator_email").notNull(),
-  creatorHandle: text("creator_handle").notNull(),
+  creatorPhone: text("creator_phone"),
+  creatorHandle: text("creator_handle").notNull(), // Instagram handle
+  creatorBettingAccount: text("creator_betting_account"), // Hard Rock Bet account username
   message: text("message"),
   videoUrl: text("video_url").notNull(),
   videoFileName: text("video_file_name").notNull(),
@@ -98,3 +108,29 @@ export const insertReviewerSchema = createInsertSchema(reviewers).omit({
 });
 export type InsertReviewer = z.infer<typeof insertReviewerSchema>;
 export type Reviewer = typeof reviewers.$inferSelect;
+
+// Saved prompt templates for quick brief creation
+export const promptTemplates = pgTable("prompt_templates", {
+  id: serial("id").primaryKey(),
+  ownerId: text("owner_id").notNull(),
+  name: text("name").notNull(),
+  overview: text("overview"),
+  requirements: text("requirements").array(),
+  deliverableRatio: text("deliverable_ratio"),
+  deliverableLength: text("deliverable_length"),
+  deliverableFormat: text("deliverable_format"),
+  rewardType: text("reward_type"),
+  rewardAmount: text("reward_amount"),
+  rewardCurrency: text("reward_currency"),
+  rewardDescription: text("reward_description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertPromptTemplateSchema = createInsertSchema(promptTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPromptTemplate = z.infer<typeof insertPromptTemplateSchema>;
+export type PromptTemplate = typeof promptTemplates.$inferSelect;

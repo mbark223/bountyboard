@@ -1,5 +1,4 @@
 import { Link, useLocation } from "wouter";
-import logo from '@assets/generated_images/minimalist_geometric_logo_for_bountyboard_app.png';
 import { LayoutDashboard, FileText, Settings, LogOut, Plus, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -23,19 +22,30 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 flex font-sans">
-      <aside className="w-64 bg-card border-r border-border fixed h-full z-40 hidden md:flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-border">
+    <div className="min-h-screen bg-[#0A0A0A] flex font-sans">
+      <aside className="w-64 bg-[#0F0F0F] border-r border-[#1A1A1A] fixed h-full z-40 hidden md:flex flex-col">
+        <div className="h-16 flex items-center px-6 border-b border-[#1A1A1A]">
           <Link href="/" className="flex items-center gap-3">
-            <img src={logo} alt="Logo" className="h-7 w-7 rounded-md" />
-            <span className="font-heading font-bold text-lg">BountyBoard</span>
+            <img src="/hrb-logo.png" alt="Hard Rock Bet" className="h-10 w-10 rounded-lg" />
+            <div className="flex flex-col">
+              <span className="font-heading text-lg tracking-wider text-[#7B5CFA] leading-none">
+                HARD ROCK BET
+              </span>
+              <span className="text-[9px] text-gray-600 tracking-widest uppercase">
+                Admin Portal
+              </span>
+            </div>
           </Link>
         </div>
 
         <div className="p-4 flex-1">
           <div className="mb-6">
             <Link href="/admin/briefs/new">
-              <Button className="w-full justify-start gap-2 shadow-sm font-medium" size="lg" data-testid="button-new-brief">
+              <Button 
+                className="w-full justify-start gap-2 font-medium bg-[#7B5CFA] hover:bg-[#6B4EE6] text-black" 
+                size="lg" 
+                data-testid="button-new-brief"
+              >
                 <Plus className="h-4 w-4" />
                 New Brief
               </Button>
@@ -52,12 +62,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
                     isActive 
-                      ? "bg-primary/10 text-primary" 
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      ? "bg-[#7B5CFA]/10 text-[#7B5CFA]" 
+                      : "text-gray-400 hover:bg-[#1A1A1A] hover:text-white"
                   )}
                   data-testid={`nav-${item.label.toLowerCase()}`}
                 >
-                  <item.icon className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")} />
+                  <item.icon className={cn("h-4 w-4", isActive ? "text-[#7B5CFA]" : "text-gray-500")} />
                   {item.label}
                 </Link>
               );
@@ -66,18 +76,18 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {user && (
-          <div className="p-4 border-t border-border space-y-3">
+          <div className="p-4 border-t border-[#1A1A1A] space-y-3">
             <div className="flex items-center gap-3 px-2">
-              <Avatar className="h-9 w-9">
+              <Avatar className="h-9 w-9 border-2 border-[#7B5CFA]/30">
                 <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || "User"} />
-                <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                <AvatarFallback className="bg-[#7B5CFA]/10 text-[#7B5CFA] text-sm">
                   {getInitials(user.firstName, user.lastName)}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user.firstName} {user.lastName}</p>
+                <p className="text-sm font-medium text-white truncate">{user.firstName} {user.lastName}</p>
                 {user.orgName && (
-                  <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                  <p className="text-xs text-gray-500 truncate flex items-center gap-1">
                     <Building2 className="h-3 w-3" />
                     {user.orgName}
                   </p>
@@ -86,7 +96,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             </div>
             <a 
               href="/api/logout" 
-              className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 w-full transition-colors"
+              className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 w-full transition-colors"
               data-testid="button-logout"
             >
               <LogOut className="h-4 w-4" />
@@ -97,12 +107,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       <main className="flex-1 md:ml-64 min-h-screen flex flex-col">
-        <header className="md:hidden h-16 border-b border-border bg-card flex items-center justify-between px-4 sticky top-0 z-30">
+        <header className="md:hidden h-16 border-b border-[#1A1A1A] bg-[#0F0F0F] flex items-center justify-between px-4 sticky top-0 z-30">
           <Link href="/" className="flex items-center gap-2">
-            <img src={logo} alt="Logo" className="h-6 w-6" />
-            <span className="font-heading font-bold">BountyBoard</span>
+            <img src="/hrb-logo.png" alt="Hard Rock Bet" className="h-8 w-8 rounded-lg" />
+            <span className="font-heading text-lg tracking-wider text-[#7B5CFA]">HARD ROCK BET</span>
           </Link>
-          <Button variant="ghost" size="sm">Menu</Button>
+          <Button variant="ghost" size="sm" className="text-gray-400">Menu</Button>
         </header>
 
         <div className="p-6 md:p-8 max-w-7xl mx-auto w-full flex-1">
