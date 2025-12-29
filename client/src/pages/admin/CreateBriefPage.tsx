@@ -46,13 +46,16 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Save, FileText, ChevronDown, Bookmark, Video, DollarSign, Calculator } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, FileText, ChevronDown, Bookmark, Video, DollarSign, Calculator, Building2, MapPin } from "lucide-react";
 import type { PromptTemplate } from "@shared/schema";
+import { BUSINESS_LINES, STATES } from "@shared/schema";
 import { formatCurrency } from "@/lib/utils";
 
 const briefSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
   orgName: z.string().min(2, "Organization name is required"),
+  businessLine: z.enum(["PMR", "Casino", "Sportsbook"]).default("Sportsbook"),
+  state: z.enum(["Florida", "New Jersey", "Michigan"]).default("Florida"),
   overview: z.string().min(20, "Overview must be at least 20 characters"),
   requirements: z.array(z.object({ value: z.string().min(1, "Requirement cannot be empty") })),
   deliverables: z.object({
@@ -183,6 +186,8 @@ export default function CreateBriefPage() {
     defaultValues: {
       title: "",
       orgName: user?.orgName || "",
+      businessLine: "Sportsbook",
+      state: "Florida",
       overview: "",
       requirements: [{ value: "" }, { value: "" }, { value: "" }],
       deliverables: {
@@ -309,6 +314,8 @@ export default function CreateBriefPage() {
       slug,
       title: data.title,
       orgName: data.orgName,
+      businessLine: data.businessLine,
+      state: data.state,
       overview: data.overview,
       requirements,
       deliverableRatio: data.deliverables.ratio,
@@ -443,12 +450,65 @@ export default function CreateBriefPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
+                    name="businessLine"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-[#D4AF37]" />
+                          Business Line
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-business-line">
+                              <SelectValue placeholder="Select business line" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {BUSINESS_LINES.map((line) => (
+                              <SelectItem key={line} value={line}>{line}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-[#D4AF37]" />
+                          State
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-state">
+                              <SelectValue placeholder="Select state" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {STATES.map((state) => (
+                              <SelectItem key={state} value={state}>{state}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
                     name="orgName"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Organization / Brand</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Glow Energy" {...field} data-testid="input-org-name" />
+                          <Input placeholder="e.g. Hard Rock Bet" {...field} data-testid="input-org-name" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

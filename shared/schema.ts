@@ -5,12 +5,18 @@ import { z } from "zod";
 // Re-export auth models
 export * from "./models/auth";
 
+// Business lines and states for filtering
+export const BUSINESS_LINES = ["PMR", "Casino", "Sportsbook"] as const;
+export const STATES = ["Florida", "New Jersey", "Michigan"] as const;
+
 // Briefs table
 export const briefs = pgTable("briefs", {
   id: serial("id").primaryKey(),
   slug: text("slug").notNull().unique(),
   title: text("title").notNull(),
   orgName: text("org_name").notNull(),
+  businessLine: text("business_line").notNull().default("Sportsbook"), // 'PMR' | 'Casino' | 'Sportsbook'
+  state: text("state").notNull().default("Florida"), // 'Florida' | 'New Jersey' | 'Michigan'
   overview: text("overview").notNull(),
   requirements: text("requirements").array().notNull(),
   deliverableRatio: text("deliverable_ratio").notNull(),
@@ -33,6 +39,8 @@ export const briefs = pgTable("briefs", {
 export const insertBriefSchema = createInsertSchema(briefs, {
   requirements: z.array(z.string().min(1)),
   rewardType: z.enum(["CASH", "BONUS_BETS", "OTHER"]),
+  businessLine: z.enum(["PMR", "Casino", "Sportsbook"]).default("Sportsbook"),
+  state: z.enum(["Florida", "New Jersey", "Michigan"]).default("Florida"),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).default("DRAFT"),
 }).omit({
   id: true,
