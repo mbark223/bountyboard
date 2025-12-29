@@ -51,7 +51,9 @@ export const submissions = pgTable("submissions", {
   creatorId: text("creator_id"), // optional - links to users.id if creator is registered
   creatorName: text("creator_name").notNull(),
   creatorEmail: text("creator_email").notNull(),
-  creatorHandle: text("creator_handle").notNull(),
+  creatorPhone: text("creator_phone"),
+  creatorHandle: text("creator_handle").notNull(), // Instagram handle
+  creatorBettingAccount: text("creator_betting_account"), // Hard Rock Bet account username
   message: text("message"),
   videoUrl: text("video_url").notNull(),
   videoFileName: text("video_file_name").notNull(),
