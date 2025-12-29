@@ -30,10 +30,10 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="flex flex-col">
               <span className="font-heading text-2xl tracking-wider text-[#D4AF37] leading-none">
-                BOUNTY BOARD
+                HARD ROCK BET
               </span>
               <span className="text-[10px] text-muted-foreground tracking-widest uppercase">
-                by Hard Rock Bet
+                Creator Portal
               </span>
             </div>
           </Link>
@@ -102,7 +102,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 <Guitar className="h-4 w-4 text-black" />
               </div>
               <span className="font-heading text-lg tracking-wider text-[#D4AF37]">
-                BOUNTY BOARD
+                HARD ROCK BET
               </span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">

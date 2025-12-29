@@ -31,7 +31,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="flex flex-col">
               <span className="font-heading text-lg tracking-wider text-[#D4AF37] leading-none">
-                BOUNTY BOARD
+                HARD ROCK BET
               </span>
               <span className="text-[9px] text-gray-600 tracking-widest uppercase">
                 Admin Portal
@@ -114,7 +114,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <div className="h-7 w-7 rounded bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center">
               <Guitar className="h-4 w-4 text-black" />
             </div>
-            <span className="font-heading text-lg tracking-wider text-[#D4AF37]">BOUNTY BOARD</span>
+            <span className="font-heading text-lg tracking-wider text-[#D4AF37]">HARD ROCK BET</span>
           </Link>
           <Button variant="ghost" size="sm" className="text-gray-400">Menu</Button>
         </header>

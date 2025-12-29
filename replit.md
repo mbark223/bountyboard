@@ -1,4 +1,4 @@
-# Bounty Board
+# Hard Rock Bet Creator Portal
 
 ## Overview
 
