@@ -13,7 +13,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   } else if (req.method === 'POST') {
     try {
-      const validated = insertBriefSchema.parse(req.body);
+      // Add demo user ID - in production would get from session
+      const validated = insertBriefSchema.parse({
+        ...req.body,
+        ownerId: "demo-user-1"
+      });
       const newBrief = await storage.createBrief(validated);
       res.status(201).json(newBrief);
     } catch (error) {

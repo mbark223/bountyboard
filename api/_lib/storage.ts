@@ -136,6 +136,43 @@ class VercelDatabaseStorage extends DatabaseStorage {
       .returning();
     return submission;
   }
+
+  async getTemplatesByOwnerId(ownerId: string): Promise<PromptTemplate[]> {
+    return await this.db
+      .select()
+      .from(promptTemplates)
+      .where(eq(promptTemplates.ownerId, ownerId))
+      .orderBy(desc(promptTemplates.updatedAt));
+  }
+
+  async getTemplateById(id: number): Promise<PromptTemplate | undefined> {
+    const [template] = await this.db
+      .select()
+      .from(promptTemplates)
+      .where(eq(promptTemplates.id, id));
+    return template || undefined;
+  }
+
+  async createTemplate(template: InsertPromptTemplate): Promise<PromptTemplate> {
+    const [created] = await this.db
+      .insert(promptTemplates)
+      .values(template)
+      .returning();
+    return created;
+  }
+
+  async updateTemplate(id: number, data: Partial<InsertPromptTemplate>): Promise<PromptTemplate> {
+    const [updated] = await this.db
+      .update(promptTemplates)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(promptTemplates.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTemplate(id: number): Promise<void> {
+    await this.db.delete(promptTemplates).where(eq(promptTemplates.id, id));
+  }
 }
 
 export const storage = new VercelDatabaseStorage();
