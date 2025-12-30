@@ -16,8 +16,9 @@ import {
 } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/utils";
-import { ArrowLeft, ExternalLink, Play, Check, X, DollarSign, Calendar, Users } from "lucide-react";
+import { ArrowLeft, ExternalLink, Play, Check, X, DollarSign, Calendar, Users, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { FeedbackSection } from "@/components/FeedbackSection";
 
 export default function AdminBriefDetail() {
   const { id } = useParams();
@@ -226,6 +227,11 @@ export default function AdminBriefDetail() {
                                         </Button>
                                       </div>
                                     )}
+                                    
+                                    {/* Feedback Section */}
+                                    <div className="border-t pt-4">
+                                      <FeedbackSection submissionId={parseInt(selectedSubmission.id)} />
+                                    </div>
                                   </div>
 
                                   <DialogFooter className="mt-6 pt-4 border-t">

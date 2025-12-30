@@ -11,6 +11,7 @@ import OnboardingPage from "@/pages/OnboardingPage";
 import BriefsListPage from "@/pages/public/BriefsListPage";
 import BriefPublicPage from "@/pages/public/BriefPublicPage";
 import BriefSubmitPage from "@/pages/public/BriefSubmitPage";
+import SubmissionStatusPage from "@/pages/public/SubmissionStatusPage";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminBriefs from "@/pages/admin/AdminBriefs";
 import AdminBriefDetail from "@/pages/admin/AdminBriefDetail";
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/" component={BriefsListPage} />
       <Route path="/b/:slug" component={BriefPublicPage} />
       <Route path="/b/:slug/submit" component={BriefSubmitPage} />
+      <Route path="/submission-status" component={SubmissionStatusPage} />
       <Route path="/welcome" component={LandingPage} />
       
       <Route path="/admin">

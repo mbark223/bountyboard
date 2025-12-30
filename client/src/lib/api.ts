@@ -1,4 +1,4 @@
-import type { Brief, Submission, InsertBrief, InsertSubmission } from "@shared/schema";
+import type { Brief, Submission, InsertBrief, InsertSubmission, Feedback } from "@shared/schema";
 
 // Briefs API
 export async function fetchBriefs(): Promise<Brief[]> {
@@ -58,4 +58,38 @@ export async function updateSubmissionPayout(id: number, payoutStatus: string, n
   });
   if (!response.ok) throw new Error("Failed to update payout");
   return response.json();
+}
+
+// Feedback API
+export async function fetchFeedback(submissionId: number): Promise<Feedback[]> {
+  const response = await fetch(`/api/submissions/${submissionId}/feedback`);
+  if (!response.ok) throw new Error("Failed to fetch feedback");
+  return response.json();
+}
+
+export async function createFeedback(submissionId: number, comment: string, requiresAction: boolean = false): Promise<Feedback> {
+  const response = await fetch(`/api/submissions/${submissionId}/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ comment, requiresAction }),
+  });
+  if (!response.ok) throw new Error("Failed to create feedback");
+  return response.json();
+}
+
+export async function updateFeedback(feedbackId: number, comment: string): Promise<Feedback> {
+  const response = await fetch(`/api/feedback/${feedbackId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ comment }),
+  });
+  if (!response.ok) throw new Error("Failed to update feedback");
+  return response.json();
+}
+
+export async function deleteFeedback(feedbackId: number): Promise<void> {
+  const response = await fetch(`/api/feedback/${feedbackId}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to delete feedback");
 }

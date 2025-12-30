@@ -6,10 +6,13 @@ import {
   type InsertSubmission,
   type PromptTemplate,
   type InsertPromptTemplate,
+  type Feedback,
+  type InsertFeedback,
   users,
   briefs,
   submissions,
-  promptTemplates
+  promptTemplates,
+  feedback
 } from "../../shared/schema";
 import { getDb } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -172,6 +175,71 @@ class VercelDatabaseStorage extends DatabaseStorage {
 
   async deleteTemplate(id: number): Promise<void> {
     await this.db.delete(promptTemplates).where(eq(promptTemplates.id, id));
+  }
+
+  async createFeedback(insertFeedback: InsertFeedback): Promise<Feedback> {
+    const [newFeedback] = await this.db
+      .insert(feedback)
+      .values(insertFeedback)
+      .returning();
+    
+    // Update submission to indicate it has feedback
+    await this.db
+      .update(submissions)
+      .set({ hasFeedback: 1 })
+      .where(eq(submissions.id, insertFeedback.submissionId));
+    
+    return newFeedback;
+  }
+
+  async getFeedbackBySubmissionId(submissionId: number): Promise<Feedback[]> {
+    return await this.db
+      .select()
+      .from(feedback)
+      .where(eq(feedback.submissionId, submissionId))
+      .orderBy(desc(feedback.createdAt));
+  }
+
+  async updateFeedback(id: number, comment: string): Promise<Feedback> {
+    const [updated] = await this.db
+      .update(feedback)
+      .set({ comment, updatedAt: new Date() })
+      .where(eq(feedback.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteFeedback(id: number): Promise<void> {
+    // Get the submission ID before deleting
+    const [feedbackToDelete] = await this.db
+      .select()
+      .from(feedback)
+      .where(eq(feedback.id, id));
+    
+    if (feedbackToDelete) {
+      await this.db.delete(feedback).where(eq(feedback.id, id));
+      
+      // Check if submission still has other feedback
+      const remainingFeedback = await this.db
+        .select()
+        .from(feedback)
+        .where(eq(feedback.submissionId, feedbackToDelete.submissionId));
+      
+      if (remainingFeedback.length === 0) {
+        // No more feedback, update submission
+        await this.db
+          .update(submissions)
+          .set({ hasFeedback: 0 })
+          .where(eq(submissions.id, feedbackToDelete.submissionId));
+      }
+    }
+  }
+
+  async markFeedbackAsRead(submissionId: number): Promise<void> {
+    await this.db
+      .update(feedback)
+      .set({ isRead: 1 })
+      .where(eq(feedback.submissionId, submissionId));
   }
 }
 

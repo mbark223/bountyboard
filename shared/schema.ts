@@ -76,6 +76,7 @@ export const submissions = pgTable("submissions", {
   selectedAt: timestamp("selected_at"),
   paidAt: timestamp("paid_at"),
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+  hasFeedback: integer("has_feedback").default(0), // 0 = false, 1 = true
 });
 
 export const insertSubmissionSchema = createInsertSchema(submissions, {
@@ -134,3 +135,26 @@ export const insertPromptTemplateSchema = createInsertSchema(promptTemplates).om
 });
 export type InsertPromptTemplate = z.infer<typeof insertPromptTemplateSchema>;
 export type PromptTemplate = typeof promptTemplates.$inferSelect;
+
+// Feedback table for submission feedback
+export const feedback = pgTable("feedback", {
+  id: serial("id").primaryKey(),
+  submissionId: integer("submission_id").notNull().references(() => submissions.id),
+  authorId: text("author_id").notNull(), // references users.id
+  authorName: text("author_name").notNull(), // denormalized for display
+  comment: text("comment").notNull(),
+  requiresAction: integer("requires_action").default(0), // 0 = informational, 1 = requires action
+  isRead: integer("is_read").default(0), // 0 = unread, 1 = read by creator
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertFeedbackSchema = createInsertSchema(feedback).omit({
+  id: true,
+  isRead: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export const selectFeedbackSchema = createSelectSchema(feedback);
+export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
+export type Feedback = typeof feedback.$inferSelect;
