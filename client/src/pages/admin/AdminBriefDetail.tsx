@@ -14,7 +14,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/utils";
 import { ArrowLeft, ExternalLink, Play, Check, X, DollarSign, Calendar, Users, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -176,6 +176,9 @@ export default function AdminBriefDetail() {
                                 <div className="w-full md:w-96 bg-card border-l p-6 flex flex-col overflow-y-auto">
                                   <DialogHeader>
                                     <DialogTitle>Review Submission</DialogTitle>
+                                    <DialogDescription>
+                                      Review the video submission and provide feedback to the creator
+                                    </DialogDescription>
                                   </DialogHeader>
                                   
                                   <div className="mt-6 space-y-6 flex-1">
@@ -230,7 +233,7 @@ export default function AdminBriefDetail() {
                                     
                                     {/* Feedback Section */}
                                     <div className="border-t pt-4">
-                                      <FeedbackSection submissionId={parseInt(selectedSubmission.id)} />
+                                      <FeedbackSection submissionId={typeof selectedSubmission.id === 'string' ? parseInt(selectedSubmission.id, 10) : selectedSubmission.id} />
                                     </div>
                                   </div>
 
