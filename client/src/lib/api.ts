@@ -8,7 +8,7 @@ export async function fetchBriefs(): Promise<Brief[]> {
 }
 
 export async function fetchBriefBySlug(slug: string): Promise<Brief> {
-  const response = await fetch(`/api/briefs/${slug}`);
+  const response = await fetch(`/api/briefs/by-slug/${slug}`);
   if (!response.ok) throw new Error("Failed to fetch brief");
   return response.json();
 }
