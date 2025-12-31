@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MessageSquare, AlertCircle, CheckCircle, XCircle, Clock, Search } from "lucide-react";
+import { MessageSquare, AlertCircle, CheckCircle, XCircle, Clock, Search, RefreshCw, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import type { Submission, Feedback } from "@shared/schema";
+import { useLocation } from "wouter";
 
 // Mock function to get submission by email and submission ID
 async function fetchSubmissionStatus(email: string, submissionId: string): Promise<{ submission: Submission | null, feedback: Feedback[] }> {
@@ -77,6 +78,7 @@ export default function SubmissionStatusPage() {
   const [email, setEmail] = useState("");
   const [submissionId, setSubmissionId] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [, setLocation] = useLocation();
 
   const { data, refetch } = useQuery({
     queryKey: ["submission-status", email, submissionId],
@@ -247,6 +249,49 @@ export default function SubmissionStatusPage() {
                         <p className="text-sm">{feedback.comment}</p>
                       </div>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Resubmission Section for Rejected Submissions */}
+            {data.submission.status === 'NOT_SELECTED' && data.submission.allowsResubmission === 1 && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <RefreshCw className="h-5 w-5 text-primary" />
+                    Resubmission Available
+                  </CardTitle>
+                  <CardDescription>
+                    You can submit a new version of your video based on the feedback provided.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Please review the feedback above before creating your new submission. Make sure to address any concerns raised by the reviewer.
+                      </AlertDescription>
+                    </Alert>
+                    
+                    <Button 
+                      onClick={() => {
+                        // Navigate to submission form with resubmission data
+                        // In production, this would pass the original submission ID
+                        setLocation(`/b/${data.submission.briefId}/submit?resubmit=${data.submission.id}`);
+                      }}
+                      className="w-full"
+                    >
+                      <ArrowRight className="mr-2 h-4 w-4" />
+                      Submit New Version
+                    </Button>
+                    
+                    {data.submission.submissionVersion && data.submission.submissionVersion > 1 && (
+                      <p className="text-sm text-muted-foreground text-center">
+                        This is version {data.submission.submissionVersion} of your submission
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>

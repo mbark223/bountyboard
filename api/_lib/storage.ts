@@ -110,13 +110,17 @@ class VercelDatabaseStorage extends DatabaseStorage {
       .orderBy(desc(submissions.submittedAt));
   }
 
-  async updateSubmissionStatus(id: number, status: string, selectedAt?: Date): Promise<Submission> {
+  async updateSubmissionStatus(id: number, status: string, selectedAt?: Date, allowsResubmission?: boolean): Promise<Submission> {
     const updateData: any = { status };
     if (selectedAt) {
       updateData.selectedAt = selectedAt;
       if (status === "SELECTED") {
         updateData.payoutStatus = "PENDING";
       }
+    }
+    // If rejecting, set whether resubmission is allowed
+    if (status === "NOT_SELECTED" && allowsResubmission !== undefined) {
+      updateData.allowsResubmission = allowsResubmission ? 1 : 0;
     }
     
     const [submission] = await this.db
@@ -138,6 +142,14 @@ class VercelDatabaseStorage extends DatabaseStorage {
       .where(eq(submissions.id, id))
       .returning();
     return submission;
+  }
+
+  async getSubmissionById(id: number): Promise<Submission | undefined> {
+    const [submission] = await this.db
+      .select()
+      .from(submissions)
+      .where(eq(submissions.id, id));
+    return submission || undefined;
   }
 
   async getTemplatesByOwnerId(ownerId: string): Promise<PromptTemplate[]> {
@@ -240,6 +252,63 @@ class VercelDatabaseStorage extends DatabaseStorage {
       .update(feedback)
       .set({ isRead: 1 })
       .where(eq(feedback.submissionId, submissionId));
+  }
+
+  async getSubmissionWithVersions(submissionId: number): Promise<{ submission: Submission | undefined, versions: Submission[] }> {
+    const submission = await this.getSubmissionById(submissionId);
+    if (!submission) return { submission: undefined, versions: [] };
+
+    // Get the root submission ID (either parent or current if it's the original)
+    const rootId = submission.parentSubmissionId || submission.id;
+    
+    // Get all versions
+    const versions = await this.db
+      .select()
+      .from(submissions)
+      .where(eq(submissions.id, rootId))
+      .union(
+        this.db
+          .select()
+          .from(submissions)
+          .where(eq(submissions.parentSubmissionId, rootId))
+      )
+      .orderBy(desc(submissions.submissionVersion));
+
+    return { submission, versions };
+  }
+
+  async getLatestSubmissionByEmail(briefId: number, email: string): Promise<Submission | undefined> {
+    const results = await this.db
+      .select()
+      .from(submissions)
+      .where(eq(submissions.briefId, briefId))
+      .orderBy(desc(submissions.submissionVersion));
+    
+    // Find the latest version for this email
+    const emailSubmissions = results.filter(s => s.creatorEmail.toLowerCase() === email.toLowerCase());
+    return emailSubmissions[0] || undefined;
+  }
+
+  async createResubmission(originalSubmission: Submission, newSubmissionData: Partial<InsertSubmission>): Promise<Submission> {
+    const rootId = originalSubmission.parentSubmissionId || originalSubmission.id;
+    const newVersion = (originalSubmission.submissionVersion || 1) + 1;
+    
+    const resubmissionData = {
+      ...newSubmissionData,
+      briefId: originalSubmission.briefId,
+      creatorId: originalSubmission.creatorId,
+      creatorName: originalSubmission.creatorName,
+      creatorEmail: originalSubmission.creatorEmail,
+      creatorPhone: originalSubmission.creatorPhone,
+      creatorHandle: originalSubmission.creatorHandle,
+      creatorBettingAccount: originalSubmission.creatorBettingAccount,
+      parentSubmissionId: rootId,
+      submissionVersion: newVersion,
+      status: "RECEIVED" as const,
+      payoutStatus: "NOT_APPLICABLE" as const,
+    };
+
+    return await this.createSubmission(resubmissionData as InsertSubmission);
   }
 }
 

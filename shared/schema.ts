@@ -77,6 +77,9 @@ export const submissions = pgTable("submissions", {
   paidAt: timestamp("paid_at"),
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
   hasFeedback: integer("has_feedback").default(0), // 0 = false, 1 = true
+  parentSubmissionId: integer("parent_submission_id"), // references submissions.id for resubmissions
+  submissionVersion: integer("submission_version").default(1), // Version number (1, 2, 3, etc.)
+  allowsResubmission: integer("allows_resubmission").default(1), // 0 = no, 1 = yes - set when rejected
 });
 
 export const insertSubmissionSchema = createInsertSchema(submissions, {

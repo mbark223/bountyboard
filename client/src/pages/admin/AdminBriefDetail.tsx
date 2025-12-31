@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   Table, 
   TableBody, 
@@ -16,9 +17,11 @@ import {
 } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/utils";
-import { ArrowLeft, ExternalLink, Play, Check, X, DollarSign, Calendar, Users, MessageSquare } from "lucide-react";
+import { ArrowLeft, ExternalLink, Play, Check, X, DollarSign, Calendar, Users, MessageSquare, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FeedbackSection } from "@/components/FeedbackSection";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 export default function AdminBriefDetail() {
   const { id } = useParams();
@@ -28,6 +31,7 @@ export default function AdminBriefDetail() {
   const brief = MOCK_BRIEFS.find((b) => b.id === id);
   const [submissions, setSubmissions] = useState(MOCK_SUBMISSIONS.filter(s => s.briefId === id));
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [allowResubmission, setAllowResubmission] = useState(true);
 
   if (!brief) return <div>Brief not found</div>;
 
@@ -217,6 +221,23 @@ export default function AdminBriefDetail() {
                                           <X className="mr-2 h-4 w-4" /> Reject
                                         </Button>
                                       </div>
+                                      {/* Show resubmission option when rejecting */}
+                                      {selectedSubmission.status !== 'SELECTED' && (
+                                        <div className="mt-3 flex items-center space-x-2">
+                                          <Checkbox 
+                                            id="allow-resubmit"
+                                            checked={allowResubmission}
+                                            onCheckedChange={(checked) => setAllowResubmission(!!checked)}
+                                          />
+                                          <Label 
+                                            htmlFor="allow-resubmit" 
+                                            className="text-sm flex items-center gap-1 cursor-pointer"
+                                          >
+                                            <RefreshCw className="h-3 w-3" />
+                                            Allow creator to resubmit
+                                          </Label>
+                                        </div>
+                                      )}
                                     </div>
 
                                     {selectedSubmission.status === 'SELECTED' && (

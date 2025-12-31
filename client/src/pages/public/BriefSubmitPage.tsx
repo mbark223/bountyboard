@@ -14,8 +14,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { UploadCloud, FileVideo, X, CheckCircle, ArrowLeft } from "lucide-react";
+import { UploadCloud, FileVideo, X, CheckCircle, ArrowLeft, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -29,9 +30,14 @@ const formSchema = z.object({
 
 export default function BriefSubmitPage() {
   const { slug } = useParams();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const brief = MOCK_BRIEFS.find((b) => b.slug === slug);
+  
+  // Check if this is a resubmission
+  const searchParams = new URLSearchParams(location.split('?')[1] || '');
+  const resubmitId = searchParams.get('resubmit');
+  const isResubmission = !!resubmitId;
 
   const [file, setFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -135,11 +141,29 @@ export default function BriefSubmitPage() {
         </Button>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-heading font-bold mb-2">Submit Video</h1>
+          <h1 className="text-3xl font-heading font-bold mb-2">
+            {isResubmission ? (
+              <span className="flex items-center gap-2">
+                <RefreshCw className="h-8 w-8" />
+                Resubmit Video
+              </span>
+            ) : (
+              "Submit Video"
+            )}
+          </h1>
           <p className="text-muted-foreground">
             For: <span className="font-medium text-foreground">{brief.title}</span>
           </p>
         </div>
+
+        {isResubmission && (
+          <Alert className="mb-6">
+            <RefreshCw className="h-4 w-4" />
+            <AlertDescription>
+              You're submitting a new version of your video. Please make sure to address the feedback from your previous submission.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Card className="border-border/60 shadow-lg">
           <CardContent className="p-6 md:p-8">
