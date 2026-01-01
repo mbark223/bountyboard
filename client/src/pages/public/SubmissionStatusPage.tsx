@@ -40,7 +40,10 @@ async function fetchSubmissionStatus(email: string, submissionId: string): Promi
       selectedAt: null,
       paidAt: null,
       submittedAt: new Date("2024-01-10"),
-      hasFeedback: 1
+      hasFeedback: 1,
+      parentSubmissionId: null,
+      submissionVersion: 1,
+      allowsResubmission: 1
     };
 
     const mockFeedback: Feedback[] = [
@@ -279,7 +282,7 @@ export default function SubmissionStatusPage() {
                       onClick={() => {
                         // Navigate to submission form with resubmission data
                         // In production, this would pass the original submission ID
-                        setLocation(`/b/${data.submission.briefId}/submit?resubmit=${data.submission.id}`);
+                        setLocation(`/b/${data.submission?.briefId}/submit?resubmit=${data.submission?.id}`);
                       }}
                       className="w-full"
                     >

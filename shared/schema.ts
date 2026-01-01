@@ -161,3 +161,99 @@ export const insertFeedbackSchema = createInsertSchema(feedback).omit({
 export const selectFeedbackSchema = createSelectSchema(feedback);
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 export type Feedback = typeof feedback.$inferSelect;
+
+// Influencers table for vetted content creators
+export const influencers = pgTable("influencers", {
+  id: serial("id").primaryKey(),
+  // Personal Information
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull().unique(),
+  phone: text("phone"),
+  profileImageUrl: text("profile_image_url"),
+  
+  // Social Media
+  instagramHandle: text("instagram_handle").notNull(),
+  instagramFollowers: integer("instagram_followers"),
+  instagramVerified: integer("instagram_verified").default(0), // 0 = not verified, 1 = verified
+  tiktokHandle: text("tiktok_handle"),
+  youtubeChannel: text("youtube_channel"),
+  
+  // Banking Information (encrypted in production)
+  bankAccountHolderName: text("bank_account_holder_name"),
+  bankRoutingNumber: text("bank_routing_number"),
+  bankAccountNumber: text("bank_account_number"),
+  bankAccountType: text("bank_account_type"), // 'checking' | 'savings'
+  taxIdNumber: text("tax_id_number"), // SSN or EIN
+  
+  // Status & Verification
+  status: text("status").notNull().default("pending"), // 'pending' | 'approved' | 'rejected' | 'suspended'
+  idVerified: integer("id_verified").default(0), // 0 = not verified, 1 = verified
+  bankVerified: integer("bank_verified").default(0), // 0 = not verified, 1 = verified
+  
+  // Admin Notes
+  adminNotes: text("admin_notes"),
+  rejectionReason: text("rejection_reason"),
+  
+  // Timestamps
+  appliedAt: timestamp("applied_at").defaultNow().notNull(),
+  approvedAt: timestamp("approved_at"),
+  rejectedAt: timestamp("rejected_at"),
+  lastActiveAt: timestamp("last_active_at"),
+  
+  // Settings
+  notificationPreferences: text("notification_preferences").default("all"), // 'all' | 'important' | 'none'
+  preferredPaymentMethod: text("preferred_payment_method").default("bank"), // 'bank' | 'paypal' | 'venmo'
+});
+
+export const insertInfluencerSchema = createInsertSchema(influencers, {
+  email: z.string().email(),
+  instagramHandle: z.string().regex(/^@?[\w.]+$/, "Invalid Instagram handle"),
+  status: z.enum(["pending", "approved", "rejected", "suspended"]).default("pending"),
+  bankAccountType: z.enum(["checking", "savings"]).optional(),
+  notificationPreferences: z.enum(["all", "important", "none"]).default("all"),
+  preferredPaymentMethod: z.enum(["bank", "paypal", "venmo"]).default("bank"),
+}).omit({
+  id: true,
+  appliedAt: true,
+  approvedAt: true,
+  rejectedAt: true,
+  lastActiveAt: true,
+});
+export const selectInfluencerSchema = createSelectSchema(influencers);
+export type InsertInfluencer = z.infer<typeof insertInfluencerSchema>;
+export type Influencer = typeof influencers.$inferSelect;
+
+// Influencer invites table
+export const influencerInvites = pgTable("influencer_invites", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  inviteCode: text("invite_code").notNull().unique(),
+  invitedBy: text("invited_by").notNull(), // references users.id
+  
+  // Invitation details
+  status: text("status").notNull().default("pending"), // 'pending' | 'accepted' | 'expired'
+  message: text("message"), // Optional personalized message
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  acceptedAt: timestamp("accepted_at"),
+  
+  // Link to influencer after acceptance
+  influencerId: integer("influencer_id"), // references influencers.id after acceptance
+});
+
+export const insertInfluencerInviteSchema = createInsertSchema(influencerInvites, {
+  email: z.string().email(),
+  inviteCode: z.string().min(8),
+  status: z.enum(["pending", "accepted", "expired"]).default("pending"),
+}).omit({
+  id: true,
+  createdAt: true,
+  acceptedAt: true,
+  influencerId: true,
+});
+export const selectInfluencerInviteSchema = createSelectSchema(influencerInvites);
+export type InsertInfluencerInvite = z.infer<typeof insertInfluencerInviteSchema>;
+export type InfluencerInvite = typeof influencerInvites.$inferSelect;

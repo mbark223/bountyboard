@@ -93,3 +93,61 @@ export async function deleteFeedback(feedbackId: number): Promise<void> {
   });
   if (!response.ok) throw new Error("Failed to delete feedback");
 }
+
+// Video Upload API
+export interface UploadUrlRequest {
+  fileName: string;
+  fileType: string;
+  fileSizeBytes: number;
+  briefId: number;
+  creatorEmail: string;
+}
+
+export interface UploadUrlResponse {
+  uploadUrl: string;
+  videoKey: string;
+  publicUrl: string;
+  expiresAt: string;
+}
+
+export async function getVideoUploadUrl(request: UploadUrlRequest): Promise<UploadUrlResponse> {
+  const response = await fetch("/api/videos/upload-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) throw new Error("Failed to get upload URL");
+  return response.json();
+}
+
+export async function uploadVideoToStorage(uploadUrl: string, file: File, onProgress?: (progress: number) => void): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    
+    xhr.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable && onProgress) {
+        const progress = (event.loaded / event.total) * 100;
+        onProgress(progress);
+      }
+    });
+    
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        reject(new Error(`Upload failed with status: ${xhr.status}`));
+      }
+    });
+    
+    xhr.addEventListener("error", () => {
+      reject(new Error("Network error during upload"));
+    });
+    
+    xhr.open("POST", uploadUrl);
+    
+    const formData = new FormData();
+    formData.append("video", file);
+    
+    xhr.send(formData);
+  });
+}

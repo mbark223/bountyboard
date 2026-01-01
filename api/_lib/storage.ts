@@ -8,11 +8,17 @@ import {
   type InsertPromptTemplate,
   type Feedback,
   type InsertFeedback,
+  type Influencer,
+  type InsertInfluencer,
+  type InfluencerInvite,
+  type InsertInfluencerInvite,
   users,
   briefs,
   submissions,
   promptTemplates,
-  feedback
+  feedback,
+  influencers,
+  influencerInvites
 } from "../../shared/schema";
 import { getDb } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -309,6 +315,118 @@ class VercelDatabaseStorage extends DatabaseStorage {
     };
 
     return await this.createSubmission(resubmissionData as InsertSubmission);
+  }
+
+  // Influencer methods
+  async createInfluencer(data: InsertInfluencer): Promise<Influencer> {
+    const [influencer] = await this.db
+      .insert(influencers)
+      .values(data)
+      .returning();
+    return influencer;
+  }
+
+  async getInfluencerById(id: number): Promise<Influencer | undefined> {
+    const [influencer] = await this.db
+      .select()
+      .from(influencers)
+      .where(eq(influencers.id, id));
+    return influencer || undefined;
+  }
+
+  async getInfluencerByEmail(email: string): Promise<Influencer | undefined> {
+    const [influencer] = await this.db
+      .select()
+      .from(influencers)
+      .where(eq(influencers.email, email));
+    return influencer || undefined;
+  }
+
+  async getAllInfluencers(status?: string): Promise<Influencer[]> {
+    let query = this.db.select().from(influencers);
+    if (status) {
+      query = query.where(eq(influencers.status, status));
+    }
+    return await query.orderBy(desc(influencers.appliedAt));
+  }
+
+  async updateInfluencerStatus(id: number, status: string, notes?: string): Promise<Influencer> {
+    const updateData: any = { status };
+    const now = new Date();
+    
+    if (status === "approved") {
+      updateData.approvedAt = now;
+    } else if (status === "rejected") {
+      updateData.rejectedAt = now;
+      if (notes) updateData.rejectionReason = notes;
+    }
+    
+    if (notes && status !== "rejected") {
+      updateData.adminNotes = notes;
+    }
+    
+    const [influencer] = await this.db
+      .update(influencers)
+      .set(updateData)
+      .where(eq(influencers.id, id))
+      .returning();
+    return influencer;
+  }
+
+  async updateInfluencer(id: number, data: Partial<InsertInfluencer>): Promise<Influencer> {
+    const [influencer] = await this.db
+      .update(influencers)
+      .set(data)
+      .where(eq(influencers.id, id))
+      .returning();
+    return influencer;
+  }
+
+  // Invite methods
+  async createInfluencerInvite(data: InsertInfluencerInvite): Promise<InfluencerInvite> {
+    const [invite] = await this.db
+      .insert(influencerInvites)
+      .values(data)
+      .returning();
+    return invite;
+  }
+
+  async getInviteByCode(inviteCode: string): Promise<InfluencerInvite | undefined> {
+    const [invite] = await this.db
+      .select()
+      .from(influencerInvites)
+      .where(eq(influencerInvites.inviteCode, inviteCode));
+    return invite || undefined;
+  }
+
+  async getInvitesByCreator(invitedBy: string): Promise<InfluencerInvite[]> {
+    return await this.db
+      .select()
+      .from(influencerInvites)
+      .where(eq(influencerInvites.invitedBy, invitedBy))
+      .orderBy(desc(influencerInvites.createdAt));
+  }
+
+  async acceptInvite(inviteCode: string, influencerId: number): Promise<InfluencerInvite> {
+    const [invite] = await this.db
+      .update(influencerInvites)
+      .set({ 
+        status: "accepted", 
+        acceptedAt: new Date(),
+        influencerId 
+      })
+      .where(eq(influencerInvites.inviteCode, inviteCode))
+      .returning();
+    return invite;
+  }
+
+  async expireInvite(id: number): Promise<InfluencerInvite> {
+    const [invite] = await this.db
+      .update(influencerInvites)
+      .set({ status: "expired" })
+      .where(eq(influencerInvites.id, id))
+      .returning();
+    return invite;
   }
 }
 

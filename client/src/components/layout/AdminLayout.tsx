@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FileText, Settings, LogOut, Plus, Building2 } from "lucide-react";
+import { LayoutDashboard, FileText, Settings, LogOut, Plus, Building2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,6 +12,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/briefs", label: "Briefs", icon: FileText },
+    { href: "/admin/influencers", label: "Influencers", icon: Users },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
 

@@ -12,10 +12,14 @@ import BriefsListPage from "@/pages/public/BriefsListPage";
 import BriefPublicPage from "@/pages/public/BriefPublicPage";
 import BriefSubmitPage from "@/pages/public/BriefSubmitPage";
 import SubmissionStatusPage from "@/pages/public/SubmissionStatusPage";
+import ApplyPage from "@/pages/public/ApplyPage";
+import ApplySuccessPage from "@/pages/public/ApplySuccessPage";
+import InfluencerPortalPage from "@/pages/public/InfluencerPortalPage";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminBriefs from "@/pages/admin/AdminBriefs";
 import AdminBriefDetail from "@/pages/admin/AdminBriefDetail";
 import CreateBriefPage from "@/pages/admin/CreateBriefPage";
+import AdminInfluencers from "@/pages/admin/AdminInfluencers";
 
 function LoadingSpinner() {
   return (
@@ -50,6 +54,9 @@ function Router() {
       <Route path="/b/:slug" component={BriefPublicPage} />
       <Route path="/b/:slug/submit" component={BriefSubmitPage} />
       <Route path="/submission-status" component={SubmissionStatusPage} />
+      <Route path="/apply" component={ApplyPage} />
+      <Route path="/apply/success" component={ApplySuccessPage} />
+      <Route path="/portal" component={InfluencerPortalPage} />
       <Route path="/welcome" component={LandingPage} />
       
       <Route path="/admin">
@@ -73,6 +80,11 @@ function Router() {
             <AdminBriefDetail />
           </ProtectedRoute>
         )}
+      </Route>
+      <Route path="/admin/influencers">
+        <ProtectedRoute>
+          <AdminInfluencers />
+        </ProtectedRoute>
       </Route>
       
       <Route component={NotFound} />
