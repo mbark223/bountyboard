@@ -343,11 +343,17 @@ class VercelDatabaseStorage extends DatabaseStorage {
   }
 
   async getAllInfluencers(status?: string): Promise<Influencer[]> {
-    let query = this.db.select().from(influencers);
     if (status) {
-      query = query.where(eq(influencers.status, status));
+      return await this.db
+        .select()
+        .from(influencers)
+        .where(eq(influencers.status, status))
+        .orderBy(desc(influencers.appliedAt));
     }
-    return await query.orderBy(desc(influencers.appliedAt));
+    return await this.db
+      .select()
+      .from(influencers)
+      .orderBy(desc(influencers.appliedAt));
   }
 
   async updateInfluencerStatus(id: number, status: string, notes?: string): Promise<Influencer> {

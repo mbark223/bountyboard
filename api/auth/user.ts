@@ -8,12 +8,14 @@ const MOCK_USER: User = {
   email: "admin@bountyboard.com",
   firstName: "Demo",
   lastName: "Admin",
+  profileImageUrl: null,
   orgName: "BountyBoard Demo",
   orgSlug: "bountyboard-demo",
   orgDescription: "Demo organization for BountyBoard",
   orgWebsite: "https://bountyboard.com",
   orgLogoUrl: null,
   isOnboarded: true,
+  role: "admin",
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-01")
 };

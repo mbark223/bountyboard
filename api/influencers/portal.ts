@@ -27,8 +27,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Get all published briefs
     const briefs = await storage.getAllPublishedBriefs();
 
-    // Update last active time
-    await storage.updateInfluencer(influencer.id, { lastActiveAt: new Date() });
+    // Update last active time - this would be done in production
+    // await storage.updateInfluencer(influencer.id, { lastActiveAt: new Date() });
 
     res.status(200).json({
       influencer: {
