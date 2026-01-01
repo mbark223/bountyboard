@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -67,13 +68,16 @@ async function updateInfluencerStatus(id: number, status: string, notes?: string
   return response.json();
 }
 
-async function createInvite(email: string, message?: string) {
+async function createInvite(email: string, message?: string, sendEmailInvite?: boolean, fromEmail?: string) {
   const response = await fetch("/api/invites/create", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, message, expiresInDays: 7 }),
+    body: JSON.stringify({ email, message, expiresInDays: 7, sendEmailInvite, fromEmail }),
   });
-  if (!response.ok) throw new Error("Failed to create invite");
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to create invite");
+  }
   return response.json();
 }
 
@@ -87,6 +91,8 @@ export default function AdminInfluencers() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteMessage, setInviteMessage] = useState("");
+  const [sendEmailInvite, setSendEmailInvite] = useState(false);
+  const [fromEmail, setFromEmail] = useState("");
 
   const { data: influencers = [], isLoading } = useQuery({
     queryKey: ["influencers", selectedTab],
@@ -116,21 +122,30 @@ export default function AdminInfluencers() {
   });
 
   const inviteMutation = useMutation({
-    mutationFn: ({ email, message }: { email: string; message?: string }) =>
-      createInvite(email, message),
+    mutationFn: ({ email, message, sendEmailInvite, fromEmail }: { 
+      email: string; 
+      message?: string;
+      sendEmailInvite?: boolean;
+      fromEmail?: string;
+    }) =>
+      createInvite(email, message, sendEmailInvite, fromEmail),
     onSuccess: (data) => {
       setInviteDialog(false);
       setInviteEmail("");
       setInviteMessage("");
+      setSendEmailInvite(false);
+      setFromEmail("");
       toast({
         title: "Invite Created",
-        description: `Invite link: ${data.inviteUrl}`,
+        description: data.emailSent 
+          ? `Invite email sent to ${inviteEmail}`
+          : `Invite link: ${data.inviteUrl}`,
       });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to create invite.",
+        description: error instanceof Error ? error.message : "Failed to create invite.",
         variant: "destructive",
       });
     },
@@ -150,6 +165,8 @@ export default function AdminInfluencers() {
     inviteMutation.mutate({
       email: inviteEmail,
       message: inviteMessage,
+      sendEmailInvite,
+      fromEmail: fromEmail || undefined,
     });
   };
 
@@ -372,6 +389,31 @@ export default function AdminInfluencers() {
                 className="min-h-[80px]"
               />
             </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="sendEmailInvite"
+                checked={sendEmailInvite}
+                onCheckedChange={(checked) => setSendEmailInvite(checked as boolean)}
+              />
+              <Label htmlFor="sendEmailInvite" className="text-sm font-normal cursor-pointer">
+                Send invite via email
+              </Label>
+            </div>
+            {sendEmailInvite && (
+              <div>
+                <Label htmlFor="fromEmail">From Email (Optional)</Label>
+                <Input
+                  id="fromEmail"
+                  type="email"
+                  value={fromEmail}
+                  onChange={(e) => setFromEmail(e.target.value)}
+                  placeholder="your.email@company.com"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Leave blank to use default noreply email
+                </p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button
