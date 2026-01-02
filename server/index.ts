@@ -4,6 +4,7 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { pool } from "./db";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
+import magicLinkRoutes from "./auth/magicLinkRoutes";
 
 const app = express();
 const httpServer = createServer(app);
@@ -82,6 +83,10 @@ app.use((req, res, next) => {
     await setupAuth(app);
     registerAuthRoutes(app);
     log("Authentication configured");
+
+    // Add magic link authentication routes
+    app.use("/api", magicLinkRoutes);
+    log("Magic link authentication routes configured");
 
     await registerRoutes(httpServer, app);
     log("Routes registered");

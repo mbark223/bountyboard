@@ -26,6 +26,9 @@ class AuthStorage implements IAuthStorage {
           firstName: userData.firstName,
           lastName: userData.lastName,
           profileImageUrl: userData.profileImageUrl,
+          userType: userData.userType || "admin",
+          emailVerified: userData.emailVerified,
+          lastLoginAt: userData.lastLoginAt,
           updatedAt: new Date(),
         },
       })

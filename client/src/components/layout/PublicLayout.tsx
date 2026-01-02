@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LayoutDashboard, LogOut } from "lucide-react";
+import { LayoutDashboard, LogOut, User, Settings } from "lucide-react";
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -57,10 +57,32 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
                   <DropdownMenuSeparator className="bg-border" />
+                  {user.userType === "admin" || user.role === "admin" ? (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin" className="flex items-center gap-2 cursor-pointer text-foreground">
+                        <LayoutDashboard className="h-4 w-4" />
+                        Admin Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  ) : user.userType === "influencer" ? (
+                    <DropdownMenuItem asChild>
+                      <Link href="/portal" className="flex items-center gap-2 cursor-pointer text-foreground">
+                        <User className="h-4 w-4" />
+                        Creator Portal
+                      </Link>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem asChild>
+                      <Link href="/account" className="flex items-center gap-2 cursor-pointer text-foreground">
+                        <User className="h-4 w-4" />
+                        My Account
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
-                    <Link href="/admin" className="flex items-center gap-2 cursor-pointer text-foreground">
-                      <LayoutDashboard className="h-4 w-4" />
-                      Dashboard
+                    <Link href="/account/settings" className="flex items-center gap-2 cursor-pointer text-foreground">
+                      <Settings className="h-4 w-4" />
+                      Settings
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-border" />
@@ -73,7 +95,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <a href="/api/login">
+              <Link href="/login">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -82,7 +104,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 >
                   Sign In
                 </Button>
-              </a>
+              </Link>
             )}
           </nav>
         </div>

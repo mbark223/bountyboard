@@ -20,6 +20,8 @@ import AdminBriefs from "@/pages/admin/AdminBriefs";
 import AdminBriefDetail from "@/pages/admin/AdminBriefDetail";
 import CreateBriefPage from "@/pages/admin/CreateBriefPage";
 import AdminInfluencers from "@/pages/admin/AdminInfluencers";
+import LoginPage from "@/pages/auth/LoginPage";
+import AccountSettingsPage from "@/pages/account/AccountSettingsPage";
 
 function LoadingSpinner() {
   return (
@@ -58,6 +60,8 @@ function Router() {
       <Route path="/apply/success" component={ApplySuccessPage} />
       <Route path="/portal" component={InfluencerPortalPage} />
       <Route path="/welcome" component={LandingPage} />
+      <Route path="/login" component={LoginPage} />
+      <Route path="/account/settings" component={AccountSettingsPage} />
       
       <Route path="/admin">
         <ProtectedRoute>
