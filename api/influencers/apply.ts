@@ -4,11 +4,16 @@ import { storage } from "../_lib/storage";
 import { insertInfluencerSchema } from "../../shared/schema";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
   try {
+    // Ensure we always return JSON
+    res.setHeader('Content-Type', 'application/json');
+    
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed" });
+    }
+
+    // Main try block for application logic
+    try {
     const { inviteCode, ...applicationData } = req.body;
     
     // Log incoming data for debugging
@@ -83,7 +88,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
     
-    console.error("Error creating influencer application:", error);
-    res.status(500).json({ error: "Failed to submit application. Please try again." });
+      console.error("Error creating influencer application:", error);
+      return res.status(500).json({ error: "Failed to submit application. Please try again." });
+    }
+  } catch (outerError) {
+    // Catch any errors that happen before we set up JSON response
+    console.error("Critical error in influencer application handler:", outerError);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }

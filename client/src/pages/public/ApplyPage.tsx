@@ -38,8 +38,20 @@ async function submitApplication(data: ApplicationFormData & { inviteCode?: stri
   });
   
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to submit application");
+    let errorMessage = "Failed to submit application";
+    try {
+      const error = await response.json();
+      errorMessage = error.error || errorMessage;
+    } catch (e) {
+      // If response is not JSON, try to get text
+      try {
+        const text = await response.text();
+        errorMessage = text.substring(0, 100); // Limit error message length
+      } catch (textError) {
+        errorMessage = `Server error (${response.status})`;
+      }
+    }
+    throw new Error(errorMessage);
   }
   
   return response.json();
