@@ -22,6 +22,7 @@ import CreateBriefPage from "@/pages/admin/CreateBriefPage";
 import AdminInfluencers from "@/pages/admin/AdminInfluencers";
 import LoginPage from "@/pages/auth/LoginPage";
 import AccountSettingsPage from "@/pages/account/AccountSettingsPage";
+import InfluencerSubmissionPage from "@/pages/influencer/SubmissionPage";
 
 function LoadingSpinner() {
   return (
@@ -62,6 +63,7 @@ function Router() {
       <Route path="/welcome" component={LandingPage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/account/settings" component={AccountSettingsPage} />
+      <Route path="/influencer/submit/:briefId" component={InfluencerSubmissionPage} />
       
       <Route path="/admin">
         <ProtectedRoute>

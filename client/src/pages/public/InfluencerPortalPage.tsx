@@ -21,7 +21,8 @@ import {
   LogIn,
   User,
   Instagram,
-  CheckCircle
+  CheckCircle,
+  Upload
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -246,12 +247,20 @@ export default function InfluencerPortalPage() {
                     </div>
                   </CardContent>
 
-                  <CardFooter className="pt-0">
+                  <CardFooter className="pt-0 flex-col gap-2">
                     <Button 
+                      className="w-full gap-2" 
+                      onClick={() => setLocation(`/influencer/submit/${brief.id}`)}
+                    >
+                      <Upload className="h-4 w-4" />
+                      Submit Video
+                    </Button>
+                    <Button 
+                      variant="outline"
                       className="w-full gap-2" 
                       onClick={() => setLocation(`/b/${brief.slug}`)}
                     >
-                      View & Submit
+                      View Details
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </CardFooter>

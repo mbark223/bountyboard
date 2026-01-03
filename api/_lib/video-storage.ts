@@ -56,9 +56,9 @@ export class MockStorageProvider implements VideoStorageProvider {
     const publicUrl = `${this.baseUrl}/api/videos/${videoKey}`;
     
     // In a real implementation, this would generate a pre-signed URL
-    // For now, we'll use a simple token-based approach
+    // For now, we'll use a mock endpoint
     const uploadToken = crypto.randomBytes(32).toString('hex');
-    const uploadUrl = `${this.baseUrl}/api/videos/upload?token=${uploadToken}&key=${encodeURIComponent(videoKey)}`;
+    const uploadUrl = `${this.baseUrl}/api/videos/mock-upload?token=${uploadToken}&key=${encodeURIComponent(videoKey)}`;
     
     return {
       uploadUrl,

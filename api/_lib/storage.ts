@@ -83,6 +83,14 @@ class VercelDatabaseStorage extends DatabaseStorage {
     };
   }
 
+  async getBriefById(id: number): Promise<Brief | undefined> {
+    const [brief] = await this.db
+      .select()
+      .from(briefs)
+      .where(eq(briefs.id, id));
+    return brief || undefined;
+  }
+
   async createBrief(insertBrief: InsertBrief): Promise<Brief> {
     const [brief] = await this.db
       .insert(briefs)
