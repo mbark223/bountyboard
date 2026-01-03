@@ -40,11 +40,11 @@ export async function createSubmission(submission: InsertSubmission): Promise<Su
   return response.json();
 }
 
-export async function updateSubmissionStatus(id: number, status: string, allowsResubmission?: boolean): Promise<Submission> {
+export async function updateSubmissionStatus(id: number, status: string, allowsResubmission?: boolean, reviewNotes?: string): Promise<Submission> {
   const response = await fetch(`/api/submissions/${id}/status`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status, allowsResubmission }),
+    body: JSON.stringify({ status, allowsResubmission, reviewNotes }),
   });
   if (!response.ok) throw new Error("Failed to update submission status");
   return response.json();

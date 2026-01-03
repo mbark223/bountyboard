@@ -11,7 +11,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: "Invalid submission ID" });
       }
       
-      const { status, allowsResubmission } = req.body;
+      const { status, allowsResubmission, reviewNotes } = req.body;
       if (!status) {
         return res.status(400).json({ error: "Status is required" });
       }
@@ -21,7 +21,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         submissionId, 
         status, 
         selectedAt,
-        status === "NOT_SELECTED" ? allowsResubmission : undefined
+        status === "NOT_SELECTED" ? allowsResubmission : undefined,
+        reviewNotes
       );
       res.status(200).json(updatedSubmission);
     } catch (error) {

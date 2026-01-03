@@ -22,31 +22,108 @@ import { useToast } from "@/hooks/use-toast";
 import { FeedbackSection } from "@/components/FeedbackSection";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { updateSubmissionStatus, createFeedback } from "@/lib/api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function AdminBriefDetail() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const brief = MOCK_BRIEFS.find((b) => b.id === id);
   const [submissions, setSubmissions] = useState(MOCK_SUBMISSIONS.filter(s => s.briefId === id));
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [allowResubmission, setAllowResubmission] = useState(true);
+  const [showRejectionDialog, setShowRejectionDialog] = useState(false);
+  const [rejectionFeedback, setRejectionFeedback] = useState("");
 
   if (!brief) return <div>Brief not found</div>;
+
+  // Mutation for updating submission status
+  const statusMutation = useMutation({
+    mutationFn: async ({ submissionId, status, reviewNotes, allowsResubmission }: {
+      submissionId: number;
+      status: string;
+      reviewNotes?: string;
+      allowsResubmission?: boolean;
+    }) => {
+      return updateSubmissionStatus(submissionId, status, allowsResubmission, reviewNotes);
+    },
+    onSuccess: (data) => {
+      // Update local state
+      setSubmissions(prev => prev.map(s => s.id === data.id ? data : s));
+      setSelectedSubmission(data);
+      setShowRejectionDialog(false);
+      setRejectionFeedback("");
+      
+      toast({
+        title: "Status Updated",
+        description: `Submission marked as ${data.status}`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update submission status",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation for creating feedback
+  const feedbackMutation = useMutation({
+    mutationFn: async ({ submissionId, comment }: {
+      submissionId: number;
+      comment: string;
+    }) => {
+      return createFeedback(submissionId, comment, true); // requiresAction = true for rejections
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["feedback", selectedSubmission?.id] });
+    }
+  });
 
   const handleStatusChange = (status: Submission['status']) => {
     if (!selectedSubmission) return;
     
-    // Optimistic update
-    const updated = { ...selectedSubmission, status };
-    setSubmissions(prev => prev.map(s => s.id === updated.id ? updated : s));
-    setSelectedSubmission(updated);
+    if (status === 'NOT_SELECTED') {
+      // Show rejection dialog
+      setShowRejectionDialog(true);
+    } else {
+      // Direct status update for selection
+      statusMutation.mutate({
+        submissionId: typeof selectedSubmission.id === 'string' 
+          ? parseInt(selectedSubmission.id, 10) 
+          : selectedSubmission.id,
+        status
+      });
+    }
+  };
 
-    toast({
-      title: "Status Updated",
-      description: `Submission marked as ${status}`,
+  const handleReject = async () => {
+    if (!selectedSubmission || !rejectionFeedback.trim()) return;
+
+    const submissionId = typeof selectedSubmission.id === 'string' 
+      ? parseInt(selectedSubmission.id, 10) 
+      : selectedSubmission.id;
+
+    // Update status with review notes
+    await statusMutation.mutateAsync({
+      submissionId,
+      status: 'NOT_SELECTED',
+      reviewNotes: rejectionFeedback,
+      allowsResubmission: allowResubmission
     });
+
+    // Also create a feedback entry
+    if (rejectionFeedback.trim()) {
+      await feedbackMutation.mutateAsync({
+        submissionId,
+        comment: `Rejection reason: ${rejectionFeedback}`
+      });
+    }
   };
 
   return (
@@ -204,6 +281,14 @@ export default function AdminBriefDetail() {
                                       <p className="text-sm text-muted-foreground italic">"Here is my submission! I really focused on the lighting as requested. Hope you like it!"</p>
                                     </div>
 
+                                    {/* Display rejection reason if exists */}
+                                    {selectedSubmission.status === 'NOT_SELECTED' && selectedSubmission.reviewNotes && (
+                                      <div className="p-4 border rounded-lg bg-red-50 dark:bg-red-900/10 border-red-200">
+                                        <h4 className="text-sm font-semibold text-red-800 dark:text-red-300 mb-1">Rejection Feedback</h4>
+                                        <p className="text-sm text-red-700 dark:text-red-400">{selectedSubmission.reviewNotes}</p>
+                                      </div>
+                                    )}
+
                                     <div className="p-4 bg-muted/50 rounded-lg">
                                       <h4 className="text-sm font-semibold mb-2">Review Status</h4>
                                       <div className="grid grid-cols-2 gap-2">
@@ -300,6 +385,63 @@ export default function AdminBriefDetail() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Rejection Dialog */}
+      <Dialog open={showRejectionDialog} onOpenChange={setShowRejectionDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reject Submission</DialogTitle>
+            <DialogDescription>
+              Provide feedback to help the creator understand why their submission was rejected.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="rejection-feedback">Rejection Feedback</Label>
+              <Textarea
+                id="rejection-feedback"
+                value={rejectionFeedback}
+                onChange={(e) => setRejectionFeedback(e.target.value)}
+                placeholder="Explain why this submission doesn't meet the requirements..."
+                className="min-h-[120px] mt-2"
+                required
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                This feedback will be visible to the creator and saved in the feedback section.
+              </p>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="allow-resubmit-dialog"
+                checked={allowResubmission}
+                onCheckedChange={(checked) => setAllowResubmission(!!checked)}
+              />
+              <Label
+                htmlFor="allow-resubmit-dialog"
+                className="text-sm flex items-center gap-1 cursor-pointer"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Allow creator to resubmit
+              </Label>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRejectionDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={!rejectionFeedback.trim() || statusMutation.isPending}
+            >
+              Reject Submission
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

@@ -193,6 +193,14 @@ export default function SubmissionStatusPage() {
                 <Alert>
                   <AlertDescription>{getStatusMessage(data.submission.status)}</AlertDescription>
                 </Alert>
+                
+                {/* Display rejection feedback if exists */}
+                {data.submission.status === 'NOT_SELECTED' && data.submission.reviewNotes && (
+                  <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200">
+                    <h4 className="text-sm font-semibold text-red-800 dark:text-red-200 mb-1">Rejection Feedback</h4>
+                    <p className="text-sm text-red-700 dark:text-red-300">{data.submission.reviewNotes}</p>
+                  </div>
+                )}
                 <div className="mt-4 space-y-2 text-sm">
                   <div><strong>Submitted:</strong> {format(new Date(data.submission.submittedAt), "MMMM d, yyyy 'at' h:mm a")}</div>
                   <div><strong>Video:</strong> {data.submission.videoFileName}</div>

@@ -129,7 +129,7 @@ class VercelDatabaseStorage extends DatabaseStorage {
       .orderBy(desc(submissions.submittedAt));
   }
 
-  async updateSubmissionStatus(id: number, status: string, selectedAt?: Date, allowsResubmission?: boolean): Promise<Submission> {
+  async updateSubmissionStatus(id: number, status: string, selectedAt?: Date, allowsResubmission?: boolean, reviewNotes?: string): Promise<Submission> {
     const updateData: any = { status };
     if (selectedAt) {
       updateData.selectedAt = selectedAt;
@@ -140,6 +140,11 @@ class VercelDatabaseStorage extends DatabaseStorage {
     // If rejecting, set whether resubmission is allowed
     if (status === "NOT_SELECTED" && allowsResubmission !== undefined) {
       updateData.allowsResubmission = allowsResubmission ? 1 : 0;
+    }
+    
+    // Add review notes if provided
+    if (reviewNotes !== undefined) {
+      updateData.reviewNotes = reviewNotes;
     }
     
     const [submission] = await this.db
