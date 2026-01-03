@@ -91,13 +91,25 @@ export default function ApplyPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Clean up Instagram handle
-    const cleanedData = {
-      ...formData,
+    // Clean up data - remove empty strings and fix Instagram handle
+    const cleanedData: any = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
       instagramHandle: formData.instagramHandle.replace("@", ""),
-      instagramFollowers: formData.instagramFollowers || undefined,
-      inviteCode: inviteCode || undefined,
     };
+
+    // Add optional fields only if they have values
+    if (formData.phone) cleanedData.phone = formData.phone;
+    if (formData.instagramFollowers) cleanedData.instagramFollowers = formData.instagramFollowers;
+    if (formData.tiktokHandle) cleanedData.tiktokHandle = formData.tiktokHandle;
+    if (formData.youtubeChannel) cleanedData.youtubeChannel = formData.youtubeChannel;
+    if (formData.bankAccountHolderName) cleanedData.bankAccountHolderName = formData.bankAccountHolderName;
+    if (formData.bankRoutingNumber) cleanedData.bankRoutingNumber = formData.bankRoutingNumber;
+    if (formData.bankAccountNumber) cleanedData.bankAccountNumber = formData.bankAccountNumber;
+    if (formData.bankAccountType) cleanedData.bankAccountType = formData.bankAccountType;
+    if (formData.taxIdNumber) cleanedData.taxIdNumber = formData.taxIdNumber;
+    if (inviteCode) cleanedData.inviteCode = inviteCode;
     
     mutation.mutate(cleanedData);
   };

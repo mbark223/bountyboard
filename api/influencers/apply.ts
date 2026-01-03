@@ -32,8 +32,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "An application with this email already exists" });
     }
 
+    // Clean up empty strings to null for optional fields
+    const cleanedData = {
+      ...applicationData,
+      phone: applicationData.phone || null,
+      instagramFollowers: applicationData.instagramFollowers || null,
+      tiktokHandle: applicationData.tiktokHandle || null,
+      youtubeChannel: applicationData.youtubeChannel || null,
+      bankAccountHolderName: applicationData.bankAccountHolderName || null,
+      bankRoutingNumber: applicationData.bankRoutingNumber || null,
+      bankAccountNumber: applicationData.bankAccountNumber || null,
+      bankAccountType: applicationData.bankAccountType || null,
+      taxIdNumber: applicationData.taxIdNumber || null,
+    };
+
     // Validate the application data
-    const validated = insertInfluencerSchema.parse(applicationData);
+    const validated = insertInfluencerSchema.parse(cleanedData);
 
     // Create the influencer application
     const influencer = await storage.createInfluencer(validated);
