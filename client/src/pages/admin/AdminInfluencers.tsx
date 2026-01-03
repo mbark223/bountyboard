@@ -52,17 +52,18 @@ interface Influencer {
 }
 
 async function fetchInfluencers(status?: string): Promise<Influencer[]> {
-  const url = status ? `/api/influencers?status=${status}` : "/api/influencers";
+  const url = status ? `/api/admin/influencers?status=${status}` : "/api/admin/influencers";
   const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to fetch influencers");
-  return response.json();
+  const data = await response.json();
+  return data.influencers || [];
 }
 
 async function updateInfluencerStatus(id: number, status: string, notes?: string) {
-  const response = await fetch(`/api/influencers/${id}/status`, {
-    method: "PATCH",
+  const response = await fetch(`/api/admin/influencers/update-status`, {
+    method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status, notes }),
+    body: JSON.stringify({ influencerId: id, status, notes }),
   });
   if (!response.ok) throw new Error("Failed to update influencer status");
   return response.json();
