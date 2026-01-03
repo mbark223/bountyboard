@@ -125,6 +125,20 @@ export async function registerRoutes(
     }
   });
 
+  // GET /api/briefs/by-slug/:slug - Alternative route for getting brief by slug
+  app.get("/api/briefs/by-slug/:slug", async (req, res) => {
+    try {
+      const brief = await storage.getBriefBySlug(req.params.slug);
+      if (!brief) {
+        return res.status(404).json({ error: "Brief not found" });
+      }
+      res.json(brief);
+    } catch (error) {
+      console.error("Error fetching brief by slug:", error);
+      res.status(500).json({ error: "Failed to fetch brief" });
+    }
+  });
+
   // POST /api/briefs - Create a new brief
   app.post("/api/briefs", async (req, res) => {
     try {
@@ -398,6 +412,82 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting template:", error);
       res.status(500).json({ error: "Failed to delete template" });
+    }
+  });
+
+  // POST /api/videos/upload-url - Generate upload URL for video
+  app.post("/api/videos/upload-url", async (req, res) => {
+    try {
+      const { fileName, fileType, fileSizeBytes, briefId, creatorEmail } = req.body;
+      
+      // Validate input
+      if (!fileName || !fileType || !fileSizeBytes || !briefId || !creatorEmail) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      
+      if (!fileType.startsWith("video/")) {
+        return res.status(400).json({ error: "File must be a video" });
+      }
+      
+      if (fileSizeBytes > 500 * 1024 * 1024) { // 500MB limit
+        return res.status(400).json({ error: "File size exceeds 500MB limit" });
+      }
+      
+      // Verify brief exists
+      const brief = await storage.getBriefById(briefId);
+      if (!brief) {
+        return res.status(404).json({ error: "Brief not found" });
+      }
+      
+      // Generate mock upload URL (in production, use real storage)
+      const timestamp = Date.now();
+      const videoKey = `briefs/${briefId}/submissions/${timestamp}-${fileName}`;
+      const uploadToken = Math.random().toString(36).substring(7);
+      const uploadUrl = `http://localhost:3000/api/videos/mock-upload?token=${uploadToken}&key=${encodeURIComponent(videoKey)}`;
+      
+      res.json({
+        uploadUrl,
+        videoKey,
+        publicUrl: `http://localhost:3000/api/videos/${videoKey}`,
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
+      });
+    } catch (error) {
+      console.error("Error generating upload URL:", error);
+      res.status(500).json({ error: "Failed to generate upload URL" });
+    }
+  });
+
+  // POST /api/videos/mock-upload - Mock video upload endpoint
+  app.post("/api/videos/mock-upload", async (req, res) => {
+    try {
+      // Simulate upload (in production, handle actual file upload)
+      console.log("Mock video upload received");
+      
+      // Simulate processing time
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      res.json({
+        success: true,
+        message: "Video uploaded successfully (mock)",
+      });
+    } catch (error) {
+      console.error("Error in mock upload:", error);
+      res.status(500).json({ error: "Failed to upload video" });
+    }
+  });
+
+  // PUT /api/videos/mock-upload - Also support PUT method
+  app.put("/api/videos/mock-upload", async (req, res) => {
+    try {
+      console.log("Mock video upload received (PUT)");
+      await new Promise(resolve => setTimeout(resolve, 100));
+      res.json({
+        success: true,
+        message: "Video uploaded successfully (mock)",
+      });
+    } catch (error) {
+      console.error("Error in mock upload:", error);
+      res.status(500).json({ error: "Failed to upload video" });
     }
   });
 
