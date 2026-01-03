@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { MOCK_BRIEFS } from "@/lib/mockData";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +29,9 @@ import { formatCurrency } from "@/lib/utils";
 import { Link, useLocation } from "wouter";
 import { MoreHorizontal, Plus, Search, Eye, Edit, Archive, ArrowUpRight, Building2, MapPin } from "lucide-react";
 import { BUSINESS_LINES, STATES } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import { fetchAdminBriefs } from "@/lib/api";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function AdminBriefs() {
   const [, setLocation] = useLocation();
@@ -37,12 +39,28 @@ export default function AdminBriefs() {
   const [businessLineFilter, setBusinessLineFilter] = useState<string>("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
 
-  const filteredBriefs = MOCK_BRIEFS.filter(b => {
+  // Fetch briefs from API
+  const { data: briefs = [], isLoading } = useQuery({
+    queryKey: ["adminBriefs"],
+    queryFn: fetchAdminBriefs,
+  });
+
+  const filteredBriefs = briefs.filter(b => {
     const matchesSearch = b.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesBusinessLine = businessLineFilter === "all" || (b as any).businessLine === businessLineFilter;
     const matchesState = stateFilter === "all" || (b as any).state === stateFilter;
     return matchesSearch && matchesBusinessLine && matchesState;
   });
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <Spinner />
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>

@@ -28,6 +28,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   
   getAllPublishedBriefs(): Promise<BriefWithOrg[]>;
+  getAllBriefs(): Promise<Brief[]>;
   getBriefBySlug(slug: string): Promise<BriefWithOrg | undefined>;
   getBriefById(id: number): Promise<Brief | undefined>;
   getBriefsByOwnerId(ownerId: string): Promise<Brief[]>;
@@ -69,6 +70,13 @@ export class DatabaseStorage implements IStorage {
         description: r.user?.orgDescription || null,
       },
     }));
+  }
+
+  async getAllBriefs(): Promise<Brief[]> {
+    return await db
+      .select()
+      .from(briefs)
+      .orderBy(desc(briefs.createdAt));
   }
 
   async getBriefBySlug(slug: string): Promise<BriefWithOrg | undefined> {

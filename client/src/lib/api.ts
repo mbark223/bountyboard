@@ -7,6 +7,12 @@ export async function fetchBriefs(): Promise<Brief[]> {
   return response.json();
 }
 
+export async function fetchAdminBriefs(): Promise<Brief[]> {
+  const response = await fetch("/api/admin/briefs");
+  if (!response.ok) throw new Error("Failed to fetch admin briefs");
+  return response.json();
+}
+
 export async function fetchBriefBySlug(slug: string): Promise<Brief> {
   const response = await fetch(`/api/briefs/by-slug/${slug}`);
   if (!response.ok) throw new Error("Failed to fetch brief");

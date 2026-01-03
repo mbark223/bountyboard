@@ -86,6 +86,19 @@ export async function registerRoutes(
     }
   });
 
+  // GET /api/admin/briefs - Get all briefs for admin
+  app.get("/api/admin/briefs", async (req, res) => {
+    try {
+      // For admin, we want to see all briefs, not just published ones
+      // In a real app, you'd check admin permissions here
+      const allBriefs = await storage.getAllBriefs();
+      res.json(allBriefs);
+    } catch (error) {
+      console.error("Error fetching admin briefs:", error);
+      res.status(500).json({ error: "Failed to fetch briefs" });
+    }
+  });
+
   // GET /api/briefs/:slug - Get a single brief by slug
   app.get("/api/briefs/:slug", async (req, res) => {
     try {
