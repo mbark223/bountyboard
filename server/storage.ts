@@ -12,7 +12,7 @@ import {
   briefs,
   submissions,
   promptTemplates,
-  feedbacks
+  feedback
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -219,32 +219,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createFeedback(insertFeedback: InsertFeedback): Promise<Feedback> {
-    const [feedback] = await db
-      .insert(feedbacks)
+    const [fb] = await db
+      .insert(feedback)
       .values(insertFeedback)
       .returning();
-    return feedback;
+    return fb;
   }
 
   async getFeedbackBySubmissionId(submissionId: number): Promise<Feedback[]> {
     return await db
       .select()
-      .from(feedbacks)
-      .where(eq(feedbacks.submissionId, submissionId))
-      .orderBy(desc(feedbacks.createdAt));
+      .from(feedback)
+      .where(eq(feedback.submissionId, submissionId))
+      .orderBy(desc(feedback.createdAt));
   }
 
   async updateFeedback(id: number, comment: string): Promise<Feedback> {
-    const [feedback] = await db
-      .update(feedbacks)
+    const [fb] = await db
+      .update(feedback)
       .set({ comment, updatedAt: new Date() })
-      .where(eq(feedbacks.id, id))
+      .where(eq(feedback.id, id))
       .returning();
-    return feedback;
+    return fb;
   }
 
   async deleteFeedback(id: number): Promise<void> {
-    await db.delete(feedbacks).where(eq(feedbacks.id, id));
+    await db.delete(feedback).where(eq(feedback.id, id));
   }
 
   async getTemplatesByOwnerId(ownerId: string): Promise<PromptTemplate[]> {
