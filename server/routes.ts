@@ -75,6 +75,17 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
+  // GET /api/health - Health check endpoint
+  app.get("/api/health", (req, res) => {
+    const demoMode = !process.env.DATABASE_URL || process.env.DATABASE_URL === '';
+    res.json({
+      status: "ok",
+      demoMode,
+      timestamp: new Date().toISOString(),
+      version: "1.0.0"
+    });
+  });
+  
   // GET /api/briefs - Get all published briefs
   app.get("/api/briefs", async (req, res) => {
     try {

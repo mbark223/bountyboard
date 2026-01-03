@@ -8,11 +8,14 @@ import {
   type InsertPromptTemplate,
   type Feedback,
   type InsertFeedback,
+  type Influencer,
+  type InsertInfluencer,
   users,
   briefs,
   submissions,
   promptTemplates,
-  feedback
+  feedback,
+  influencers
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -26,6 +29,20 @@ export interface BriefWithOrg extends Brief {
     description: string | null;
   };
 }
+
+export type {
+  User,
+  Brief,
+  InsertBrief,
+  Submission,
+  InsertSubmission,
+  PromptTemplate,
+  InsertPromptTemplate,
+  Feedback,
+  InsertFeedback,
+  Influencer,
+  InsertInfluencer
+};
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -49,6 +66,21 @@ export interface IStorage {
   getFeedbackBySubmissionId(submissionId: number): Promise<Feedback[]>;
   updateFeedback(id: number, comment: string): Promise<Feedback>;
   deleteFeedback(id: number): Promise<void>;
+  
+  getTemplatesByOwnerId(ownerId: string): Promise<PromptTemplate[]>;
+  getTemplateById(id: number): Promise<PromptTemplate | undefined>;
+  createTemplate(template: InsertPromptTemplate): Promise<PromptTemplate>;
+  updateTemplate(id: number, updates: Partial<InsertPromptTemplate>): Promise<PromptTemplate>;
+  deleteTemplate(id: number): Promise<void>;
+  
+  getInfluencerByEmail(email: string): Promise<Influencer | undefined>;
+  getInfluencerById(id: number): Promise<Influencer | undefined>;
+  getInfluencersByStatus(status: string): Promise<Influencer[]>;
+  getAllInfluencers(): Promise<Influencer[]>;
+  createInfluencer(influencer: InsertInfluencer): Promise<Influencer>;
+  updateInfluencerStatus(id: number, status: string, rejectionReason?: string): Promise<Influencer>;
+  updateInfluencerActivity(id: number): Promise<void>;
+  getInfluencerSubmissions(email: string): Promise<Submission[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -283,6 +315,91 @@ export class DatabaseStorage implements IStorage {
   async deleteTemplate(id: number): Promise<void> {
     await db.delete(promptTemplates).where(eq(promptTemplates.id, id));
   }
+
+  async getInfluencerByEmail(email: string): Promise<Influencer | undefined> {
+    const [influencer] = await db
+      .select()
+      .from(influencers)
+      .where(eq(influencers.email, email));
+    return influencer || undefined;
+  }
+
+  async getInfluencerById(id: number): Promise<Influencer | undefined> {
+    const [influencer] = await db
+      .select()
+      .from(influencers)
+      .where(eq(influencers.id, id));
+    return influencer || undefined;
+  }
+
+  async getInfluencersByStatus(status: string): Promise<Influencer[]> {
+    return await db
+      .select()
+      .from(influencers)
+      .where(eq(influencers.status, status))
+      .orderBy(desc(influencers.appliedAt));
+  }
+
+  async getAllInfluencers(): Promise<Influencer[]> {
+    return await db
+      .select()
+      .from(influencers)
+      .orderBy(desc(influencers.appliedAt));
+  }
+
+  async createInfluencer(insertInfluencer: InsertInfluencer): Promise<Influencer> {
+    const [influencer] = await db
+      .insert(influencers)
+      .values(insertInfluencer)
+      .returning();
+    return influencer;
+  }
+
+  async updateInfluencerStatus(id: number, status: string, rejectionReason?: string): Promise<Influencer> {
+    const updateData: any = { status };
+    
+    if (status === 'approved') {
+      updateData.approvedAt = new Date();
+    } else if (status === 'rejected') {
+      updateData.rejectedAt = new Date();
+      if (rejectionReason) {
+        updateData.rejectionReason = rejectionReason;
+      }
+    }
+    
+    const [influencer] = await db
+      .update(influencers)
+      .set(updateData)
+      .where(eq(influencers.id, id))
+      .returning();
+    return influencer;
+  }
+
+  async updateInfluencerActivity(id: number): Promise<void> {
+    await db
+      .update(influencers)
+      .set({ lastActiveAt: new Date() })
+      .where(eq(influencers.id, id));
+  }
+
+  async getInfluencerSubmissions(email: string): Promise<Submission[]> {
+    return await db
+      .select()
+      .from(submissions)
+      .where(eq(submissions.creatorEmail, email))
+      .orderBy(desc(submissions.submittedAt));
+  }
 }
 
-export const storage = new DatabaseStorage();
+// Create storage instance based on database availability
+import { MockStorage } from "./mock-storage";
+
+function createStorage(): IStorage {
+  if (!db) {
+    console.warn("Using MockStorage - data will not persist");
+    return new MockStorage();
+  }
+  return new DatabaseStorage();
+}
+
+export const storage: IStorage = createStorage();
