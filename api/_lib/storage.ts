@@ -27,7 +27,12 @@ import { DatabaseStorage } from "../../server/storage";
 // Create a storage instance that uses the Vercel-compatible database connection
 class VercelDatabaseStorage extends DatabaseStorage {
   private get db() {
-    return getDb();
+    try {
+      return getDb();
+    } catch (error) {
+      console.error("Database connection error:", error);
+      throw new Error("Database service unavailable. Please check configuration.");
+    }
   }
 
   async getUser(id: string): Promise<User | undefined> {

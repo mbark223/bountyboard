@@ -9,7 +9,8 @@ let db: ReturnType<typeof drizzle> | null = null;
 
 export function getDb() {
   if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL not set");
+    console.error("DATABASE_URL not set - database operations will fail");
+    throw new Error("Database not configured. Please set DATABASE_URL environment variable.");
   }
   
   if (!pool) {

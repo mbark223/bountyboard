@@ -69,7 +69,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: "Invalid application data", details: error.errors });
     }
+    
+    // Check if it's a database configuration error
+    if (error instanceof Error && error.message.includes("Database service unavailable")) {
+      return res.status(503).json({ 
+        error: "Service temporarily unavailable", 
+        message: "The application service is not properly configured. Please try again later or contact support."
+      });
+    }
+    
     console.error("Error creating influencer application:", error);
-    res.status(500).json({ error: "Failed to submit application" });
+    res.status(500).json({ error: "Failed to submit application. Please try again." });
   }
 }
