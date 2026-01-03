@@ -46,10 +46,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           COALESCE(bank_verified, 0) as "bankVerified",
           admin_notes as "adminNotes",
           rejection_reason as "rejectionReason",
-          created_at as "appliedAt",
+          applied_at as "appliedAt",
           approved_at as "approvedAt",
           rejected_at as "rejectedAt"
-        FROM influencers ORDER BY created_at DESC`
+        FROM influencers ORDER BY applied_at DESC`
       : `SELECT 
           id,
           first_name as "firstName",
@@ -67,10 +67,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           COALESCE(bank_verified, 0) as "bankVerified",
           admin_notes as "adminNotes",
           rejection_reason as "rejectionReason",
-          created_at as "appliedAt",
+          applied_at as "appliedAt",
           approved_at as "approvedAt",
           rejected_at as "rejectedAt"
-        FROM influencers WHERE status = $1 ORDER BY created_at DESC`;
+        FROM influencers WHERE status = $1 ORDER BY applied_at DESC`;
     
     const params = status === 'all' ? [] : [status];
     const result = await client.query(query, params);

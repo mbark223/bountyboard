@@ -39,13 +39,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let updateParams;
     
     if (status === 'approved') {
-      updateQuery = 'UPDATE influencers SET status = $1, admin_notes = $2, approved_at = NOW(), updated_at = NOW() WHERE id = $3 RETURNING *';
+      updateQuery = 'UPDATE influencers SET status = $1, admin_notes = $2, approved_at = NOW() WHERE id = $3 RETURNING *';
       updateParams = [status, notes, influencerId];
     } else if (status === 'rejected') {
-      updateQuery = 'UPDATE influencers SET status = $1, rejection_reason = $2, rejected_at = NOW(), updated_at = NOW() WHERE id = $3 RETURNING *';
+      updateQuery = 'UPDATE influencers SET status = $1, rejection_reason = $2, rejected_at = NOW() WHERE id = $3 RETURNING *';
       updateParams = [status, notes, influencerId];
     } else {
-      updateQuery = 'UPDATE influencers SET status = $1, admin_notes = $2, updated_at = NOW() WHERE id = $3 RETURNING *';
+      updateQuery = 'UPDATE influencers SET status = $1, admin_notes = $2 WHERE id = $3 RETURNING *';
       updateParams = [status, notes, influencerId];
     }
     
