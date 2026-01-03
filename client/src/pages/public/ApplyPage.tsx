@@ -13,14 +13,9 @@ import {
   CheckCircle2, 
   Loader2, 
   AlertCircle,
-  DollarSign,
-  Building,
   User,
   Mail,
-  Phone,
-  Hash,
-  Youtube,
-  Shield
+  Phone
 } from "lucide-react";
 
 interface ApplicationFormData {
@@ -32,16 +27,7 @@ interface ApplicationFormData {
   
   // Social Media
   instagramHandle: string;
-  instagramFollowers?: number;
   tiktokHandle?: string;
-  youtubeChannel?: string;
-  
-  // Banking Info
-  bankAccountHolderName: string;
-  bankRoutingNumber: string;
-  bankAccountNumber: string;
-  bankAccountType: "checking" | "savings";
-  taxIdNumber: string;
 }
 
 async function submitApplication(data: ApplicationFormData & { inviteCode?: string }) {
@@ -70,14 +56,7 @@ export default function ApplyPage() {
     email: "",
     phone: "",
     instagramHandle: "",
-    instagramFollowers: undefined,
     tiktokHandle: "",
-    youtubeChannel: "",
-    bankAccountHolderName: "",
-    bankRoutingNumber: "",
-    bankAccountNumber: "",
-    bankAccountType: "checking",
-    taxIdNumber: "",
   });
 
   const mutation = useMutation({
@@ -101,14 +80,7 @@ export default function ApplyPage() {
 
     // Add optional fields only if they have values
     if (formData.phone) cleanedData.phone = formData.phone;
-    if (formData.instagramFollowers) cleanedData.instagramFollowers = formData.instagramFollowers;
     if (formData.tiktokHandle) cleanedData.tiktokHandle = formData.tiktokHandle;
-    if (formData.youtubeChannel) cleanedData.youtubeChannel = formData.youtubeChannel;
-    if (formData.bankAccountHolderName) cleanedData.bankAccountHolderName = formData.bankAccountHolderName;
-    if (formData.bankRoutingNumber) cleanedData.bankRoutingNumber = formData.bankRoutingNumber;
-    if (formData.bankAccountNumber) cleanedData.bankAccountNumber = formData.bankAccountNumber;
-    if (formData.bankAccountType) cleanedData.bankAccountType = formData.bankAccountType;
-    if (formData.taxIdNumber) cleanedData.taxIdNumber = formData.taxIdNumber;
     if (inviteCode) cleanedData.inviteCode = inviteCode;
     
     mutation.mutate(cleanedData);
@@ -222,20 +194,6 @@ export default function ApplyPage() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="followers">Instagram Followers</Label>
-                <div className="relative">
-                  <Hash className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="followers"
-                    type="number"
-                    value={formData.instagramFollowers || ""}
-                    onChange={(e) => updateField("instagramFollowers", e.target.value ? parseInt(e.target.value) : undefined)}
-                    className="pl-9"
-                    placeholder="10000"
-                  />
-                </div>
-              </div>
-              <div>
                 <Label htmlFor="tiktok">TikTok Handle (Optional)</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-3 text-sm text-muted-foreground">TT</span>
@@ -248,101 +206,9 @@ export default function ApplyPage() {
                   />
                 </div>
               </div>
-              <div>
-                <Label htmlFor="youtube">YouTube Channel (Optional)</Label>
-                <div className="relative">
-                  <Youtube className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="youtube"
-                    value={formData.youtubeChannel}
-                    onChange={(e) => updateField("youtubeChannel", e.target.value)}
-                    placeholder="channel/UCxxxxxx"
-                    className="pl-9"
-                  />
-                </div>
-              </div>
             </CardContent>
           </Card>
 
-          {/* Banking Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building className="h-5 w-5" />
-                Banking Information
-              </CardTitle>
-              <CardDescription>Required for payments. All information is encrypted.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20">
-                <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <AlertDescription className="text-blue-600 dark:text-blue-400">
-                  Your banking information is encrypted and stored securely. We only use this for direct payments.
-                </AlertDescription>
-              </Alert>
-              
-              <div>
-                <Label htmlFor="accountHolder">Account Holder Name</Label>
-                <Input
-                  id="accountHolder"
-                  value={formData.bankAccountHolderName}
-                  onChange={(e) => updateField("bankAccountHolderName", e.target.value)}
-                  placeholder="John Doe"
-                  required
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="routing">Routing Number</Label>
-                  <Input
-                    id="routing"
-                    value={formData.bankRoutingNumber}
-                    onChange={(e) => updateField("bankRoutingNumber", e.target.value)}
-                    placeholder="123456789"
-                    maxLength={9}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="account">Account Number</Label>
-                  <Input
-                    id="account"
-                    value={formData.bankAccountNumber}
-                    onChange={(e) => updateField("bankAccountNumber", e.target.value)}
-                    placeholder="1234567890"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="accountType">Account Type</Label>
-                  <select
-                    id="accountType"
-                    value={formData.bankAccountType}
-                    onChange={(e) => updateField("bankAccountType", e.target.value as "checking" | "savings")}
-                    className="w-full px-3 py-2 border rounded-md bg-background"
-                    required
-                  >
-                    <option value="checking">Checking</option>
-                    <option value="savings">Savings</option>
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="taxId">Tax ID Number (SSN/EIN)</Label>
-                  <Input
-                    id="taxId"
-                    value={formData.taxIdNumber}
-                    onChange={(e) => updateField("taxIdNumber", e.target.value)}
-                    placeholder="123-45-6789"
-                    required
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           {mutation.error && (
             <Alert variant="destructive">
