@@ -6,10 +6,13 @@ import {
   type InsertSubmission,
   type PromptTemplate,
   type InsertPromptTemplate,
+  type Feedback,
+  type InsertFeedback,
   users,
   briefs,
   submissions,
-  promptTemplates
+  promptTemplates,
+  feedbacks
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -41,6 +44,11 @@ export interface IStorage {
   updateSubmissionStatus(id: number, status: string, selectedAt?: Date, allowsResubmission?: boolean, reviewNotes?: string): Promise<Submission>;
   updateSubmissionPayout(id: number, payoutStatus: string, paidAt?: Date, notes?: string): Promise<Submission>;
   countSubmissionsByCreatorEmail(briefId: number, email: string): Promise<number>;
+  
+  createFeedback(feedback: InsertFeedback): Promise<Feedback>;
+  getFeedbackBySubmissionId(submissionId: number): Promise<Feedback[]>;
+  updateFeedback(id: number, comment: string): Promise<Feedback>;
+  deleteFeedback(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -208,6 +216,35 @@ export class DatabaseStorage implements IStorage {
       .where(eq(submissions.briefId, briefId));
     
     return results.filter(s => s.creatorEmail.toLowerCase() === email.toLowerCase()).length;
+  }
+
+  async createFeedback(insertFeedback: InsertFeedback): Promise<Feedback> {
+    const [feedback] = await db
+      .insert(feedbacks)
+      .values(insertFeedback)
+      .returning();
+    return feedback;
+  }
+
+  async getFeedbackBySubmissionId(submissionId: number): Promise<Feedback[]> {
+    return await db
+      .select()
+      .from(feedbacks)
+      .where(eq(feedbacks.submissionId, submissionId))
+      .orderBy(desc(feedbacks.createdAt));
+  }
+
+  async updateFeedback(id: number, comment: string): Promise<Feedback> {
+    const [feedback] = await db
+      .update(feedbacks)
+      .set({ comment, updatedAt: new Date() })
+      .where(eq(feedbacks.id, id))
+      .returning();
+    return feedback;
+  }
+
+  async deleteFeedback(id: number): Promise<void> {
+    await db.delete(feedbacks).where(eq(feedbacks.id, id));
   }
 
   async getTemplatesByOwnerId(ownerId: string): Promise<PromptTemplate[]> {

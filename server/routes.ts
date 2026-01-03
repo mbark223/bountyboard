@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertBriefSchema, insertSubmissionSchema, insertPromptTemplateSchema } from "@shared/schema";
+import { insertBriefSchema, insertSubmissionSchema, insertPromptTemplateSchema, insertFeedbackSchema } from "@shared/schema";
 import { isAuthenticated } from "./replit_integrations/auth";
 
 async function fetchBrandMetadata(url: string): Promise<{
@@ -92,7 +92,19 @@ export async function registerRoutes(
       // For admin, we want to see all briefs, not just published ones
       // In a real app, you'd check admin permissions here
       const allBriefs = await storage.getAllBriefs();
-      res.json(allBriefs);
+      
+      // Add submission count to each brief
+      const briefsWithCounts = await Promise.all(
+        allBriefs.map(async (brief) => {
+          const submissions = await storage.getSubmissionsByBriefId(brief.id);
+          return {
+            ...brief,
+            submissionCount: submissions.length
+          };
+        })
+      );
+      
+      res.json(briefsWithCounts);
     } catch (error) {
       console.error("Error fetching admin briefs:", error);
       res.status(500).json({ error: "Failed to fetch briefs" });
@@ -205,6 +217,73 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating payout:", error);
       res.status(500).json({ error: "Failed to update payout" });
+    }
+  });
+
+  // GET /api/submissions/:id/feedback - Get feedback for a submission
+  app.get("/api/submissions/:id/feedback", async (req, res) => {
+    try {
+      const submissionId = parseInt(req.params.id);
+      const feedbackList = await storage.getFeedbackBySubmissionId(submissionId);
+      res.json(feedbackList);
+    } catch (error) {
+      console.error("Error fetching feedback:", error);
+      res.status(500).json({ error: "Failed to fetch feedback" });
+    }
+  });
+
+  // POST /api/submissions/:id/feedback - Create feedback for a submission
+  app.post("/api/submissions/:id/feedback", async (req, res) => {
+    try {
+      const submissionId = parseInt(req.params.id);
+      const { comment, requiresAction } = req.body;
+      
+      if (!comment || comment.trim().length === 0) {
+        return res.status(400).json({ error: "Comment is required" });
+      }
+      
+      const feedback = await storage.createFeedback({
+        submissionId,
+        authorId: "demo-user-1", // For demo purposes
+        authorName: "Demo Admin",
+        comment: comment.trim(),
+        requiresAction: requiresAction ? 1 : 0
+      });
+      
+      res.status(201).json(feedback);
+    } catch (error) {
+      console.error("Error creating feedback:", error);
+      res.status(500).json({ error: "Failed to create feedback" });
+    }
+  });
+
+  // PATCH /api/feedback/:id - Update feedback
+  app.patch("/api/feedback/:id", async (req, res) => {
+    try {
+      const feedbackId = parseInt(req.params.id);
+      const { comment } = req.body;
+      
+      if (!comment || comment.trim().length === 0) {
+        return res.status(400).json({ error: "Comment is required" });
+      }
+      
+      const feedback = await storage.updateFeedback(feedbackId, comment.trim());
+      res.json(feedback);
+    } catch (error) {
+      console.error("Error updating feedback:", error);
+      res.status(500).json({ error: "Failed to update feedback" });
+    }
+  });
+
+  // DELETE /api/feedback/:id - Delete feedback
+  app.delete("/api/feedback/:id", async (req, res) => {
+    try {
+      const feedbackId = parseInt(req.params.id);
+      await storage.deleteFeedback(feedbackId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting feedback:", error);
+      res.status(500).json({ error: "Failed to delete feedback" });
     }
   });
 
