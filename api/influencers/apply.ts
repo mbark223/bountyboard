@@ -10,6 +10,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { inviteCode, ...applicationData } = req.body;
+    
+    // Log incoming data for debugging
+    console.log("Received application data:", JSON.stringify(applicationData, null, 2));
 
     // Check if invite code is provided and valid
     if (inviteCode) {
@@ -36,18 +39,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const cleanedData = {
       ...applicationData,
       phone: applicationData.phone || null,
-      instagramFollowers: applicationData.instagramFollowers || null,
       tiktokHandle: applicationData.tiktokHandle || null,
-      youtubeChannel: applicationData.youtubeChannel || null,
-      bankAccountHolderName: applicationData.bankAccountHolderName || null,
-      bankRoutingNumber: applicationData.bankRoutingNumber || null,
-      bankAccountNumber: applicationData.bankAccountNumber || null,
-      bankAccountType: applicationData.bankAccountType || null,
-      taxIdNumber: applicationData.taxIdNumber || null,
     };
+    
+    console.log("Cleaned data for validation:", JSON.stringify(cleanedData, null, 2));
 
     // Validate the application data
-    const validated = insertInfluencerSchema.parse(cleanedData);
+    let validated;
+    try {
+      validated = insertInfluencerSchema.parse(cleanedData);
+      console.log("Validation successful:", JSON.stringify(validated, null, 2));
+    } catch (validationError) {
+      console.error("Validation failed:", validationError);
+      throw validationError;
+    }
 
     // Create the influencer application
     const influencer = await storage.createInfluencer(validated);

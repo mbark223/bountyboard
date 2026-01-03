@@ -80,7 +80,7 @@ export default function ApplyPage() {
 
     // Add optional fields only if they have values
     if (formData.phone) cleanedData.phone = formData.phone;
-    if (formData.tiktokHandle) cleanedData.tiktokHandle = formData.tiktokHandle;
+    if (formData.tiktokHandle) cleanedData.tiktokHandle = formData.tiktokHandle.replace("@", "");
     if (inviteCode) cleanedData.inviteCode = inviteCode;
     
     mutation.mutate(cleanedData);
