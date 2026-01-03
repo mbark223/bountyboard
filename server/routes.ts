@@ -146,14 +146,14 @@ export async function registerRoutes(
   app.patch("/api/submissions/:id/status", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const { status } = req.body;
+      const { status, allowsResubmission, reviewNotes } = req.body;
       
       if (!["RECEIVED", "IN_REVIEW", "SELECTED", "NOT_SELECTED"].includes(status)) {
         return res.status(400).json({ error: "Invalid status" });
       }
 
       const selectedAt = status === "SELECTED" ? new Date() : undefined;
-      const submission = await storage.updateSubmissionStatus(id, status, selectedAt);
+      const submission = await storage.updateSubmissionStatus(id, status, selectedAt, allowsResubmission, reviewNotes);
       res.json(submission);
     } catch (error) {
       console.error("Error updating submission status:", error);

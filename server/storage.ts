@@ -37,7 +37,7 @@ export interface IStorage {
   getSubmissionsByBriefId(briefId: number): Promise<Submission[]>;
   getSubmissionById(id: number): Promise<Submission | undefined>;
   createSubmission(submission: InsertSubmission): Promise<Submission>;
-  updateSubmissionStatus(id: number, status: string, selectedAt?: Date): Promise<Submission>;
+  updateSubmissionStatus(id: number, status: string, selectedAt?: Date, allowsResubmission?: boolean, reviewNotes?: string): Promise<Submission>;
   updateSubmissionPayout(id: number, payoutStatus: string, paidAt?: Date, notes?: string): Promise<Submission>;
   countSubmissionsByCreatorEmail(briefId: number, email: string): Promise<number>;
 }
@@ -153,13 +153,23 @@ export class DatabaseStorage implements IStorage {
     return submission;
   }
 
-  async updateSubmissionStatus(id: number, status: string, selectedAt?: Date): Promise<Submission> {
+  async updateSubmissionStatus(id: number, status: string, selectedAt?: Date, allowsResubmission?: boolean, reviewNotes?: string): Promise<Submission> {
     const updateData: any = { status };
     if (selectedAt) {
       updateData.selectedAt = selectedAt;
       if (status === "SELECTED") {
         updateData.payoutStatus = "PENDING";
       }
+    }
+    
+    // If rejecting, set whether resubmission is allowed
+    if (status === "NOT_SELECTED" && allowsResubmission !== undefined) {
+      updateData.allowsResubmission = allowsResubmission ? 1 : 0;
+    }
+    
+    // Add review notes if provided
+    if (reviewNotes !== undefined) {
+      updateData.reviewNotes = reviewNotes;
     }
     
     const [submission] = await db
