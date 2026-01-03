@@ -31,7 +31,7 @@ interface ApplicationFormData {
 }
 
 async function submitApplication(data: ApplicationFormData & { inviteCode?: string }) {
-  const response = await fetch("/api/influencers/apply", {
+  const response = await fetch("/api/test-apply", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
