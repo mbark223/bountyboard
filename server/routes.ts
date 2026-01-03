@@ -115,6 +115,21 @@ export async function registerRoutes(
     }
   });
 
+  // GET /api/briefs/id/:id - Get a single brief by ID
+  app.get("/api/briefs/id/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const brief = await storage.getBriefById(id);
+      if (!brief) {
+        return res.status(404).json({ error: "Brief not found" });
+      }
+      res.json(brief);
+    } catch (error) {
+      console.error("Error fetching brief:", error);
+      res.status(500).json({ error: "Failed to fetch brief" });
+    }
+  });
+
   // GET /api/briefs/:id/submissions - Get all submissions for a brief
   app.get("/api/briefs/:id/submissions", async (req, res) => {
     try {

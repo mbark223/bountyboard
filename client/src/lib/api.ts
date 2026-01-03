@@ -13,6 +13,12 @@ export async function fetchBriefBySlug(slug: string): Promise<Brief> {
   return response.json();
 }
 
+export async function fetchBriefById(id: string): Promise<Brief> {
+  const response = await fetch(`/api/briefs/id/${id}`);
+  if (!response.ok) throw new Error("Failed to fetch brief");
+  return response.json();
+}
+
 export async function createBrief(brief: InsertBrief): Promise<Brief> {
   const response = await fetch("/api/briefs", {
     method: "POST",

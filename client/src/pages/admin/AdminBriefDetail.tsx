@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { MOCK_BRIEFS, MOCK_SUBMISSIONS, Submission } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -23,8 +22,10 @@ import { FeedbackSection } from "@/components/FeedbackSection";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { updateSubmissionStatus, createFeedback } from "@/lib/api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateSubmissionStatus, createFeedback, fetchBriefById, fetchSubmissions } from "@/lib/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Brief, Submission } from "@shared/schema";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function AdminBriefDetail() {
   const { id } = useParams();
@@ -32,14 +33,36 @@ export default function AdminBriefDetail() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const brief = MOCK_BRIEFS.find((b) => b.id === id);
-  const [submissions, setSubmissions] = useState(MOCK_SUBMISSIONS.filter(s => s.briefId === id));
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [allowResubmission, setAllowResubmission] = useState(true);
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   const [rejectionFeedback, setRejectionFeedback] = useState("");
 
-  if (!brief) return <div>Brief not found</div>;
+  // Fetch brief data
+  const { data: brief, isLoading: briefLoading } = useQuery({
+    queryKey: ["brief", id],
+    queryFn: () => fetchBriefById(id || ""),
+    enabled: !!id,
+  });
+
+  // Fetch submissions
+  const { data: submissions = [], isLoading: submissionsLoading, refetch: refetchSubmissions } = useQuery({
+    queryKey: ["submissions", id],
+    queryFn: () => fetchSubmissions(parseInt(id || "0")),
+    enabled: !!id && !!brief,
+  });
+
+  if (briefLoading || submissionsLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <Spinner />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (!brief) return <AdminLayout><div>Brief not found</div></AdminLayout>;
 
   // Mutation for updating submission status
   const statusMutation = useMutation({
@@ -52,8 +75,8 @@ export default function AdminBriefDetail() {
       return updateSubmissionStatus(submissionId, status, allowsResubmission, reviewNotes);
     },
     onSuccess: (data) => {
-      // Update local state
-      setSubmissions(prev => prev.map(s => s.id === data.id ? data : s));
+      // Refresh submissions list
+      refetchSubmissions();
       setSelectedSubmission(data);
       setShowRejectionDialog(false);
       setRejectionFeedback("");
