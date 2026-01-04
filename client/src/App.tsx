@@ -103,11 +103,9 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/admin/briefs/:id/edit">
-        {(params) => (
-          <ProtectedRoute>
-            <EditBriefPage />
-          </ProtectedRoute>
-        )}
+        <ProtectedRoute>
+          <EditBriefPage />
+        </ProtectedRoute>
       </Route>
       <Route path="/admin/briefs/:id">
         {(params) => (
