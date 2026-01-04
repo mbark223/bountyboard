@@ -16,14 +16,6 @@ interface FeedbackSectionProps {
 }
 
 export function FeedbackSection({ submissionId }: FeedbackSectionProps) {
-  // Handle invalid submission IDs
-  if (!submissionId || isNaN(submissionId)) {
-    return (
-      <div className="text-sm text-muted-foreground italic">
-        Unable to load feedback - invalid submission ID.
-      </div>
-    );
-  }
   const [comment, setComment] = useState("");
   const [requiresAction, setRequiresAction] = useState(false);
   const { toast } = useToast();
@@ -33,6 +25,7 @@ export function FeedbackSection({ submissionId }: FeedbackSectionProps) {
   const { data: feedbackList = [], isLoading } = useQuery({
     queryKey: ["feedback", submissionId],
     queryFn: () => fetchFeedback(submissionId),
+    enabled: !!submissionId && !isNaN(submissionId),
   });
 
   // Create feedback mutation
@@ -74,6 +67,15 @@ export function FeedbackSection({ submissionId }: FeedbackSectionProps) {
       createMutation.mutate();
     }
   };
+
+  // Handle invalid submission IDs
+  if (!submissionId || isNaN(submissionId)) {
+    return (
+      <div className="text-sm text-muted-foreground italic">
+        Unable to load feedback - invalid submission ID.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
