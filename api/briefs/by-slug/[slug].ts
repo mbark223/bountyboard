@@ -8,7 +8,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       console.log('[API] Fetching brief with slug:', slug);
       console.log('[API] Type of slug:', typeof slug);
-      console.log('[API] Storage instance:', storage.constructor.name);
+      console.log('[API] DATABASE_URL exists:', !!process.env.DATABASE_URL);
+      
+      // Add more error context
+      if (!slug) {
+        return res.status(400).json({ error: "Slug parameter is required" });
+      }
       
       const brief = await storage.getBriefBySlug(slug as string);
       
@@ -20,9 +25,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       console.log('[API] Brief found:', { id: brief.id, title: brief.title, slug: brief.slug });
       res.status(200).json(brief);
-    } catch (error) {
+    } catch (error: any) {
       console.error("[API] Error fetching brief:", error);
-      res.status(500).json({ error: "Failed to fetch brief", details: error.message });
+      console.error("[API] Error stack:", error.stack);
+      
+      // Check for database connection errors
+      if (error.message?.includes('Database')) {
+        return res.status(500).json({ 
+          error: "Database connection error", 
+          details: "Please check DATABASE_URL configuration in Vercel environment variables",
+          configured: !!process.env.DATABASE_URL
+        });
+      }
+      
+      res.status(500).json({ 
+        error: "Failed to fetch brief", 
+        details: error.message,
+        type: error.constructor.name 
+      });
     }
   } else {
     res.setHeader('Allow', ['GET']);
