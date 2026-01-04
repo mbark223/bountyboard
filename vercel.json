@@ -25,7 +25,7 @@
     },
     {
       "source": "/api/briefs/id/:id",
-      "destination": "/api/briefs/[id]"
+      "destination": "/api/briefs-by-id?id=:id"
     },
     {
       "source": "/api/briefs/:id/submissions",
@@ -33,7 +33,7 @@
     },
     {
       "source": "/api/briefs/:id",
-      "destination": "/api/briefs/[id]"
+      "destination": "/api/briefs-by-id?id=:id"
     },
     {
       "source": "/api/submissions",
