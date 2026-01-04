@@ -70,7 +70,8 @@ export default function BriefPublicPage() {
         <img 
           src="/hrb-logo.png" 
           alt="Hard Rock Bet" 
-          className="absolute top-8 right-8 h-16 w-16 opacity-20 md:h-20 md:w-20"
+          className="absolute top-8 right-8 h-16 w-16 opacity-100 md:h-20 md:w-20"
+          onError={(e) => console.error('Failed to load HRB logo:', e)}
         />
 
         <div className="container mx-auto px-4 relative z-10">

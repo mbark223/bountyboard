@@ -81,7 +81,8 @@ export default function BriefsListPage() {
                       <img 
                         src="/hrb-logo.png" 
                         alt="Hard Rock Bet" 
-                        className="absolute top-3 right-3 h-8 w-8 opacity-30 group-hover:opacity-50 transition-opacity duration-300 z-10"
+                        className="absolute top-3 right-3 h-8 w-8 opacity-100 transition-opacity duration-300 z-10"
+                        onError={(e) => console.error('Failed to load HRB logo:', e)}
                       />
                       <CardHeader className="pb-3 space-y-3">
                         <div className="flex justify-between items-start">
