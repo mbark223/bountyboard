@@ -27,11 +27,19 @@ import { motion } from "framer-motion";
 export default function BriefPublicPage() {
   const { slug } = useParams();
   const [, setLocation] = useLocation();
+  
+  console.log('[BriefPublicPage] Component mounted with slug:', slug);
 
   const { data: rawBrief, isLoading, error } = useQuery({
     queryKey: ["brief", slug],
     queryFn: () => fetchBriefBySlug(slug!),
     enabled: !!slug,
+    onSuccess: (data) => {
+      console.log('[BriefPublicPage] Raw brief data received:', data);
+    },
+    onError: (err) => {
+      console.error('[BriefPublicPage] Error fetching brief:', err);
+    }
   });
 
   if (isLoading) {
@@ -56,11 +64,19 @@ export default function BriefPublicPage() {
   }
 
   const brief = transformBrief(rawBrief);
+  console.log('[BriefPublicPage] Transformed brief:', brief);
+  
   const org = brief.organization;
   const isCash = brief.reward.type === 'CASH';
   const rewardDisplay = brief.reward.type === 'OTHER' 
     ? String(brief.reward.amount)
     : formatCurrency(Number(brief.reward.amount), brief.reward.currency);
+  
+  console.log('[BriefPublicPage] Ready to render with:', { 
+    title: brief.title, 
+    org: org.name,
+    reward: rewardDisplay 
+  });
 
   return (
     <PublicLayout>
