@@ -6,10 +6,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   if (req.method === 'GET') {
     try {
+      console.log('Fetching brief with slug:', slug);
       const brief = await storage.getBriefBySlug(slug as string);
       if (!brief) {
+        console.log('Brief not found for slug:', slug);
         return res.status(404).json({ error: "Brief not found" });
       }
+      console.log('Brief found:', brief.title);
       res.status(200).json(brief);
     } catch (error) {
       console.error("Error fetching brief:", error);

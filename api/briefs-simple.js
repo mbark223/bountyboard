@@ -76,6 +76,7 @@ export default async function handler(req, res) {
     }));
     
     console.log(`Returning ${briefs.length} published briefs`);
+    console.log('Brief slugs:', briefs.map(b => ({ id: b.id, slug: b.slug, title: b.title })));
     res.status(200).json(briefs);
     
   } catch (error) {
