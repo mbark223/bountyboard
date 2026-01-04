@@ -4,8 +4,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useDropzone } from "react-dropzone";
+import { useQuery } from "@tanstack/react-query";
 import { PublicLayout } from "@/components/layout/PublicLayout";
-import { MOCK_BRIEFS } from "@/lib/mockData";
+import { fetchBriefBySlug } from "@/lib/api";
+import { transformBrief } from "@/lib/transformers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,7 +34,15 @@ export default function BriefSubmitPage() {
   const { slug } = useParams();
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
-  const brief = MOCK_BRIEFS.find((b) => b.slug === slug);
+  
+  // Fetch brief data
+  const { data: rawBrief, isLoading: briefLoading, error: briefError } = useQuery({
+    queryKey: ["brief", slug],
+    queryFn: () => fetchBriefBySlug(slug!),
+    enabled: !!slug,
+  });
+
+  const brief = rawBrief ? transformBrief(rawBrief) : null;
   
   // Check if this is a resubmission
   const searchParams = new URLSearchParams(location.split('?')[1] || '');
@@ -103,7 +113,29 @@ export default function BriefSubmitPage() {
     window.scrollTo(0, 0);
   };
 
-  if (!brief) return null;
+  if (briefLoading) {
+    return (
+      <PublicLayout>
+        <div className="container mx-auto px-4 py-20 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </PublicLayout>
+    );
+  }
+
+  if (briefError || !brief) {
+    return (
+      <PublicLayout>
+        <div className="container mx-auto px-4 py-20 text-center">
+          <h1 className="text-4xl font-heading font-bold mb-4">Brief Not Found</h1>
+          <p className="text-muted-foreground mb-8">The brief you are looking for does not exist or has been archived.</p>
+          <Button onClick={() => setLocation("/briefs")} variant="outline">
+            View All Briefs
+          </Button>
+        </div>
+      </PublicLayout>
+    );
+  }
 
   if (isSuccess) {
     return (
