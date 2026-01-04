@@ -1,7 +1,7 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { query } from './_db';
+// JavaScript version of admin briefs endpoint
+import { Pool } from 'pg';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,18 +9,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
   
   if (req.method !== 'GET') {
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  let pool;
+  
   try {
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL not configured');
+    }
+    
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: 1,
+      ssl: {
+        rejectUnauthorized: false
+      }
+    });
+    
     // Get all briefs with organization info and submission counts
-    const briefsResult = await query(`
+    const briefsResult = await pool.query(`
       SELECT 
         b.*,
         u.org_name as user_org_name,
@@ -37,7 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     `);
     
     // Transform the results to match expected format
-    const briefs = briefsResult.rows.map((row: any) => ({
+    const briefs = briefsResult.rows.map(row => ({
       id: row.id,
       slug: row.slug,
       title: row.title,
@@ -80,11 +92,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log(`Returning ${briefs.length} briefs for admin`);
     res.status(200).json(briefs);
     
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching admin briefs:', error);
     res.status(500).json({ 
       error: 'Failed to fetch briefs',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: error.message,
+      code: error.code
     });
+  } finally {
+    if (pool) {
+      await pool.end();
+    }
   }
 }

@@ -1,4 +1,6 @@
 // Simple JavaScript version of briefs endpoint
+import { Pool } from 'pg';
+
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -10,7 +12,6 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
   
-  const { Pool } = require('pg');
   let pool;
   
   try {

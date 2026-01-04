@@ -1,6 +1,7 @@
 // Test 4: Try to run a simple query
+import { Pool } from 'pg';
+
 export default async function handler(req, res) {
-  const { Pool } = require('pg');
   let pool;
   
   try {

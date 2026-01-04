@@ -1,7 +1,8 @@
 // Test 3: Try to create a pg Pool
+import { Pool } from 'pg';
+
 export default async function handler(req, res) {
   try {
-    const { Pool } = require('pg');
     
     if (!process.env.DATABASE_URL) {
       return res.status(200).json({ 

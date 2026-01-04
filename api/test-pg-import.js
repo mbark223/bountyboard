@@ -1,7 +1,8 @@
 // Test 2: Check if we can import pg module
+import pg from 'pg';
+
 export default function handler(req, res) {
   try {
-    const pg = require('pg');
     res.status(200).json({ 
       success: true,
       test: 'pg-import',
