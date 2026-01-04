@@ -19,6 +19,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // Check if DATABASE_URL is set
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL not configured in Vercel environment variables');
+    }
+    
     // Get published briefs with organization info
     const result = await query(`
       SELECT 

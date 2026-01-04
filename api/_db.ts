@@ -4,16 +4,31 @@ let pool: Pool;
 
 export function getPool(): Pool {
   if (!pool) {
-    if (!process.env.DATABASE_URL) {
-      throw new Error('DATABASE_URL environment variable is not set');
+    const databaseUrl = process.env.DATABASE_URL;
+    
+    if (!databaseUrl) {
+      console.error('DATABASE_URL environment variable is not set');
+      throw new Error('DATABASE_URL environment variable is not set. Please set it in Vercel environment variables.');
     }
     
-    pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      max: 1, // Serverless functions should use minimal connections
-      idleTimeoutMillis: 10000,
-      connectionTimeoutMillis: 10000,
-    });
+    console.log('Creating new database pool...');
+    
+    try {
+      pool = new Pool({
+        connectionString: databaseUrl,
+        max: 1, // Serverless functions should use minimal connections
+        idleTimeoutMillis: 10000,
+        connectionTimeoutMillis: 10000,
+        ssl: {
+          rejectUnauthorized: false // Required for Supabase
+        }
+      });
+      
+      console.log('Database pool created successfully');
+    } catch (error) {
+      console.error('Failed to create database pool:', error);
+      throw error;
+    }
   }
   
   return pool;
