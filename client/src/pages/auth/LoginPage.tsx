@@ -250,19 +250,6 @@ export default function LoginPage() {
                   )}
                 </Button>
               </form>
-
-              <div className="mt-6 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Are you a brand? {" "}
-                  <Button
-                    variant="link"
-                    className="p-0"
-                    onClick={() => window.location.href = "/api/login"}
-                  >
-                    Sign in with Replit
-                  </Button>
-                </p>
-              </div>
             </CardContent>
           </Card>
         </motion.div>
