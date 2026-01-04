@@ -53,18 +53,6 @@ export default function AdminBriefDetail() {
     enabled: !!id,
   });
 
-  if (briefLoading || submissionsLoading) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <Spinner />
-        </div>
-      </AdminLayout>
-    );
-  }
-
-  if (!brief) return <AdminLayout><div>Brief not found</div></AdminLayout>;
-
   // Mutation for updating submission status
   const statusMutation = useMutation({
     mutationFn: async ({ submissionId, status, reviewNotes, allowsResubmission }: {
@@ -148,6 +136,18 @@ export default function AdminBriefDetail() {
       });
     }
   };
+
+  if (briefLoading || submissionsLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <Spinner />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (!brief) return <AdminLayout><div>Brief not found</div></AdminLayout>;
 
   return (
     <AdminLayout>
