@@ -185,7 +185,38 @@ export async function registerRoutes(
     try {
       const briefId = parseInt(req.params.id);
       const submissionList = await storage.getSubmissionsByBriefId(briefId);
-      res.json(submissionList);
+      
+      // Transform submissions to match client expectations
+      const transformedSubmissions = submissionList.map(sub => ({
+        id: sub.id,
+        briefId: sub.briefId,
+        creator: {
+          name: sub.creatorName,
+          email: sub.creatorEmail,
+          handle: sub.creatorHandle,
+          phone: sub.creatorPhone,
+          avatar: null // Add if you have profile images
+        },
+        video: {
+          url: sub.videoUrl,
+          thumbnail: sub.videoUrl, // Using video URL as thumbnail for now
+          duration: "0:30", // Default duration, update when you have real data
+          fileName: sub.videoFileName,
+          mimeType: sub.videoMimeType,
+          sizeBytes: sub.videoSizeBytes
+        },
+        message: sub.message,
+        status: sub.status,
+        payoutStatus: sub.payoutStatus,
+        payoutAmount: sub.payoutAmount,
+        submittedAt: sub.submittedAt,
+        selectedAt: sub.selectedAt,
+        reviewedBy: sub.reviewedBy,
+        reviewNotes: sub.reviewNotes,
+        allowsResubmission: sub.allowsResubmission
+      }));
+      
+      res.json(transformedSubmissions);
     } catch (error) {
       console.error("Error fetching submissions:", error);
       res.status(500).json({ error: "Failed to fetch submissions" });
