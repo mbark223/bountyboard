@@ -164,7 +164,7 @@ export default function LoginPage() {
               ))}
             </div>
             <div className="mt-6 text-center">
-              <Button variant="link" onClick={() => setLocation("/")}>
+              <Button variant="link" onClick={() => setLocation("/briefs")}>
                 View all briefs
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
