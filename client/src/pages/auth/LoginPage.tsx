@@ -252,7 +252,7 @@ export default function LoginPage() {
                     <>
                       <Lock className="mr-2 h-4 w-4" />
                       Unlock Briefs
-                    <>
+                    </>
                   )}
                 </Button>
               </form>
