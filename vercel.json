@@ -33,13 +33,7 @@
     },
     {
       "source": "/api/briefs/:id",
-      "destination": "/api/briefs-by-id?id=:id",
-      "methods": ["GET"]
-    },
-    {
-      "source": "/api/briefs/:id",
-      "destination": "/api/briefs-update?id=:id",
-      "methods": ["PUT"]
+      "destination": "/api/briefs-handler?id=:id"
     },
     {
       "source": "/api/submissions",
