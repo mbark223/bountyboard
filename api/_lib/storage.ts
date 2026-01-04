@@ -454,4 +454,85 @@ class VercelDatabaseStorage extends DatabaseStorage {
   }
 }
 
-export const storage = new VercelDatabaseStorage();
+// Create a wrapped storage instance with error handling
+class SafeStorage {
+  private storage = new VercelDatabaseStorage();
+
+  async getAllPublishedBriefs() {
+    try {
+      console.log("[SafeStorage] Getting all published briefs...");
+      const briefs = await this.storage.getAllPublishedBriefs();
+      console.log(`[SafeStorage] Found ${briefs.length} published briefs`);
+      return briefs;
+    } catch (error) {
+      console.error("[SafeStorage] Error getting published briefs:", error);
+      if (!process.env.DATABASE_URL) {
+        console.error("[SafeStorage] DATABASE_URL is not set in environment");
+        throw new Error("Database configuration missing. Please set DATABASE_URL in Vercel environment variables.");
+      }
+      throw error;
+    }
+  }
+
+  async getAllBriefs() {
+    try {
+      console.log("[SafeStorage] Getting all briefs...");
+      const briefs = await this.storage.getAllBriefs();
+      console.log(`[SafeStorage] Found ${briefs.length} briefs`);
+      return briefs;
+    } catch (error) {
+      console.error("[SafeStorage] Error getting all briefs:", error);
+      if (!process.env.DATABASE_URL) {
+        console.error("[SafeStorage] DATABASE_URL is not set in environment");
+        throw new Error("Database configuration missing. Please set DATABASE_URL in Vercel environment variables.");
+      }
+      throw error;
+    }
+  }
+
+  // Delegate all other methods to the original storage
+  async getUser(id: string) { return this.storage.getUser(id); }
+  async getUserByEmail(email: string) { return this.storage.getUserByEmail(email); }
+  async createUser(user: any) { return this.storage.createUser(user); }
+  async updateUser(id: string, updates: any) { return this.storage.updateUser(id, updates); }
+  async getBriefBySlug(slug: string) { return this.storage.getBriefBySlug(slug); }
+  async getBriefById(id: number) { return this.storage.getBriefById(id); }
+  async getBriefsByOwnerId(ownerId: string) { return this.storage.getBriefsByOwnerId(ownerId); }
+  async createBrief(brief: any) { return this.storage.createBrief(brief); }
+  async updateBriefStatus(id: number, status: string) { return this.storage.updateBriefStatus(id, status); }
+  async getSubmissionsByBriefId(briefId: number) { return this.storage.getSubmissionsByBriefId(briefId); }
+  async getSubmissionById(id: number) { return this.storage.getSubmissionById(id); }
+  async createSubmission(submission: any) { return this.storage.createSubmission(submission); }
+  async updateSubmissionStatus(id: number, status: string, selectedAt?: Date, allowsResubmission?: boolean, reviewNotes?: string) { 
+    return this.storage.updateSubmissionStatus(id, status, selectedAt, allowsResubmission, reviewNotes); 
+  }
+  async updateSubmissionPayout(id: number, payoutStatus: string, paidAt?: Date, notes?: string) { 
+    return this.storage.updateSubmissionPayout(id, payoutStatus, paidAt, notes); 
+  }
+  async countSubmissionsByCreatorEmail(briefId: number, email: string) { return this.storage.countSubmissionsByCreatorEmail(briefId, email); }
+  async createFeedback(feedback: any) { return this.storage.createFeedback(feedback); }
+  async getFeedbackBySubmissionId(submissionId: number) { return this.storage.getFeedbackBySubmissionId(submissionId); }
+  async updateFeedback(id: number, comment: string) { return this.storage.updateFeedback(id, comment); }
+  async deleteFeedback(id: number) { return this.storage.deleteFeedback(id); }
+  async getTemplatesByOwnerId(ownerId: string) { return this.storage.getTemplatesByOwnerId(ownerId); }
+  async getTemplateById(id: number) { return this.storage.getTemplateById(id); }
+  async createTemplate(template: any) { return this.storage.createTemplate(template); }
+  async updateTemplate(id: number, updates: any) { return this.storage.updateTemplate(id, updates); }
+  async deleteTemplate(id: number) { return this.storage.deleteTemplate(id); }
+  async getInfluencerByEmail(email: string) { return this.storage.getInfluencerByEmail(email); }
+  async getInfluencerById(id: number) { return this.storage.getInfluencerById(id); }
+  async getInfluencersByStatus(status: string) { return this.storage.getInfluencersByStatus(status); }
+  async getAllInfluencers() { return this.storage.getAllInfluencers(); }
+  async createInfluencer(influencer: any) { return this.storage.createInfluencer(influencer); }
+  async updateInfluencerStatus(id: number, status: string, rejectionReason?: string) { 
+    return this.storage.updateInfluencerStatus(id, status, rejectionReason); 
+  }
+  async updateInfluencerActivity(id: number) { return this.storage.updateInfluencerActivity(id); }
+  async getInfluencerSubmissions(email: string) { return this.storage.getInfluencerSubmissions(email); }
+  async getInfluencerInviteByEmail(email: string) { return this.storage.getInfluencerInviteByEmail(email); }
+  async createInfluencerInvite(invite: any) { return this.storage.createInfluencerInvite(invite); }
+  async updateInfluencerInviteStatus(id: number, status: string) { return this.storage.updateInfluencerInviteStatus(id, status); }
+  async getAllInfluencerInvites() { return this.storage.getAllInfluencerInvites(); }
+}
+
+export const storage = new SafeStorage();
