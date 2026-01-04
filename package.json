@@ -11,6 +11,7 @@
     "check": "tsc",
     "db:push": "drizzle-kit push",
     "seed": "tsx scripts/seed-test-data.ts",
+    "seed:requested-briefs": "tsx scripts/seed-requested-briefs.ts",
     "setup": "tsx scripts/setup.ts",
     "setup:check": "tsx scripts/check-env.ts",
     "health": "tsx scripts/check-env.ts"
