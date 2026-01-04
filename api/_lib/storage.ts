@@ -64,7 +64,8 @@ class VercelDatabaseStorage extends DatabaseStorage {
   }
 
   async getBriefBySlug(slug: string) {
-    const results = await this.db
+    // First try to find by slug
+    let results = await this.db
       .select({
         brief: briefs,
         user: users,
@@ -72,6 +73,21 @@ class VercelDatabaseStorage extends DatabaseStorage {
       .from(briefs)
       .leftJoin(users, eq(briefs.ownerId, users.id))
       .where(eq(briefs.slug, slug));
+
+    // If not found and slug looks like "brief-123", try to find by ID
+    if (results.length === 0 && slug.startsWith('brief-')) {
+      const id = parseInt(slug.replace('brief-', ''));
+      if (!isNaN(id)) {
+        results = await this.db
+          .select({
+            brief: briefs,
+            user: users,
+          })
+          .from(briefs)
+          .leftJoin(users, eq(briefs.ownerId, users.id))
+          .where(eq(briefs.id, id));
+      }
+    }
 
     if (results.length === 0) return undefined;
 

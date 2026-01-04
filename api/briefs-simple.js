@@ -44,7 +44,7 @@ export default async function handler(req, res) {
     // Transform snake_case to camelCase
     const briefs = result.rows.map(row => ({
       id: row.id,
-      slug: row.slug,
+      slug: row.slug || `brief-${row.id}`, // Fallback to ID-based slug if null
       title: row.title,
       orgName: row.org_name,
       businessLine: row.business_line,

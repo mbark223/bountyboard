@@ -35,7 +35,7 @@ export function transformBrief(brief: BriefWithOrg) {
 
   return {
     id: String(brief.id),
-    slug: brief.slug,
+    slug: brief.slug || `brief-${brief.id}`,
     title: brief.title,
     orgName: org.name || brief.orgName,
     overview: brief.overview,
