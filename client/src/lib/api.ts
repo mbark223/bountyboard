@@ -2,7 +2,7 @@ import type { Brief, Submission, InsertBrief, InsertSubmission, Feedback } from 
 
 // Briefs API
 export async function fetchBriefs(): Promise<Brief[]> {
-  const response = await fetch("/api/briefs");
+  const response = await fetch("/api/briefs-simple");
   if (!response.ok) throw new Error("Failed to fetch briefs");
   return response.json();
 }

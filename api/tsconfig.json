@@ -1,17 +1,17 @@
 {
-  "extends": "../tsconfig.json",
-  "include": ["./**/*", "../shared/**/*"],
-  "exclude": ["node_modules"],
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es2017",
-    "lib": ["es2017"],
+    "module": "esnext",
+    "target": "esnext",
+    "lib": ["esnext"],
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": false,
     "resolveJsonModule": true,
-    "isolatedModules": true,
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
     "noEmit": true
-  }
+  },
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules"]
 }
