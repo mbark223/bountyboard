@@ -141,8 +141,7 @@ export default function LandingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
                 >
-                  <Link href={`/b/${brief.slug}`}>
-                    <a className="block h-full group" data-testid={`card-brief-${brief.id}`}>
+                  <Link href={`/b/${brief.slug}`} className="block h-full group" data-testid={`card-brief-${brief.id}`}>
                       <Card className="h-full flex flex-col bg-[#1A1525] border-[#2A2535] hover:border-[#7B5CFA]/50 transition-all duration-300 overflow-hidden">
                         <CardHeader className="pb-3 space-y-3">
                           <div className="flex justify-between items-start">
@@ -221,13 +220,12 @@ export default function LandingPage() {
                         </CardContent>
 
                         <CardFooter className="pt-0 pb-5 px-6">
-                          <Button className="w-full bg-[#7B5CFA] hover:bg-[#6B4EE6] text-white transition-colors">
+                          <div className="w-full py-2 px-4 bg-[#7B5CFA] hover:bg-[#6B4EE6] text-white rounded-md text-center font-medium transition-colors flex items-center justify-center">
                             View Bounty 
                             <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                          </Button>
+                          </div>
                         </CardFooter>
                       </Card>
-                    </a>
                   </Link>
                 </motion.div>
               ))}

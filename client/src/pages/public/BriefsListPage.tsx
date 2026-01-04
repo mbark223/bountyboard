@@ -75,10 +75,9 @@ export default function BriefsListPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                <Link href={`/b/${brief.slug}`}>
-                  <a className="block h-full group" data-testid={`card-brief-${brief.id}`}>
-                    <Card className="h-full flex flex-col border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden bg-card">
-                      <CardHeader className="pb-3 space-y-3">
+                <Link href={`/b/${brief.slug}`} className="block h-full group" data-testid={`card-brief-${brief.id}`}>
+                  <Card className="h-full flex flex-col border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden bg-card">
+                    <CardHeader className="pb-3 space-y-3">
                         <div className="flex justify-between items-start">
                           <Badge variant="outline" className="font-medium text-xs uppercase tracking-wider bg-secondary/50">
                             {brief.orgName}
@@ -150,13 +149,12 @@ export default function BriefsListPage() {
                       </CardContent>
 
                       <CardFooter className="pt-0 pb-5 px-6">
-                        <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors" variant="secondary">
+                        <div className="w-full py-2 px-4 bg-secondary text-secondary-foreground rounded-md text-center font-medium group-hover:bg-primary group-hover:text-primary-foreground transition-colors flex items-center justify-center">
                           View Details 
                           <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                        </Button>
+                        </div>
                       </CardFooter>
                     </Card>
-                  </a>
                 </Link>
               </motion.div>
             ))}
