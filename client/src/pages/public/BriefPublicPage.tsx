@@ -67,12 +67,6 @@ export default function BriefPublicPage() {
       <section className="relative overflow-hidden bg-background py-16 md:py-24">
         <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-72 h-72 bg-secondary/30 rounded-full blur-3xl pointer-events-none" />
-        <img 
-          src="/hrb-logo.png" 
-          alt="Hard Rock Bet" 
-          className="absolute top-8 right-8 h-16 w-16 opacity-100 md:h-20 md:w-20"
-          onError={(e) => console.error('Failed to load HRB logo:', e)}
-        />
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center space-y-6">
