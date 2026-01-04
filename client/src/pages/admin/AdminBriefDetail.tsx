@@ -315,7 +315,7 @@ export default function AdminBriefDetail() {
               <div className="bg-black flex-1 flex items-center justify-center p-4">
                 {/* Mock Video Player */}
                 <div className="aspect-[9/16] h-full max-h-[70vh] bg-zinc-900 rounded-lg flex items-center justify-center text-white border border-zinc-800 relative group">
-                  <img src={selectedSubmission.video.thumbnail} className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                  <img src={selectedSubmission?.video?.thumbnail || '/placeholder-video.jpg'} className="absolute inset-0 w-full h-full object-cover opacity-50" />
                   <Play className="h-16 w-16 opacity-80 group-hover:opacity-100 transition-opacity cursor-pointer" />
                 </div>
               </div>
@@ -334,11 +334,11 @@ export default function AdminBriefDetail() {
                     <h4 className="text-sm font-semibold mb-1">Creator</h4>
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                        {selectedSubmission.creator.name[0]}
+                        {selectedSubmission?.creator?.name?.[0] || 'U'}
                       </div>
                       <div>
-                        <p className="font-medium">{selectedSubmission.creator.name}</p>
-                        <p className="text-sm text-muted-foreground">{selectedSubmission.creator.handle}</p>
+                        <p className="font-medium">{selectedSubmission?.creator?.name || 'Unknown'}</p>
+                        <p className="text-sm text-muted-foreground">{selectedSubmission?.creator?.handle || '@unknown'}</p>
                       </div>
                     </div>
                   </div>
@@ -349,7 +349,7 @@ export default function AdminBriefDetail() {
                   </div>
 
                   {/* Display rejection reason if exists */}
-                  {selectedSubmission.status === 'NOT_SELECTED' && selectedSubmission.reviewNotes && (
+                  {selectedSubmission?.status === 'NOT_SELECTED' && selectedSubmission?.reviewNotes && (
                     <div className="p-4 border rounded-lg bg-red-50 dark:bg-red-900/10 border-red-200">
                       <h4 className="text-sm font-semibold text-red-800 dark:text-red-300 mb-1">Rejection Feedback</h4>
                       <p className="text-sm text-red-700 dark:text-red-400">{selectedSubmission.reviewNotes}</p>
@@ -360,21 +360,21 @@ export default function AdminBriefDetail() {
                     <h4 className="text-sm font-semibold mb-2">Review Status</h4>
                     <div className="grid grid-cols-2 gap-2">
                       <Button 
-                        variant={selectedSubmission.status === 'SELECTED' ? 'default' : 'outline'}
-                        className={selectedSubmission.status === 'SELECTED' ? 'bg-green-600 hover:bg-green-700' : ''}
+                        variant={selectedSubmission?.status === 'SELECTED' ? 'default' : 'outline'}
+                        className={selectedSubmission?.status === 'SELECTED' ? 'bg-green-600 hover:bg-green-700' : ''}
                         onClick={() => handleStatusChange('SELECTED')}
                       >
                         <Check className="mr-2 h-4 w-4" /> Select
                       </Button>
                       <Button 
-                        variant={selectedSubmission.status === 'NOT_SELECTED' ? 'destructive' : 'outline'}
+                        variant={selectedSubmission?.status === 'NOT_SELECTED' ? 'destructive' : 'outline'}
                         onClick={() => handleStatusChange('NOT_SELECTED')}
                       >
                         <X className="mr-2 h-4 w-4" /> Reject
                       </Button>
                     </div>
                     {/* Show resubmission option when rejecting */}
-                    {selectedSubmission.status !== 'SELECTED' && (
+                    {selectedSubmission?.status !== 'SELECTED' && (
                       <div className="mt-3 flex items-center space-x-2">
                         <Checkbox 
                           id="allow-resubmit"
@@ -392,7 +392,7 @@ export default function AdminBriefDetail() {
                     )}
                   </div>
 
-                  {selectedSubmission.status === 'SELECTED' && (
+                  {selectedSubmission?.status === 'SELECTED' && (
                     <div className="p-4 border rounded-lg bg-green-50 dark:bg-green-900/10 border-green-200">
                       <h4 className="text-sm font-semibold text-green-800 dark:text-green-300 mb-2">Bounty Eligible</h4>
                       <p className="text-sm text-green-700 dark:text-green-400 mb-3">
@@ -406,7 +406,7 @@ export default function AdminBriefDetail() {
                   
                   {/* Feedback Section */}
                   <div className="border-t pt-4">
-                    <FeedbackSection submissionId={typeof selectedSubmission.id === 'string' ? parseInt(selectedSubmission.id, 10) : selectedSubmission.id} />
+                    <FeedbackSection submissionId={typeof selectedSubmission?.id === 'string' ? parseInt(selectedSubmission.id, 10) : selectedSubmission?.id || 0} />
                   </div>
                 </div>
 
