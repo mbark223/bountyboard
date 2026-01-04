@@ -18,6 +18,9 @@ export default async function handler(req, res) {
 
   const { briefId } = req.query;
   
+  console.log('[Admin Submissions] Request received for briefId:', briefId);
+  console.log('[Admin Submissions] DATABASE_URL configured:', !!process.env.DATABASE_URL);
+  
   if (!briefId) {
     return res.status(400).json({ error: 'briefId is required' });
   }
@@ -125,7 +128,7 @@ export default async function handler(req, res) {
         name: row.creator_name || (row.creator_first_name && row.creator_last_name 
           ? `${row.creator_first_name} ${row.creator_last_name}`
           : row.creator_username_from_user || row.creator_handle || row.creator_email),
-        handle: row.creator_handle || '@' + (row.creator_handle || row.creator_email.split('@')[0])
+        handle: row.creator_handle || '@' + ((row.creator_email || 'user').split('@')[0])
       },
       video: {
         url: row.video_url,
@@ -142,9 +145,19 @@ export default async function handler(req, res) {
     
   } catch (error) {
     console.error('Error fetching submissions:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      briefId,
+      dbConfigured: !!process.env.DATABASE_URL,
+      errorCode: error.code,
+      errorName: error.constructor.name
+    });
+    
     res.status(500).json({ 
       error: 'Failed to fetch submissions',
-      message: error.message
+      message: error.message,
+      code: error.code,
+      dbConfigured: !!process.env.DATABASE_URL
     });
   } finally {
     if (pool) {
