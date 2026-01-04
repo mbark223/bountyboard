@@ -38,6 +38,7 @@ export default function AdminBriefDetail() {
   const [allowResubmission, setAllowResubmission] = useState(true);
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   const [rejectionFeedback, setRejectionFeedback] = useState("");
+  const [statusFilter, setStatusFilter] = useState<'all' | 'selected' | 'rejected' | 'pending'>('all');
 
   // Fetch brief data
   const { data: brief, isLoading: briefLoading } = useQuery({
@@ -222,8 +223,42 @@ export default function AdminBriefDetail() {
         <TabsContent value="submissions" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Received Submissions</CardTitle>
-              <CardDescription>Review and select winners for the bounty.</CardDescription>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <CardTitle>Received Submissions</CardTitle>
+                  <CardDescription>Review and select winners for the bounty.</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant={statusFilter === 'all' ? 'default' : 'outline'} 
+                    size="sm"
+                    onClick={() => setStatusFilter('all')}
+                  >
+                    All ({submissions.length})
+                  </Button>
+                  <Button 
+                    variant={statusFilter === 'pending' ? 'default' : 'outline'} 
+                    size="sm"
+                    onClick={() => setStatusFilter('pending')}
+                  >
+                    Pending ({submissions.filter(s => s.status === 'RECEIVED' || s.status === 'IN_REVIEW').length})
+                  </Button>
+                  <Button 
+                    variant={statusFilter === 'selected' ? 'default' : 'outline'} 
+                    size="sm"
+                    onClick={() => setStatusFilter('selected')}
+                  >
+                    Selected ({submissions.filter(s => s.status === 'SELECTED').length})
+                  </Button>
+                  <Button 
+                    variant={statusFilter === 'rejected' ? 'default' : 'outline'} 
+                    size="sm"
+                    onClick={() => setStatusFilter('rejected')}
+                  >
+                    Rejected ({submissions.filter(s => s.status === 'NOT_SELECTED').length})
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <Table>
@@ -237,7 +272,15 @@ export default function AdminBriefDetail() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {submissions.map((sub) => (
+                  {submissions
+                    .filter((sub) => {
+                      if (statusFilter === 'all') return true;
+                      if (statusFilter === 'pending') return sub.status === 'RECEIVED' || sub.status === 'IN_REVIEW';
+                      if (statusFilter === 'selected') return sub.status === 'SELECTED';
+                      if (statusFilter === 'rejected') return sub.status === 'NOT_SELECTED';
+                      return true;
+                    })
+                    .map((sub) => (
                     <TableRow key={sub.id}>
                       <TableCell>
                         <div className="font-medium">{sub.creator.name}</div>
@@ -259,10 +302,23 @@ export default function AdminBriefDetail() {
                           }>
                             {sub.status.replace('_', ' ')}
                           </Badge>
+                          {sub.status === 'NOT_SELECTED' && sub.reviewNotes && (
+                            <div className="mt-1 p-2 bg-red-50 dark:bg-red-900/20 rounded-md">
+                              <p className="text-xs text-red-700 dark:text-red-400">
+                                <span className="font-medium">Rejection reason:</span> {sub.reviewNotes}
+                              </p>
+                              {sub.allowsResubmission && (
+                                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                                  <RefreshCw className="h-3 w-3" />
+                                  Resubmission allowed
+                                </p>
+                              )}
+                            </div>
+                          )}
                           {sub.hasFeedback > 0 && (
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <MessageSquare className="h-3 w-3" />
-                              Feedback
+                              {sub.hasFeedback} Feedback
                             </div>
                           )}
                         </div>
@@ -281,10 +337,18 @@ export default function AdminBriefDetail() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {submissions.length === 0 && (
+                  {submissions.filter((sub) => {
+                      if (statusFilter === 'all') return true;
+                      if (statusFilter === 'pending') return sub.status === 'RECEIVED' || sub.status === 'IN_REVIEW';
+                      if (statusFilter === 'selected') return sub.status === 'SELECTED';
+                      if (statusFilter === 'rejected') return sub.status === 'NOT_SELECTED';
+                      return true;
+                    }).length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        No submissions yet.
+                        {submissions.length === 0 
+                          ? "No submissions yet." 
+                          : `No ${statusFilter === 'pending' ? 'pending' : statusFilter} submissions found.`}
                       </TableCell>
                     </TableRow>
                   )}
