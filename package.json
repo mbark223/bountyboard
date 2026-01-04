@@ -17,6 +17,7 @@
     "seed:requested-briefs": "tsx scripts/seed-requested-briefs.ts",
     "update:briefs-hardrock": "tsx scripts/update-briefs-to-hardrock.ts",
     "add:demo-user": "tsx scripts/add-demo-user.ts",
+    "add:nfl-submissions": "tsx scripts/add-nfl-submissions.ts",
     "setup": "tsx scripts/setup.ts",
     "setup:check": "tsx scripts/check-env.ts",
     "health": "tsx scripts/check-env.ts"
