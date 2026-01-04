@@ -50,7 +50,7 @@ export default function AdminBriefDetail() {
   const { data: submissions = [], isLoading: submissionsLoading, refetch: refetchSubmissions } = useQuery({
     queryKey: ["submissions", id],
     queryFn: () => fetchSubmissions(parseInt(id || "0")),
-    enabled: !!id && !!brief,
+    enabled: !!id,
   });
 
   if (briefLoading || submissionsLoading) {
@@ -78,7 +78,10 @@ export default function AdminBriefDetail() {
     onSuccess: (data) => {
       // Refresh submissions list
       refetchSubmissions();
-      setSelectedSubmission(data);
+      // Ensure data has the correct structure before setting
+      if (data && typeof data.id === 'number') {
+        setSelectedSubmission(data);
+      }
       setShowRejectionDialog(false);
       setRejectionFeedback("");
       
@@ -118,9 +121,7 @@ export default function AdminBriefDetail() {
     } else {
       // Direct status update for selection
       statusMutation.mutate({
-        submissionId: typeof selectedSubmission.id === 'string' 
-          ? parseInt(selectedSubmission.id, 10) 
-          : selectedSubmission.id,
+        submissionId: selectedSubmission.id,
         status
       });
     }
@@ -129,9 +130,7 @@ export default function AdminBriefDetail() {
   const handleReject = async () => {
     if (!selectedSubmission || !rejectionFeedback.trim()) return;
 
-    const submissionId = typeof selectedSubmission.id === 'string' 
-      ? parseInt(selectedSubmission.id, 10) 
-      : selectedSubmission.id;
+    const submissionId = selectedSubmission.id;
 
     // Update status with review notes
     await statusMutation.mutateAsync({
@@ -307,7 +306,7 @@ export default function AdminBriefDetail() {
       </Tabs>
 
       {/* Review Dialog */}
-      <Dialog key="review-dialog" open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
         <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0 overflow-hidden">
           <div className="flex flex-col md:flex-row h-full">
             {/* Video Area */}
@@ -408,7 +407,7 @@ export default function AdminBriefDetail() {
                 {/* Feedback Section */}
                 {selectedSubmission && (
                   <div className="border-t pt-4">
-                    <FeedbackSection submissionId={typeof selectedSubmission.id === 'string' ? parseInt(selectedSubmission.id, 10) : selectedSubmission.id} />
+                    <FeedbackSection submissionId={selectedSubmission.id} />
                   </div>
                 )}
               </div>
@@ -425,7 +424,7 @@ export default function AdminBriefDetail() {
       </Dialog>
 
       {/* Rejection Dialog */}
-      <Dialog key="rejection-dialog" open={showRejectionDialog} onOpenChange={setShowRejectionDialog}>
+      <Dialog open={showRejectionDialog} onOpenChange={setShowRejectionDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Reject Submission</DialogTitle>
