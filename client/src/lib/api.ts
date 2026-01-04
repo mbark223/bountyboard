@@ -14,9 +14,19 @@ export async function fetchAdminBriefs(): Promise<Brief[]> {
 }
 
 export async function fetchBriefBySlug(slug: string): Promise<Brief> {
+  console.log('[Client API] Fetching brief with slug:', slug);
   const response = await fetch(`/api/briefs/by-slug/${slug}`);
-  if (!response.ok) throw new Error("Failed to fetch brief");
-  return response.json();
+  console.log('[Client API] Response status:', response.status);
+  
+  if (!response.ok) {
+    const error = await response.json();
+    console.error('[Client API] Error response:', error);
+    throw new Error(error.error || "Failed to fetch brief");
+  }
+  
+  const data = await response.json();
+  console.log('[Client API] Brief received:', { id: data.id, slug: data.slug, title: data.title });
+  return data;
 }
 
 export async function fetchBriefById(id: string): Promise<Brief> {

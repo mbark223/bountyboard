@@ -64,6 +64,8 @@ class VercelDatabaseStorage extends DatabaseStorage {
   }
 
   async getBriefBySlug(slug: string) {
+    console.log('[Storage] getBriefBySlug called with:', slug);
+    
     // First try to find by slug
     let results = await this.db
       .select({
@@ -73,10 +75,14 @@ class VercelDatabaseStorage extends DatabaseStorage {
       .from(briefs)
       .leftJoin(users, eq(briefs.ownerId, users.id))
       .where(eq(briefs.slug, slug));
+    
+    console.log('[Storage] First query by slug returned:', results.length, 'results');
 
     // If not found and slug looks like "brief-123", try to find by ID
     if (results.length === 0 && slug.startsWith('brief-')) {
       const id = parseInt(slug.replace('brief-', ''));
+      console.log('[Storage] Trying fallback with ID:', id);
+      
       if (!isNaN(id)) {
         results = await this.db
           .select({
@@ -86,10 +92,15 @@ class VercelDatabaseStorage extends DatabaseStorage {
           .from(briefs)
           .leftJoin(users, eq(briefs.ownerId, users.id))
           .where(eq(briefs.id, id));
+        
+        console.log('[Storage] Fallback query by ID returned:', results.length, 'results');
       }
     }
 
-    if (results.length === 0) return undefined;
+    if (results.length === 0) {
+      console.log('[Storage] No brief found for slug:', slug);
+      return undefined;
+    }
 
     const r = results[0];
     return {

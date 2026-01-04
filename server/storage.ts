@@ -120,7 +120,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBriefBySlug(slug: string): Promise<BriefWithOrg | undefined> {
-    const results = await db
+    // First try to find by slug
+    let results = await db
       .select({
         brief: briefs,
         user: users,
@@ -128,6 +129,21 @@ export class DatabaseStorage implements IStorage {
       .from(briefs)
       .leftJoin(users, eq(briefs.ownerId, users.id))
       .where(eq(briefs.slug, slug));
+
+    // If not found and slug looks like "brief-123", try to find by ID
+    if (results.length === 0 && slug.startsWith('brief-')) {
+      const id = parseInt(slug.replace('brief-', ''));
+      if (!isNaN(id)) {
+        results = await db
+          .select({
+            brief: briefs,
+            user: users,
+          })
+          .from(briefs)
+          .leftJoin(users, eq(briefs.ownerId, users.id))
+          .where(eq(briefs.id, id));
+      }
+    }
 
     if (results.length === 0) return undefined;
 
