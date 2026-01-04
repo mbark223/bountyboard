@@ -146,23 +146,9 @@ export default function LandingPage() {
                       <Card className="h-full flex flex-col bg-[#1A1525] border-[#2A2535] hover:border-[#7B5CFA]/50 transition-all duration-300 overflow-hidden">
                         <CardHeader className="pb-3 space-y-3">
                           <div className="flex justify-between items-start">
-                            <div className="flex items-center gap-2">
-                              {brief.organization?.logoUrl ? (
-                                <Avatar className="h-8 w-8">
-                                  <AvatarImage src={brief.organization.logoUrl} alt={brief.orgName} />
-                                  <AvatarFallback className="bg-[#7B5CFA]/20 text-[#7B5CFA] text-xs">
-                                    {brief.orgName.slice(0, 2).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                              ) : (
-                                <div className="h-8 w-8 rounded-full bg-[#7B5CFA]/20 flex items-center justify-center">
-                                  <Building2 className="h-4 w-4 text-[#7B5CFA]" />
-                                </div>
-                              )}
-                              <Badge variant="outline" className="font-medium text-xs uppercase tracking-wider bg-[#2A2535] border-[#3A3545] text-gray-300">
-                                {brief.orgName}
-                              </Badge>
-                            </div>
+                            <Badge variant="outline" className="font-medium text-xs uppercase tracking-wider bg-[#2A2535] border-[#3A3545] text-gray-300">
+                              {brief.orgName}
+                            </Badge>
                             {brief.reward.type === 'CASH' ? (
                               <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
                                 <DollarSign className="h-3 w-3 mr-1" />

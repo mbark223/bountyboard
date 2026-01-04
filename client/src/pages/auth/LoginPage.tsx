@@ -98,22 +98,9 @@ export default function LoginPage() {
                   <Card className="h-full flex flex-col border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden bg-card">
                     <CardHeader className="pb-3 space-y-3">
                       <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-2">
-                          {brief.organization.logoUrl ? (
-                            <img 
-                              src={brief.organization.logoUrl} 
-                              alt={brief.orgName}
-                              className="h-8 w-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                              <Building2 className="h-4 w-4 text-primary" />
-                            </div>
-                          )}
-                          <Badge variant="outline" className="font-medium text-xs uppercase tracking-wider bg-secondary/50">
-                            {brief.orgName}
-                          </Badge>
-                        </div>
+                        <Badge variant="outline" className="font-medium text-xs uppercase tracking-wider bg-secondary/50">
+                          {brief.orgName}
+                        </Badge>
                         {brief.reward.type === 'CASH' ? (
                           <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
                             <DollarSign className="h-3 w-3 mr-1" />
