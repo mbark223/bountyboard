@@ -40,7 +40,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return <Redirect to="/welcome" />;
+    return <Redirect to="/login" />;
   }
 
   if (!user.isOnboarded) {
@@ -53,7 +53,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={BriefsListPage} />
+      <Route path="/" component={LoginPage} />
+      <Route path="/briefs" component={BriefsListPage} />
       <Route path="/b/:slug" component={BriefPublicPage} />
       <Route path="/b/:slug/submit" component={BriefSubmitPage} />
       <Route path="/submission-status" component={SubmissionStatusPage} />

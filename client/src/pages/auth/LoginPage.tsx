@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,42 +7,46 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, Mail, Shield, Sparkles, CheckCircle } from "lucide-react";
+import { Loader2, Lock, Shield, Sparkles, CheckCircle, DollarSign, Gift, Clock, Video, ArrowRight, Building2, Users } from "lucide-react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { fetchBriefs } from "@/lib/api";
+import { transformBrief } from "@/lib/transformers";
+import { Badge } from "@/components/ui/badge";
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
-  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [userType, setUserType] = useState<"creator" | "influencer">("creator");
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+
+  const { data: briefsData, isLoading: briefsLoading } = useQuery({
+    queryKey: ["briefs"],
+    queryFn: fetchBriefs,
+  });
+
+  const briefs = briefsData?.map(transformBrief) || [];
+  const activeBriefs = briefs.slice(0, 3); // Show first 3 briefs
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
-    try {
-      const response = await fetch("/api/auth/magic-link/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, userType }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to send magic link");
-      }
-
-      setSuccess(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
+    if (password !== "HardRockBet") {
+      setError("Invalid password");
       setIsLoading(false);
+      return;
     }
+
+    // For demo purposes, redirect to briefs list
+    setSuccess(true);
+    setTimeout(() => {
+      setLocation("/briefs");
+    }, 1000);
   };
 
   if (success) {
@@ -57,34 +61,10 @@ export default function LoginPage() {
             <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <CheckCircle className="h-8 w-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">Check your email!</h1>
+            <h1 className="text-2xl font-bold mb-2">Access Granted!</h1>
             <p className="text-muted-foreground mb-8">
-              We've sent a magic link to <strong>{email}</strong>
+              Redirecting you to available briefs...
             </p>
-            <Card className="text-left">
-              <CardContent className="pt-6">
-                <h3 className="font-semibold mb-2">Next steps:</h3>
-                <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                  <li>Open your email inbox</li>
-                  <li>Find the email from BountyBoard</li>
-                  <li>Click the "Sign In" button</li>
-                  <li>You'll be automatically logged in</li>
-                </ol>
-                <p className="mt-4 text-sm text-muted-foreground">
-                  The link expires in 15 minutes for security reasons.
-                </p>
-              </CardContent>
-            </Card>
-            <Button
-              variant="ghost"
-              className="mt-6"
-              onClick={() => {
-                setSuccess(false);
-                setEmail("");
-              }}
-            >
-              Send another link
-            </Button>
           </motion.div>
         </div>
       </PublicLayout>
@@ -93,7 +73,100 @@ export default function LoginPage() {
 
   return (
     <PublicLayout>
-      <div className="container max-w-lg mx-auto py-16">
+      <div className="container mx-auto py-8">
+        {/* Active Briefs Section */}
+        {activeBriefs.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-2xl font-heading font-semibold mb-6">Active Briefs</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {activeBriefs.map((brief, index) => (
+                <motion.div
+                  key={brief.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  onClick={() => setLocation(`/b/${brief.slug}`)}
+                  className="cursor-pointer"
+                >
+                  <Card className="h-full flex flex-col border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden bg-card">
+                    <CardHeader className="pb-3 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          {brief.organization.logoUrl ? (
+                            <img 
+                              src={brief.organization.logoUrl} 
+                              alt={brief.orgName}
+                              className="h-8 w-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Building2 className="h-4 w-4 text-primary" />
+                            </div>
+                          )}
+                          <Badge variant="outline" className="font-medium text-xs uppercase tracking-wider bg-secondary/50">
+                            {brief.orgName}
+                          </Badge>
+                        </div>
+                        {brief.reward.type === 'CASH' ? (
+                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
+                            <DollarSign className="h-3 w-3 mr-1" />
+                            Cash
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800">
+                            <Gift className="h-3 w-3 mr-1" />
+                            Product
+                          </Badge>
+                        )}
+                      </div>
+                      <h3 className="text-xl font-heading font-bold leading-tight hover:text-primary transition-colors">
+                        {brief.title}
+                      </h3>
+                    </CardHeader>
+                    
+                    <CardContent className="flex-1 pb-4">
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                        {brief.overview}
+                      </p>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center text-sm text-foreground/80">
+                          {brief.reward.type === 'OTHER' ? (
+                            <Gift className="h-4 w-4 text-purple-500 mr-2" />
+                          ) : (
+                            <DollarSign className="h-4 w-4 text-green-500 mr-2" />
+                          )}
+                          <span className="font-bold">
+                            {brief.reward.type === 'OTHER' 
+                              ? brief.reward.amount 
+                              : formatCurrency(brief.reward.amount as number, brief.reward.currency)}
+                          </span>
+                          <span className="text-muted-foreground ml-1 font-normal">
+                            Bounty
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center text-sm text-foreground/80">
+                          <Clock className="h-4 w-4 text-orange-500 mr-2" />
+                          <span>Due {new Date(brief.deadline).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+            <div className="mt-6 text-center">
+              <Button variant="link" onClick={() => setLocation("/")}>
+                View all briefs
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </section>
+        )}
+
+        {/* Login Form */}
+        <div className="max-w-lg mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -144,15 +217,15 @@ export default function LoginPage() {
                   </RadioGroup>
                 </div>
 
-                {/* Email Input */}
+                {/* Password Input */}
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email address</Label>
+                  <Label htmlFor="password">Password</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="password"
+                    type="password"
+                    placeholder="Enter password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
                   />
@@ -173,13 +246,13 @@ export default function LoginPage() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending magic link...
+                      Unlocking...
                     </>
                   ) : (
                     <>
-                      <Mail className="mr-2 h-4 w-4" />
-                      Send me a magic link
-                    </>
+                      <Lock className="mr-2 h-4 w-4" />
+                      Unlock Briefs
+                    <>
                   )}
                 </Button>
               </form>
@@ -199,6 +272,7 @@ export default function LoginPage() {
             </CardContent>
           </Card>
         </motion.div>
+        </div>
       </div>
     </PublicLayout>
   );
