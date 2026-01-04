@@ -17,7 +17,7 @@
     },
     {
       "source": "/api/admin/submissions",
-      "destination": "/api/admin-submissions-simple-cjs"
+      "destination": "/api/admin-submissions-minimal"
     },
     {
       "source": "/api/briefs/by-slug/:slug",
