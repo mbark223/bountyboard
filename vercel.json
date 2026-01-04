@@ -17,7 +17,7 @@
     },
     {
       "source": "/api/admin/submissions",
-      "destination": "/api/admin-submissions"
+      "destination": "/api/admin-submissions-simple"
     },
     {
       "source": "/api/submissions/:submissionId/feedback",

@@ -37,7 +37,7 @@ export async function createBrief(brief: InsertBrief): Promise<Brief> {
 
 // Submissions API
 export async function fetchSubmissions(briefId: number): Promise<Submission[]> {
-  const response = await fetch(`/api/briefs/${briefId}/submissions`);
+  const response = await fetch(`/api/admin/submissions?briefId=${briefId}`);
   if (!response.ok) throw new Error("Failed to fetch submissions");
   return response.json();
 }
