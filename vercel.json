@@ -17,7 +17,7 @@
     },
     {
       "source": "/api/admin/submissions",
-      "destination": "/api/admin-submissions-mock"
+      "destination": "/api/admin-submissions-real"
     },
     {
       "source": "/api/briefs/by-slug/:slug",
