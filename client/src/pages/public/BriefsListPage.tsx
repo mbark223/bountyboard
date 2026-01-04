@@ -77,7 +77,12 @@ export default function BriefsListPage() {
               >
                 <Link href={`/b/${brief.slug}`}>
                   <a className="block h-full group" data-testid={`card-brief-${brief.id}`}>
-                    <Card className="h-full flex flex-col border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden bg-card">
+                    <Card className="h-full flex flex-col border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden bg-card relative">
+                      <img 
+                        src="/hrb-logo.png" 
+                        alt="Hard Rock Bet" 
+                        className="absolute top-3 right-3 h-8 w-8 opacity-30 group-hover:opacity-50 transition-opacity duration-300 z-10"
+                      />
                       <CardHeader className="pb-3 space-y-3">
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-2">
