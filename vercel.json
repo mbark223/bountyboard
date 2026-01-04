@@ -21,7 +21,7 @@
     },
     {
       "source": "/api/briefs/by-slug/:slug",
-      "destination": "/api/briefs/by-slug/[slug]"
+      "destination": "/api/briefs-by-slug?slug=:slug"
     },
     {
       "source": "/api/briefs/id/:id",
