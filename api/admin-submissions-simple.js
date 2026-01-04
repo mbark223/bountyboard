@@ -41,12 +41,12 @@ export default async function handler(req, res) {
     const submissionsResult = await pool.query(`
       SELECT 
         s.*,
-        u.username as creator_username,
-        u.email as creator_email,
+        u.username as creator_username_from_user,
+        u.email as creator_email_from_user,
         u.first_name as creator_first_name,
         u.last_name as creator_last_name
       FROM submissions s
-      LEFT JOIN users u ON s.user_id = u.id
+      LEFT JOIN users u ON s.creator_id = u.id
       WHERE s.brief_id = $1
       ORDER BY s.submitted_at DESC
     `, [briefId]);
@@ -73,34 +73,58 @@ export default async function handler(req, res) {
       videoUrl: row.video_url,
       status: row.status,
       submittedAt: row.submitted_at,
-      feedback: row.feedback,
-      creatorId: row.user_id,
+      creatorId: row.creator_id,
+      creatorName: row.creator_name,
+      creatorEmail: row.creator_email,
+      creatorPhone: row.creator_phone,
+      creatorHandle: row.creator_handle,
+      creatorBettingAccount: row.creator_betting_account,
+      message: row.message,
+      videoFileName: row.video_file_name,
+      videoMimeType: row.video_mime_type,
+      videoSizeBytes: row.video_size_bytes,
+      payoutStatus: row.payout_status,
+      payoutAmount: row.payout_amount,
+      payoutNotes: row.payout_notes,
+      reviewedBy: row.reviewed_by,
+      reviewNotes: row.review_notes,
+      selectedAt: row.selected_at,
+      paidAt: row.paid_at,
+      hasFeedback: row.has_feedback,
+      parentSubmissionId: row.parent_submission_id,
+      submissionVersion: row.submission_version,
+      allowsResubmission: row.allows_resubmission,
       briefId: row.brief_id,
       brief: {
         id: brief.id,
-        slug: brief.slug,
+        slug: brief.slug || `brief-${brief.id}`,
         title: brief.title,
-        orgName: brief.org_name,
+        orgName: brief.user_org_name || brief.org_name,
+        organization: {
+          name: brief.user_org_name || brief.org_name,
+          slug: brief.org_slug,
+          logoUrl: brief.org_logo_url,
+          website: brief.org_website,
+          description: brief.org_description
+        },
         rewardType: brief.reward_type,
         rewardAmount: brief.reward_amount,
         rewardCurrency: brief.reward_currency,
         rewardDescription: brief.reward_description,
-        reward: {
-          type: brief.reward_type,
-          amount: brief.reward_amount,
-          currency: brief.reward_currency || 'USD',
-          description: brief.reward_description
-        }
+        deadline: brief.deadline,
+        status: brief.status,
+        maxWinners: brief.max_winners,
+        maxSubmissionsPerCreator: brief.max_submissions_per_creator
       },
       creator: {
-        id: row.user_id,
-        username: row.creator_username,
+        id: row.creator_id,
+        username: row.creator_username_from_user || row.creator_handle,
         email: row.creator_email,
         firstName: row.creator_first_name,
         lastName: row.creator_last_name,
-        name: row.creator_first_name && row.creator_last_name 
+        name: row.creator_name || (row.creator_first_name && row.creator_last_name 
           ? `${row.creator_first_name} ${row.creator_last_name}`
-          : row.creator_username || row.creator_email
+          : row.creator_username_from_user || row.creator_handle || row.creator_email)
       }
     }));
     

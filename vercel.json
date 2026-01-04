@@ -36,6 +36,10 @@
       "destination": "/api/briefs/[id]"
     },
     {
+      "source": "/api/submissions",
+      "destination": "/api/submissions-create"
+    },
+    {
       "source": "/api/submissions/:id/feedback",
       "destination": "/api/submissions/[id]/feedback"
     },
