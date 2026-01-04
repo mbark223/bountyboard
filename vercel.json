@@ -45,7 +45,7 @@
     },
     {
       "source": "/api/submissions/:id/status",
-      "destination": "/api/submissions-status?id=:id"
+      "destination": "/api/submissions-status-simple?id=:id"
     },
     {
       "source": "/api/submissions/:id/payout",

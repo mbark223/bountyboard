@@ -36,7 +36,13 @@ export default async function handler(req, res) {
       throw new Error('DATABASE_URL not configured');
     }
     
-    console.log('[API] Updating submission status:', { submissionId, status, allowsResubmission, reviewNotes });
+    console.log('[API] Updating submission status:', { 
+      submissionId, 
+      status, 
+      allowsResubmission, 
+      reviewNotes,
+      reviewNotesLength: reviewNotes ? reviewNotes.length : 0 
+    });
     
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
@@ -69,9 +75,12 @@ export default async function handler(req, res) {
       values.push(reviewNotes);
     }
     
+    // Add updated_at only if we're updating other fields
+    updateFields.push('updated_at = NOW()');
+    
     const updateQuery = `
       UPDATE submissions 
-      SET ${updateFields.join(', ')}, updated_at = NOW()
+      SET ${updateFields.join(', ')}
       WHERE id = $1
       RETURNING 
         id,

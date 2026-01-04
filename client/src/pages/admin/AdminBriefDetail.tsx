@@ -251,13 +251,21 @@ export default function AdminBriefDetail() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={
-                          sub.status === 'SELECTED' ? 'bg-green-100 text-green-700 border-green-200' :
-                          sub.status === 'NOT_SELECTED' ? 'bg-red-50 text-red-700 border-red-200' :
-                          'bg-gray-100 text-gray-700'
-                        }>
-                          {sub.status.replace('_', ' ')}
-                        </Badge>
+                        <div className="space-y-1">
+                          <Badge variant="outline" className={
+                            sub.status === 'SELECTED' ? 'bg-green-100 text-green-700 border-green-200' :
+                            sub.status === 'NOT_SELECTED' ? 'bg-red-50 text-red-700 border-red-200' :
+                            'bg-gray-100 text-gray-700'
+                          }>
+                            {sub.status.replace('_', ' ')}
+                          </Badge>
+                          {sub.hasFeedback > 0 && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <MessageSquare className="h-3 w-3" />
+                              Feedback
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button 

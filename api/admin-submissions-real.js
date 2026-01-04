@@ -58,7 +58,7 @@ export default async function handler(req, res) {
         s.review_notes,
         s.selected_at,
         s.paid_at,
-        s.has_feedback,
+        COALESCE(s.has_feedback, (SELECT COUNT(*) FROM feedback WHERE submission_id = s.id)) as has_feedback,
         s.parent_submission_id,
         s.submission_version,
         s.allows_resubmission,
