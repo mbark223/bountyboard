@@ -44,10 +44,28 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user.isOnboarded) {
-    return <OnboardingPage user={user} />;
+    return <Redirect to="/onboarding" />;
   }
 
   return <>{children}</>;
+}
+
+function OnboardingRoute() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!user) {
+    return <Redirect to="/login" />;
+  }
+
+  if (user.isOnboarded) {
+    return <Redirect to="/admin" />;
+  }
+
+  return <OnboardingPage user={user} />;
 }
 
 function Router() {
@@ -63,6 +81,7 @@ function Router() {
       <Route path="/portal" component={InfluencerPortalPage} />
       <Route path="/welcome" component={LandingPage} />
       <Route path="/login" component={LoginPage} />
+      <Route path="/onboarding" component={OnboardingRoute} />
       <Route path="/account/settings" component={AccountSettingsPage} />
       <Route path="/influencer/submit/:briefId" component={InfluencerSubmissionPage} />
       

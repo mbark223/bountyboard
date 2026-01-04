@@ -86,7 +86,7 @@ export default function OnboardingPage({ user }: { user: User }) {
         orgSlug: generateSlug(user.orgName!),
       }));
     }
-  }, [user.orgName]);
+  }, [user.orgName, formData.orgSlug]);
 
   const handleOrgNameChange = (value: string) => {
     setFormData((prev) => ({
