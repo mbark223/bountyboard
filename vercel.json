@@ -20,16 +20,48 @@
       "destination": "/api/admin-submissions-simple"
     },
     {
-      "source": "/api/submissions/:submissionId/feedback",
-      "destination": "/api/submissions-feedback?submissionId=:submissionId"
+      "source": "/api/briefs/by-slug/:slug",
+      "destination": "/api/briefs/by-slug/[slug]"
     },
     {
-      "source": "/api/briefs",
-      "destination": "/api/briefs"
+      "source": "/api/briefs/id/:id",
+      "destination": "/api/briefs/[id]"
     },
     {
-      "source": "/api/health-check",
-      "destination": "/api/health-check"
+      "source": "/api/briefs/:id/submissions",
+      "destination": "/api/briefs/[id]/submissions"
+    },
+    {
+      "source": "/api/briefs/:id",
+      "destination": "/api/briefs/[id]"
+    },
+    {
+      "source": "/api/submissions/:id/feedback",
+      "destination": "/api/submissions/[id]/feedback"
+    },
+    {
+      "source": "/api/submissions/:id/status",
+      "destination": "/api/submissions/[id]/status"
+    },
+    {
+      "source": "/api/submissions/:id/payout",
+      "destination": "/api/submissions/[id]/payout"
+    },
+    {
+      "source": "/api/feedback/:id",
+      "destination": "/api/feedback/[id]"
+    },
+    {
+      "source": "/api/templates/:id",
+      "destination": "/api/templates/[id]"
+    },
+    {
+      "source": "/api/influencers/:id/status",
+      "destination": "/api/influencers/[id]/status"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     },
     {
       "source": "/(.*)",
