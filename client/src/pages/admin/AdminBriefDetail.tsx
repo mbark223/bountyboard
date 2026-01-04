@@ -34,6 +34,7 @@ export default function AdminBriefDetail() {
   const queryClient = useQueryClient();
   
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [allowResubmission, setAllowResubmission] = useState(true);
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
   const [rejectionFeedback, setRejectionFeedback] = useState("");
@@ -260,9 +261,9 @@ export default function AdminBriefDetail() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Dialog>
+                        <Dialog onOpenChange={(open) => { if (open) setSelectedSubmission(sub); }}>
                           <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" onClick={() => setSelectedSubmission(sub)}>Review</Button>
+                            <Button variant="outline" size="sm">Review</Button>
                           </DialogTrigger>
                           <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0 overflow-hidden">
                             {selectedSubmission && (
