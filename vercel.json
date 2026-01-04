@@ -4,11 +4,9 @@
   "framework": null,
   "functions": {
     "api/*.ts": {
-      "runtime": "@vercel/node@latest",
       "maxDuration": 10
     },
     "api/*.js": {
-      "runtime": "@vercel/node@latest",
       "maxDuration": 10
     }
   },
