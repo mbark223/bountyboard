@@ -173,7 +173,7 @@ export default function AdminBriefDetail() {
               <ExternalLink className="mr-2 h-4 w-4" />
               Public Page
             </Button>
-            <Button>Edit Brief</Button>
+            <Button onClick={() => setLocation(`/admin/briefs/${id}/edit`)}>Edit Brief</Button>
           </div>
         </div>
       </div>

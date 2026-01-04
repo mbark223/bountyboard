@@ -19,6 +19,7 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminBriefs from "@/pages/admin/AdminBriefs";
 import AdminBriefDetail from "@/pages/admin/AdminBriefDetail";
 import CreateBriefPage from "@/pages/admin/CreateBriefPage";
+import EditBriefPage from "@/pages/admin/EditBriefPage";
 import AdminInfluencers from "@/pages/admin/AdminInfluencers";
 import LoginPage from "@/pages/auth/LoginPage";
 import AccountSettingsPage from "@/pages/account/AccountSettingsPage";
@@ -100,6 +101,13 @@ function Router() {
         <ProtectedRoute>
           <CreateBriefPage />
         </ProtectedRoute>
+      </Route>
+      <Route path="/admin/briefs/:id/edit">
+        {(params) => (
+          <ProtectedRoute>
+            <EditBriefPage />
+          </ProtectedRoute>
+        )}
       </Route>
       <Route path="/admin/briefs/:id">
         {(params) => (
