@@ -17,6 +17,7 @@ export async function fetchBriefBySlug(slug: string): Promise<Brief> {
   console.log('[Client API] Fetching brief with slug:', slug);
   const response = await fetch(`/api/briefs/by-slug/${slug}`);
   console.log('[Client API] Response status:', response.status);
+  console.log('[Client API] Response headers:', response.headers.get('content-type'));
   
   if (!response.ok) {
     const error = await response.json();
@@ -24,9 +25,22 @@ export async function fetchBriefBySlug(slug: string): Promise<Brief> {
     throw new Error(error.error || "Failed to fetch brief");
   }
   
-  const data = await response.json();
-  console.log('[Client API] Brief received:', { id: data.id, slug: data.slug, title: data.title });
-  return data;
+  // Get response text first to see what we're actually getting
+  const responseText = await response.text();
+  console.log('[Client API] Raw response:', responseText.substring(0, 200) + '...');
+  
+  try {
+    const data = JSON.parse(responseText);
+    console.log('[Client API] Parsed data type:', typeof data);
+    console.log('[Client API] Data is null?', data === null);
+    console.log('[Client API] Data keys:', data ? Object.keys(data) : 'no data');
+    console.log('[Client API] Brief received:', data ? { id: data.id, slug: data.slug, title: data.title } : 'no data');
+    return data;
+  } catch (e) {
+    console.error('[Client API] Failed to parse JSON:', e);
+    console.error('[Client API] Response was:', responseText);
+    throw new Error('Invalid JSON response from server');
+  }
 }
 
 export async function fetchBriefById(id: string): Promise<Brief> {

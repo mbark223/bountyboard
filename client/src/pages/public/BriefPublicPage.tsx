@@ -30,16 +30,24 @@ export default function BriefPublicPage() {
   
   console.log('[BriefPublicPage] Component mounted with slug:', slug);
 
-  const { data: rawBrief, isLoading, error } = useQuery({
+  const { data: rawBrief, isLoading, error, isError, isSuccess } = useQuery({
     queryKey: ["brief", slug],
     queryFn: () => fetchBriefBySlug(slug!),
     enabled: !!slug,
     onSuccess: (data) => {
-      console.log('[BriefPublicPage] Raw brief data received:', data);
+      console.log('[BriefPublicPage] onSuccess called with data:', data);
     },
     onError: (err) => {
-      console.error('[BriefPublicPage] Error fetching brief:', err);
+      console.error('[BriefPublicPage] onError called with error:', err);
     }
+  });
+  
+  console.log('[BriefPublicPage] Query state:', { 
+    isLoading, 
+    isError, 
+    isSuccess, 
+    hasData: !!rawBrief,
+    error: error?.message 
   });
 
   if (isLoading) {
