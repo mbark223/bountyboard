@@ -137,7 +137,10 @@ export default function AdminBriefs() {
                 <TableRow 
                   key={brief.id} 
                   className="cursor-pointer border-[#2A2A2A] hover:bg-[#1A1A1A]" 
-                  onClick={() => setLocation(`/admin/briefs/${brief.id}`)}
+                  onClick={() => {
+                    console.log('Brief clicked:', brief.id);
+                    setLocation(`/admin/briefs/${brief.id}`);
+                  }}
                 >
                   <TableCell className="font-medium text-white">
                     <div>{brief.title}</div>
