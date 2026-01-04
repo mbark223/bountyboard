@@ -60,6 +60,13 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Brief not found' });
     }
     
+    // Get submission count
+    const countResult = await pool.query(
+      'SELECT COUNT(*) as count FROM submissions WHERE brief_id = $1',
+      [briefId]
+    );
+    const submissionCount = parseInt(countResult.rows[0].count);
+    
     // Transform snake_case to camelCase
     const row = result.rows[0];
     const brief = {
@@ -86,6 +93,7 @@ export default async function handler(req, res) {
       ownerId: row.owner_id,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
+      submissionCount: submissionCount,
       organization: {
         name: row.user_org_name || row.org_name,
         slug: row.org_slug,

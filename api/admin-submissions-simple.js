@@ -124,7 +124,16 @@ export default async function handler(req, res) {
         lastName: row.creator_last_name,
         name: row.creator_name || (row.creator_first_name && row.creator_last_name 
           ? `${row.creator_first_name} ${row.creator_last_name}`
-          : row.creator_username_from_user || row.creator_handle || row.creator_email)
+          : row.creator_username_from_user || row.creator_handle || row.creator_email),
+        handle: row.creator_handle || '@' + (row.creator_handle || row.creator_email.split('@')[0])
+      },
+      video: {
+        url: row.video_url,
+        fileName: row.video_file_name,
+        mimeType: row.video_mime_type,
+        sizeBytes: row.video_size_bytes,
+        duration: '0:30', // Mock duration for now
+        thumbnail: '/placeholder-video.jpg' // Mock thumbnail for now
       }
     }));
     
