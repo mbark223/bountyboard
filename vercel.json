@@ -21,12 +21,12 @@
       "destination": "/api/submissions-feedback?submissionId=:submissionId"
     },
     {
-      "source": "/api/briefs/:path*",
-      "destination": "/api/briefs/:path*"
+      "source": "/api/briefs",
+      "destination": "/api/briefs"
     },
     {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
+      "source": "/api/health-check",
+      "destination": "/api/health-check"
     },
     {
       "source": "/(.*)",

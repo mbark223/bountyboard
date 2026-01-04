@@ -23,10 +23,17 @@ export default function LoginPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  const { data: briefsData, isLoading: briefsLoading } = useQuery({
+  const { data: briefsData, isLoading: briefsLoading, error: briefsError } = useQuery({
     queryKey: ["briefs"],
     queryFn: fetchBriefs,
   });
+
+  // Log any errors for debugging
+  useEffect(() => {
+    if (briefsError) {
+      console.error("Failed to load briefs:", briefsError);
+    }
+  }, [briefsError]);
 
   const briefs = briefsData?.map(transformBrief) || [];
   const activeBriefs = briefs.slice(0, 3); // Show first 3 briefs
@@ -75,7 +82,7 @@ export default function LoginPage() {
     <PublicLayout>
       <div className="container mx-auto py-8">
         {/* Active Briefs Section */}
-        {activeBriefs.length > 0 && (
+        {!briefsLoading && !briefsError && activeBriefs.length > 0 && (
           <section className="mb-12">
             <h2 className="text-2xl font-heading font-semibold mb-6">Active Briefs</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
