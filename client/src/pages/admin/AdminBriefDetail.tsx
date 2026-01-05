@@ -275,6 +275,17 @@ export default function AdminBriefDetail() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  <TableRow className="bg-red-500">
+                    <TableCell colSpan={5} className="text-white">
+                      Debug: Total submissions: {submissions.length}, Filtered: {submissions.filter((sub) => {
+                        if (statusFilter === 'all') return true;
+                        if (statusFilter === 'pending') return sub.status === 'RECEIVED' || sub.status === 'IN_REVIEW';
+                        if (statusFilter === 'selected') return sub.status === 'SELECTED';
+                        if (statusFilter === 'rejected') return sub.status === 'NOT_SELECTED';
+                        return true;
+                      }).length}, Filter: {statusFilter}
+                    </TableCell>
+                  </TableRow>
                   {submissions
                     .filter((sub) => {
                       if (statusFilter === 'all') return true;
@@ -283,7 +294,9 @@ export default function AdminBriefDetail() {
                       if (statusFilter === 'rejected') return sub.status === 'NOT_SELECTED';
                       return true;
                     })
-                    .map((sub) => (
+                    .map((sub) => {
+                      console.log('[AdminBriefDetail] Rendering submission:', sub.id, sub.creator.name, sub.status);
+                      return (
                     <TableRow key={sub.id} className="border-[#2A2A2A] hover:bg-[#1A1A1A] bg-[#0A0A0A]">
                       <TableCell className="text-white">
                         <div className="font-medium">{sub.creator.name}</div>
@@ -339,7 +352,7 @@ export default function AdminBriefDetail() {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )})}
                   {submissions.filter((sub) => {
                       if (statusFilter === 'all') return true;
                       if (statusFilter === 'pending') return sub.status === 'RECEIVED' || sub.status === 'IN_REVIEW';
