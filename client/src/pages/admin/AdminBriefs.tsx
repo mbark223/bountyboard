@@ -40,15 +40,10 @@ export default function AdminBriefs() {
   const [stateFilter, setStateFilter] = useState<string>("all");
 
   // Fetch briefs from API
-  const { data: briefs = [], isLoading, error } = useQuery({
+  const { data: briefs = [], isLoading } = useQuery({
     queryKey: ["adminBriefs"],
     queryFn: fetchAdminBriefs,
   });
-  
-  // Debug logging
-  console.log('[AdminBriefs] Briefs data:', briefs);
-  console.log('[AdminBriefs] Loading state:', isLoading);
-  console.log('[AdminBriefs] Error:', error);
 
   const filteredBriefs = briefs.filter(b => {
     const matchesSearch = b.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -56,9 +51,6 @@ export default function AdminBriefs() {
     const matchesState = stateFilter === "all" || (b as any).state === stateFilter;
     return matchesSearch && matchesBusinessLine && matchesState;
   });
-  
-  console.log('[AdminBriefs] Filtered briefs:', filteredBriefs);
-  console.log('[AdminBriefs] Filters:', { searchTerm, businessLineFilter, stateFilter });
 
   if (isLoading) {
     return (
@@ -141,19 +133,11 @@ export default function AdminBriefs() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow className="bg-red-500">
-                <TableCell colSpan={8} className="text-white">
-                  Debug: {filteredBriefs.length} briefs should appear below
-                </TableCell>
-              </TableRow>
               {filteredBriefs.map((brief) => (
                 <TableRow 
                   key={brief.id} 
                   className="cursor-pointer border-[#2A2A2A] hover:bg-[#1A1A1A] bg-[#0A0A0A]" 
-                  onClick={() => {
-                    console.log('Brief clicked:', brief.id);
-                    setLocation(`/admin/briefs/${brief.id}`);
-                  }}
+                  onClick={() => setLocation(`/admin/briefs/${brief.id}`)}
                 >
                   <TableCell className="font-medium text-white">
                     <div>{brief.title}</div>
