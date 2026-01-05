@@ -53,11 +53,6 @@ export default function AdminBriefDetail() {
     queryFn: () => fetchSubmissions(parseInt(id || "0")),
     enabled: !!id,
   });
-  
-  // Debug logging
-  console.log('[AdminBriefDetail] Brief ID:', id);
-  console.log('[AdminBriefDetail] Submissions:', submissions);
-  console.log('[AdminBriefDetail] Submissions loading:', submissionsLoading);
 
   // Mutation for updating submission status
   const statusMutation = useMutation({
@@ -229,7 +224,7 @@ export default function AdminBriefDetail() {
         </TabsList>
         
         <TabsContent value="submissions" className="mt-6">
-          <Card>
+          <Card className="bg-[#0F0F0F] border-[#1A1A1A]">
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
@@ -271,12 +266,12 @@ export default function AdminBriefDetail() {
             <CardContent>
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Creator</TableHead>
-                    <TableHead>Submitted</TableHead>
-                    <TableHead>Video</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
+                  <TableRow className="border-[#2A2A2A] hover:bg-transparent">
+                    <TableHead className="text-gray-400">Creator</TableHead>
+                    <TableHead className="text-gray-400">Submitted</TableHead>
+                    <TableHead className="text-gray-400">Video</TableHead>
+                    <TableHead className="text-gray-400">Status</TableHead>
+                    <TableHead className="text-right text-gray-400">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -289,12 +284,12 @@ export default function AdminBriefDetail() {
                       return true;
                     })
                     .map((sub) => (
-                    <TableRow key={sub.id} className="border-border hover:bg-muted/50">
-                      <TableCell>
+                    <TableRow key={sub.id} className="border-[#2A2A2A] hover:bg-[#1A1A1A] bg-[#0A0A0A]">
+                      <TableCell className="text-white">
                         <div className="font-medium">{sub.creator.name}</div>
-                        <div className="text-xs text-muted-foreground">{sub.creator.handle}</div>
+                        <div className="text-xs text-gray-500">{sub.creator.handle}</div>
                       </TableCell>
-                      <TableCell>{new Date(sub.submittedAt).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-gray-400">{new Date(sub.submittedAt).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm text-primary cursor-pointer hover:underline">
                           <Play className="h-3 w-3" />
@@ -353,7 +348,7 @@ export default function AdminBriefDetail() {
                       return true;
                     }).length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center py-8 text-gray-500">
                         {submissions.length === 0 
                           ? "No submissions yet." 
                           : `No ${statusFilter === 'pending' ? 'pending' : statusFilter} submissions found.`}
