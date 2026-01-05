@@ -114,6 +114,44 @@ const MOCK_BRIEFS = [
       website: null,
       description: null
     }
+  },
+  {
+    id: 4,
+    slug: "hard-rock-casino-legends",
+    title: "Hard Rock Casino Legends",
+    orgName: "Hard Rock Bet",
+    businessLine: "Casino",
+    state: "Florida",
+    overview: "Showcase the legendary casino experience at Hard Rock! Create content featuring your favorite casino games and the excitement of winning big.",
+    requirements: [
+      "Feature Hard Rock Casino app",
+      "Show responsible gaming message",
+      "Highlight casino atmosphere",
+      "Include #HardRockLegends",
+      "Must be 21+ to participate"
+    ],
+    deliverableRatio: "9:16 or 1:1",
+    deliverableLength: "15-30 seconds",
+    deliverableFormat: "MP4 / 1080p",
+    rewardType: "CASH",
+    rewardAmount: "500",
+    rewardCurrency: "USD",
+    rewardDescription: null,
+    deadline: new Date("2025-01-20T23:59:00Z"),
+    status: "PUBLISHED",
+    password: null,
+    maxWinners: 5,
+    maxSubmissionsPerCreator: 1,
+    ownerId: "demo-user-1",
+    createdAt: new Date("2024-12-30T10:00:00Z"),
+    updatedAt: new Date(),
+    organization: {
+      name: "Hard Rock Bet",
+      slug: null,
+      logoUrl: null,
+      website: null,
+      description: null
+    }
   }
 ];
 
