@@ -126,25 +126,38 @@ export default async function handler(req, res) {
         maxSubmissionsPerCreator
       } = req.body;
       
+      // Generate slug from title
+      function generateSlug(title) {
+        return title
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, '') // Remove special characters
+          .replace(/\s+/g, '-')      // Replace spaces with hyphens
+          .replace(/-+/g, '-')       // Replace multiple hyphens with single hyphen
+          .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+      }
+      
+      const slug = generateSlug(title);
+      
       // Build update query
       const updateQuery = `
         UPDATE briefs SET
-          title = $2,
-          overview = $3,
-          requirements = $4,
-          business_line = $5,
-          state = $6,
-          deliverable_ratio = $7,
-          deliverable_length = $8,
-          deliverable_format = $9,
-          reward_type = $10,
-          reward_amount = $11,
-          reward_currency = $12,
-          reward_description = $13,
-          deadline = $14,
-          status = $15,
-          max_winners = $16,
-          max_submissions_per_creator = $17,
+          slug = $2,
+          title = $3,
+          overview = $4,
+          requirements = $5,
+          business_line = $6,
+          state = $7,
+          deliverable_ratio = $8,
+          deliverable_length = $9,
+          deliverable_format = $10,
+          reward_type = $11,
+          reward_amount = $12,
+          reward_currency = $13,
+          reward_description = $14,
+          deadline = $15,
+          status = $16,
+          max_winners = $17,
+          max_submissions_per_creator = $18,
           updated_at = NOW()
         WHERE id = $1
         RETURNING *
@@ -152,6 +165,7 @@ export default async function handler(req, res) {
       
       const values = [
         briefId,
+        slug,
         title,
         overview,
         requirements || [],
