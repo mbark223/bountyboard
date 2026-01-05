@@ -37,7 +37,7 @@
     },
     {
       "source": "/api/briefs",
-      "destination": "/api/briefs-create"
+      "destination": "/api/briefs-simple"
     },
     {
       "source": "/api/submissions",
