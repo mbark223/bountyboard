@@ -40,10 +40,15 @@ export default function AdminBriefs() {
   const [stateFilter, setStateFilter] = useState<string>("all");
 
   // Fetch briefs from API
-  const { data: briefs = [], isLoading } = useQuery({
+  const { data: briefs = [], isLoading, error } = useQuery({
     queryKey: ["adminBriefs"],
     queryFn: fetchAdminBriefs,
   });
+  
+  // Debug logging
+  console.log('[AdminBriefs] Briefs data:', briefs);
+  console.log('[AdminBriefs] Loading state:', isLoading);
+  console.log('[AdminBriefs] Error:', error);
 
   const filteredBriefs = briefs.filter(b => {
     const matchesSearch = b.title.toLowerCase().includes(searchTerm.toLowerCase());
