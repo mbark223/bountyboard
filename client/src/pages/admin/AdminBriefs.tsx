@@ -56,6 +56,9 @@ export default function AdminBriefs() {
     const matchesState = stateFilter === "all" || (b as any).state === stateFilter;
     return matchesSearch && matchesBusinessLine && matchesState;
   });
+  
+  console.log('[AdminBriefs] Filtered briefs:', filteredBriefs);
+  console.log('[AdminBriefs] Filters:', { searchTerm, businessLineFilter, stateFilter });
 
   if (isLoading) {
     return (
