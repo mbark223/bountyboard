@@ -22,7 +22,142 @@ export default async function handler(req, res) {
   
   try {
     if (!process.env.DATABASE_URL) {
-      throw new Error('DATABASE_URL not configured');
+      // Use mock data in demo mode
+      console.log('[Admin Submissions Demo] Using mock data - DATABASE_URL not configured');
+      
+      const MOCK_SUBMISSIONS = [
+        {
+          id: 1,
+          videoUrl: "https://example.com/videos/submission1.mp4",
+          status: "SELECTED",
+          submittedAt: new Date("2024-12-25T10:30:00Z"),
+          creatorId: "creator-1",
+          creatorName: "John Doe",
+          creatorEmail: "john@example.com",
+          creatorPhone: "+1234567890",
+          creatorHandle: "@johndoe",
+          creatorBettingAccount: "john123",
+          message: "Here's my exciting New Year's betting tradition video! I've been using Hard Rock Bet all year.",
+          videoFileName: "new-years-bet.mp4",
+          videoMimeType: "video/mp4",
+          videoSizeBytes: 15000000,
+          payoutStatus: "PAID",
+          payoutAmount: "1000",
+          payoutNotes: "Paid via PayPal",
+          reviewedBy: "admin@hardrock.com",
+          reviewNotes: "Great energy and brand integration",
+          selectedAt: new Date("2024-12-26T14:00:00Z"),
+          paidAt: new Date("2024-12-27T10:00:00Z"),
+          hasFeedback: 1,
+          parentSubmissionId: null,
+          submissionVersion: 1,
+          allowsResubmission: 0,
+          briefId: parseInt(briefId),
+          creator: {
+            id: "creator-1",
+            name: "John Doe",
+            email: "john@example.com",
+            handle: "@johndoe"
+          },
+          video: {
+            url: "https://example.com/videos/submission1.mp4",
+            fileName: "new-years-bet.mp4",
+            mimeType: "video/mp4",
+            sizeBytes: 15000000,
+            duration: "0:28",
+            thumbnail: "/placeholder-video.jpg"
+          }
+        },
+        {
+          id: 2,
+          videoUrl: "https://example.com/videos/submission2.mp4",
+          status: "IN_REVIEW",
+          submittedAt: new Date("2024-12-26T15:45:00Z"),
+          creatorId: "creator-2",
+          creatorName: "Jane Smith",
+          creatorEmail: "jane@example.com",
+          creatorPhone: "+1234567891",
+          creatorHandle: "@janesmith",
+          creatorBettingAccount: "jane456",
+          message: "My playoff predictions are in! Go Chiefs!",
+          videoFileName: "playoffs-hype.mp4",
+          videoMimeType: "video/mp4",
+          videoSizeBytes: 25000000,
+          payoutStatus: "NOT_APPLICABLE",
+          payoutAmount: null,
+          payoutNotes: null,
+          reviewedBy: null,
+          reviewNotes: null,
+          selectedAt: null,
+          paidAt: null,
+          hasFeedback: 0,
+          parentSubmissionId: null,
+          submissionVersion: 1,
+          allowsResubmission: 1,
+          briefId: parseInt(briefId),
+          creator: {
+            id: "creator-2",
+            name: "Jane Smith",
+            email: "jane@example.com",
+            handle: "@janesmith"
+          },
+          video: {
+            url: "https://example.com/videos/submission2.mp4",
+            fileName: "playoffs-hype.mp4",
+            mimeType: "video/mp4",
+            sizeBytes: 25000000,
+            duration: "0:45",
+            thumbnail: "/placeholder-video.jpg"
+          }
+        },
+        {
+          id: 3,
+          videoUrl: "https://example.com/videos/submission3.mp4",
+          status: "NOT_SELECTED",
+          submittedAt: new Date("2024-12-24T09:15:00Z"),
+          creatorId: "creator-3",
+          creatorName: "Mike Johnson",
+          creatorEmail: "mike@example.com",
+          creatorPhone: "+1234567892",
+          creatorHandle: "@mikej",
+          creatorBettingAccount: "mikej789",
+          message: "Casino legends entry - showing my favorite slots!",
+          videoFileName: "casino-legends.mp4",
+          videoMimeType: "video/mp4",
+          videoSizeBytes: 18000000,
+          payoutStatus: "NOT_APPLICABLE",
+          payoutAmount: null,
+          payoutNotes: null,
+          reviewedBy: "admin@hardrock.com",
+          reviewNotes: "Good effort but didn't meet brand guidelines",
+          selectedAt: null,
+          paidAt: null,
+          hasFeedback: 1,
+          parentSubmissionId: null,
+          submissionVersion: 1,
+          allowsResubmission: 1,
+          briefId: parseInt(briefId),
+          creator: {
+            id: "creator-3",
+            name: "Mike Johnson",
+            email: "mike@example.com",
+            handle: "@mikej"
+          },
+          video: {
+            url: "https://example.com/videos/submission3.mp4",
+            fileName: "casino-legends.mp4",
+            mimeType: "video/mp4",
+            sizeBytes: 18000000,
+            duration: "0:20",
+            thumbnail: "/placeholder-video.jpg"
+          }
+        }
+      ];
+      
+      // Filter by briefId and return only relevant submissions
+      const filteredSubmissions = MOCK_SUBMISSIONS.filter(sub => sub.briefId === parseInt(briefId));
+      console.log(`[Admin Submissions Demo] Returning ${filteredSubmissions.length} submissions for briefId ${briefId}`);
+      return res.status(200).json(filteredSubmissions);
     }
     
     console.log('[Admin Submissions Real] Fetching submissions for briefId:', briefId);

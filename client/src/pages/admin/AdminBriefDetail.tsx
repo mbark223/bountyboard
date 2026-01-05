@@ -53,6 +53,11 @@ export default function AdminBriefDetail() {
     queryFn: () => fetchSubmissions(parseInt(id || "0")),
     enabled: !!id,
   });
+  
+  // Debug logging
+  console.log('[AdminBriefDetail] Brief ID:', id);
+  console.log('[AdminBriefDetail] Submissions:', submissions);
+  console.log('[AdminBriefDetail] Submissions loading:', submissionsLoading);
 
   // Mutation for updating submission status
   const statusMutation = useMutation({
@@ -284,7 +289,7 @@ export default function AdminBriefDetail() {
                       return true;
                     })
                     .map((sub) => (
-                    <TableRow key={sub.id}>
+                    <TableRow key={sub.id} className="border-border hover:bg-muted/50">
                       <TableCell>
                         <div className="font-medium">{sub.creator.name}</div>
                         <div className="text-xs text-muted-foreground">{sub.creator.handle}</div>
