@@ -1,5 +1,5 @@
-import { 
-  type User, 
+import {
+  type User,
   type Brief,
   type InsertBrief,
   type Submission,
@@ -12,16 +12,19 @@ import {
   type InsertInfluencer,
   type InfluencerInvite,
   type InsertInfluencerInvite,
+  type BriefAssignment,
+  type InsertBriefAssignment,
   users,
   briefs,
   submissions,
   promptTemplates,
   feedback,
   influencers,
-  influencerInvites
+  influencerInvites,
+  briefAssignments
 } from "../../shared/schema";
 import { getDb } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { DatabaseStorage } from "../../server/storage";
 
 // Create a storage instance that uses the Vercel-compatible database connection
@@ -479,6 +482,79 @@ class VercelDatabaseStorage extends DatabaseStorage {
       .returning();
     return invite;
   }
+
+  // Brief assignment methods
+  async getBriefAssignment(briefId: number, influencerId: number): Promise<BriefAssignment | undefined> {
+    const [assignment] = await this.db
+      .select()
+      .from(briefAssignments)
+      .where(and(
+        eq(briefAssignments.briefId, briefId),
+        eq(briefAssignments.influencerId, influencerId)
+      ));
+    return assignment || undefined;
+  }
+
+  async getBriefAssignments(briefId: number): Promise<BriefAssignment[]> {
+    return await this.db
+      .select()
+      .from(briefAssignments)
+      .where(eq(briefAssignments.briefId, briefId))
+      .orderBy(desc(briefAssignments.assignedAt));
+  }
+
+  async getInfluencerAssignments(influencerId: number): Promise<BriefAssignment[]> {
+    return await this.db
+      .select()
+      .from(briefAssignments)
+      .where(eq(briefAssignments.influencerId, influencerId))
+      .orderBy(desc(briefAssignments.assignedAt));
+  }
+
+  async getAssignedBriefs(influencerId: number) {
+    const results = await this.db
+      .select({
+        brief: briefs,
+        user: users,
+        assignment: briefAssignments,
+      })
+      .from(briefAssignments)
+      .innerJoin(briefs, eq(briefAssignments.briefId, briefs.id))
+      .leftJoin(users, eq(briefs.ownerId, users.id))
+      .where(and(
+        eq(briefAssignments.influencerId, influencerId),
+        eq(briefs.status, "PUBLISHED")
+      ))
+      .orderBy(desc(briefs.deadline));
+
+    return results.map((r) => ({
+      ...r.brief,
+      organization: {
+        name: r.user?.orgName || r.brief.orgName,
+        slug: r.user?.orgSlug || null,
+        logoUrl: r.user?.orgLogoUrl || null,
+        website: r.user?.orgWebsite || null,
+        description: r.user?.orgDescription || null,
+      },
+    }));
+  }
+
+  async createBriefAssignment(assignment: InsertBriefAssignment): Promise<BriefAssignment> {
+    const [created] = await this.db
+      .insert(briefAssignments)
+      .values(assignment)
+      .returning();
+    return created;
+  }
+
+  async deleteBriefAssignment(briefId: number, influencerId: number): Promise<void> {
+    await this.db
+      .delete(briefAssignments)
+      .where(and(
+        eq(briefAssignments.briefId, briefId),
+        eq(briefAssignments.influencerId, influencerId)
+      ));
+  }
 }
 
 // Create a wrapped storage instance with error handling
@@ -560,6 +636,14 @@ class SafeStorage {
   async createInfluencerInvite(invite: any) { return this.storage.createInfluencerInvite(invite); }
   async updateInfluencerInviteStatus(id: number, status: string) { return this.storage.updateInfluencerInviteStatus(id, status); }
   async getAllInfluencerInvites() { return this.storage.getAllInfluencerInvites(); }
+
+  // Brief assignment methods
+  async getBriefAssignment(briefId: number, influencerId: number) { return this.storage.getBriefAssignment(briefId, influencerId); }
+  async getBriefAssignments(briefId: number) { return this.storage.getBriefAssignments(briefId); }
+  async getInfluencerAssignments(influencerId: number) { return this.storage.getInfluencerAssignments(influencerId); }
+  async getAssignedBriefs(influencerId: number) { return this.storage.getAssignedBriefs(influencerId); }
+  async createBriefAssignment(assignment: any) { return this.storage.createBriefAssignment(assignment); }
+  async deleteBriefAssignment(briefId: number, influencerId: number) { return this.storage.deleteBriefAssignment(briefId, influencerId); }
 }
 
 export const storage = new SafeStorage();

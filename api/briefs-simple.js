@@ -1,5 +1,7 @@
 // Simple JavaScript version of briefs endpoint
 import { Pool } from 'pg';
+import { getUser } from './_lib/auth.ts';
+import { storage } from './_lib/storage.ts';
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -7,27 +9,72 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
-  
+
   if (req.method === 'POST') {
     // For POST requests, return a simple error in demo mode
     return res.status(400).json({ error: 'Creating briefs is not available in demo mode' });
   }
-  
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  
-  let pool;
+
+  // Check authentication
+  const user = await getUser(req);
+  if (!user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
   
   try {
-    if (!process.env.DATABASE_URL) {
-      // Use mock data in demo mode - return only published briefs
-      console.log('[Demo API] Using mock data - DATABASE_URL not configured');
-      const MOCK_BRIEFS = [
+    // For admins: return briefs they own
+    if (user.userType === 'admin' || user.role === 'admin') {
+      const briefs = await storage.getBriefsByOwnerId(user.id);
+      console.log(`[Auth] Admin ${user.email} - returning ${briefs.length} owned briefs`);
+      return res.status(200).json(briefs);
+    }
+
+    // For influencers: return only assigned briefs
+    if (user.userType === 'influencer') {
+      const influencer = await storage.getInfluencerByEmail(user.email);
+
+      if (!influencer) {
+        console.log(`[Auth] Influencer ${user.email} - no influencer record found`);
+        return res.status(403).json({ error: 'Influencer profile not found' });
+      }
+
+      if (influencer.status !== 'approved') {
+        console.log(`[Auth] Influencer ${user.email} - status: ${influencer.status}`);
+        return res.status(403).json({
+          error: 'Account pending approval',
+          status: influencer.status
+        });
+      }
+
+      const briefs = await storage.getAssignedBriefs(influencer.id);
+      console.log(`[Auth] Influencer ${user.email} - returning ${briefs.length} assigned briefs`);
+      return res.status(200).json(briefs);
+    }
+
+    // Other user types not allowed
+    console.log(`[Auth] User ${user.email} - unauthorized userType: ${user.userType}`);
+    return res.status(403).json({ error: 'Access denied' });
+
+  } catch (error) {
+    console.error('Error fetching briefs:', error);
+    res.status(500).json({
+      error: 'Failed to fetch briefs',
+      message: error.message
+    });
+  }
+}
+
+// Legacy mock data code (kept for reference, but no longer used)
+function getLegacyMockBriefs() {
+  return [
         {
           id: 1,
           slug: "pmr-new-years-2025",
@@ -178,82 +225,6 @@ export default async function handler(req, res) {
             description: null
           }
         }
-      ];
-      
-      console.log(`[Demo API] Returning ${MOCK_BRIEFS.length} published briefs`);
-      return res.status(200).json(MOCK_BRIEFS);
-    }
-    
-    pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      max: 1,
-      ssl: {
-        rejectUnauthorized: false
-      }
-    });
-    
-    const result = await pool.query(`
-      SELECT 
-        b.*,
-        u.org_name as user_org_name,
-        u.org_slug,
-        u.org_logo_url,
-        u.org_website,
-        u.org_description
-      FROM briefs b
-      LEFT JOIN users u ON b.owner_id = u.id
-      WHERE b.status = 'PUBLISHED'
-      ORDER BY b.created_at DESC
-    `);
-    
-    // Transform snake_case to camelCase
-    const briefs = result.rows.map(row => ({
-      id: row.id,
-      slug: row.slug || `brief-${row.id}`, // Fallback to ID-based slug if null
-      title: row.title,
-      orgName: row.org_name,
-      businessLine: row.business_line,
-      state: row.state,
-      overview: row.overview,
-      requirements: row.requirements,
-      deliverableRatio: row.deliverable_ratio,
-      deliverableLength: row.deliverable_length,
-      deliverableFormat: row.deliverable_format,
-      rewardType: row.reward_type,
-      rewardAmount: row.reward_amount,
-      rewardCurrency: row.reward_currency,
-      rewardDescription: row.reward_description,
-      deadline: row.deadline,
-      status: row.status,
-      password: row.password,
-      maxWinners: row.max_winners,
-      maxSubmissionsPerCreator: row.max_submissions_per_creator,
-      ownerId: row.owner_id,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      organization: {
-        name: row.user_org_name || row.org_name,
-        slug: row.org_slug,
-        logoUrl: row.org_logo_url,
-        website: row.org_website,
-        description: row.org_description,
-      }
-    }));
-    
-    console.log(`Returning ${briefs.length} published briefs`);
-    console.log('Brief slugs:', briefs.map(b => ({ id: b.id, slug: b.slug, title: b.title })));
-    res.status(200).json(briefs);
-    
-  } catch (error) {
-    console.error('Error fetching briefs:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch briefs',
-      message: error.message,
-      code: error.code
-    });
-  } finally {
-    if (pool) {
-      await pool.end();
-    }
-  }
+      ]
+  ];
 }

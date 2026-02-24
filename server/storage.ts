@@ -1,5 +1,5 @@
-import { 
-  type User, 
+import {
+  type User,
   type Brief,
   type InsertBrief,
   type Submission,
@@ -10,15 +10,18 @@ import {
   type InsertFeedback,
   type Influencer,
   type InsertInfluencer,
+  type BriefAssignment,
+  type InsertBriefAssignment,
   users,
   briefs,
   submissions,
   promptTemplates,
   feedback,
-  influencers
+  influencers,
+  briefAssignments
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface BriefWithOrg extends Brief {
   organization: {
@@ -41,7 +44,9 @@ export type {
   Feedback,
   InsertFeedback,
   Influencer,
-  InsertInfluencer
+  InsertInfluencer,
+  BriefAssignment,
+  InsertBriefAssignment
 };
 
 export interface IStorage {
@@ -81,6 +86,14 @@ export interface IStorage {
   updateInfluencerStatus(id: number, status: string, rejectionReason?: string): Promise<Influencer>;
   updateInfluencerActivity(id: number): Promise<void>;
   getInfluencerSubmissions(email: string): Promise<Submission[]>;
+
+  // Brief assignment methods
+  getBriefAssignment(briefId: number, influencerId: number): Promise<BriefAssignment | undefined>;
+  getBriefAssignments(briefId: number): Promise<BriefAssignment[]>;
+  getInfluencerAssignments(influencerId: number): Promise<BriefAssignment[]>;
+  getAssignedBriefs(influencerId: number): Promise<BriefWithOrg[]>;
+  createBriefAssignment(assignment: InsertBriefAssignment): Promise<BriefAssignment>;
+  deleteBriefAssignment(briefId: number, influencerId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -404,6 +417,79 @@ export class DatabaseStorage implements IStorage {
       .from(submissions)
       .where(eq(submissions.creatorEmail, email))
       .orderBy(desc(submissions.submittedAt));
+  }
+
+  // Brief assignment methods
+  async getBriefAssignment(briefId: number, influencerId: number): Promise<BriefAssignment | undefined> {
+    const [assignment] = await db
+      .select()
+      .from(briefAssignments)
+      .where(and(
+        eq(briefAssignments.briefId, briefId),
+        eq(briefAssignments.influencerId, influencerId)
+      ));
+    return assignment || undefined;
+  }
+
+  async getBriefAssignments(briefId: number): Promise<BriefAssignment[]> {
+    return await db
+      .select()
+      .from(briefAssignments)
+      .where(eq(briefAssignments.briefId, briefId))
+      .orderBy(desc(briefAssignments.assignedAt));
+  }
+
+  async getInfluencerAssignments(influencerId: number): Promise<BriefAssignment[]> {
+    return await db
+      .select()
+      .from(briefAssignments)
+      .where(eq(briefAssignments.influencerId, influencerId))
+      .orderBy(desc(briefAssignments.assignedAt));
+  }
+
+  async getAssignedBriefs(influencerId: number): Promise<BriefWithOrg[]> {
+    const results = await db
+      .select({
+        brief: briefs,
+        user: users,
+        assignment: briefAssignments,
+      })
+      .from(briefAssignments)
+      .innerJoin(briefs, eq(briefAssignments.briefId, briefs.id))
+      .leftJoin(users, eq(briefs.ownerId, users.id))
+      .where(and(
+        eq(briefAssignments.influencerId, influencerId),
+        eq(briefs.status, "PUBLISHED")
+      ))
+      .orderBy(desc(briefs.deadline));
+
+    return results.map((r) => ({
+      ...r.brief,
+      organization: {
+        name: r.user?.orgName || r.brief.orgName,
+        slug: r.user?.orgSlug || null,
+        logoUrl: r.user?.orgLogoUrl || null,
+        website: r.user?.orgWebsite || null,
+        description: r.user?.orgDescription || null,
+      },
+    }));
+  }
+
+  async createBriefAssignment(assignment: InsertBriefAssignment): Promise<BriefAssignment> {
+    const [created] = await db
+      .insert(briefAssignments)
+      .values(assignment)
+      .returning();
+    return created;
+  }
+
+  async deleteBriefAssignment(briefId: number, influencerId: number): Promise<void> {
+    await db
+      .delete(briefAssignments)
+      .where(and(
+        eq(briefAssignments.briefId, briefId),
+        eq(briefAssignments.influencerId, influencerId)
+      ));
   }
 }
 

@@ -1,5 +1,6 @@
-// JavaScript version of submissions creation endpoint
-import { Pool } from 'pg';
+// Protected endpoint - submission creation with authentication
+import { getUser } from './_lib/auth.ts';
+import { storage } from './_lib/storage.ts';
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -7,142 +8,108 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
-  
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  
-  let pool;
-  
+
   try {
-    if (!process.env.DATABASE_URL) {
-      throw new Error('DATABASE_URL not configured');
+    // Check authentication
+    const user = await getUser(req);
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
-    
-    pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      max: 1,
-      ssl: {
-        rejectUnauthorized: false
-      }
-    });
-    
-    const submission = req.body;
-    
-    // Validate required fields
-    if (!submission.briefId || !submission.creatorName || !submission.creatorEmail || 
-        !submission.creatorHandle || !submission.videoUrl || !submission.videoFileName) {
-      return res.status(400).json({ 
-        error: 'Missing required fields', 
-        required: ['briefId', 'creatorName', 'creatorEmail', 'creatorHandle', 'videoUrl', 'videoFileName']
+
+    // Only approved influencers can submit
+    if (user.userType !== 'influencer') {
+      return res.status(403).json({ error: 'Only influencers can submit content' });
+    }
+
+    const influencer = await storage.getInfluencerByEmail(user.email);
+
+    if (!influencer) {
+      console.log(`[Auth] Influencer ${user.email} - no influencer record found`);
+      return res.status(403).json({ error: 'Influencer profile not found' });
+    }
+
+    if (influencer.status !== 'approved') {
+      console.log(`[Auth] Influencer ${user.email} - status: ${influencer.status}`);
+      return res.status(403).json({
+        error: 'Account pending approval',
+        status: influencer.status
       });
     }
-    
+
+    const submission = req.body;
+
+    // Validate required fields
+    if (!submission.briefId || !submission.videoUrl || !submission.videoFileName) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        required: ['briefId', 'videoUrl', 'videoFileName']
+      });
+    }
+
     // Check if brief exists
-    const briefCheck = await pool.query('SELECT id FROM briefs WHERE id = $1', [submission.briefId]);
-    if (briefCheck.rows.length === 0) {
+    const brief = await storage.getBriefById(submission.briefId);
+    if (!brief) {
       return res.status(400).json({ error: 'Brief not found' });
     }
-    
+
+    // Check if influencer is assigned to this brief
+    const assignment = await storage.getBriefAssignment(submission.briefId, influencer.id);
+
+    if (!assignment) {
+      console.log(`[Auth] Influencer ${user.email} - not assigned to brief ${brief.title}`);
+      return res.status(403).json({ error: 'You are not assigned to this brief' });
+    }
+
     // Count existing submissions from this creator
-    const countResult = await pool.query(`
-      SELECT COUNT(*) as count 
-      FROM submissions 
-      WHERE brief_id = $1 
-      AND LOWER(creator_email) = LOWER($2)
-    `, [submission.briefId, submission.creatorEmail]);
-    
-    const submissionCount = parseInt(countResult.rows[0].count);
-    
-    // Check submission limit
-    const briefResult = await pool.query(
-      'SELECT max_submissions_per_creator FROM briefs WHERE id = $1',
-      [submission.briefId]
+    const submissionCount = await storage.countSubmissionsByCreatorEmail(
+      submission.briefId,
+      influencer.email
     );
-    
-    const maxSubmissions = briefResult.rows[0]?.max_submissions_per_creator || 1;
-    
+
+    // Check submission limit
+    const maxSubmissions = brief.maxSubmissionsPerCreator || 1;
+
     if (submissionCount >= maxSubmissions) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Submission limit reached',
         message: `You have already submitted the maximum of ${maxSubmissions} videos for this brief`
       });
     }
-    
-    // Insert submission
-    const insertResult = await pool.query(`
-      INSERT INTO submissions (
-        brief_id,
-        creator_id,
-        creator_name,
-        creator_email,
-        creator_phone,
-        creator_handle,
-        creator_betting_account,
-        message,
-        video_url,
-        video_file_name,
-        video_mime_type,
-        video_size_bytes,
-        status,
-        payout_status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-      RETURNING *
-    `, [
-      submission.briefId,
-      submission.creatorId || null,
-      submission.creatorName,
-      submission.creatorEmail,
-      submission.creatorPhone || null,
-      submission.creatorHandle,
-      submission.creatorBettingAccount || null,
-      submission.message || null,
-      submission.videoUrl,
-      submission.videoFileName,
-      submission.videoMimeType || 'video/mp4',
-      submission.videoSizeBytes || 0,
-      'RECEIVED',
-      'NOT_APPLICABLE'
-    ]);
-    
-    const newSubmission = insertResult.rows[0];
-    
-    // Transform to camelCase
-    const response = {
-      id: newSubmission.id,
-      briefId: newSubmission.brief_id,
-      creatorId: newSubmission.creator_id,
-      creatorName: newSubmission.creator_name,
-      creatorEmail: newSubmission.creator_email,
-      creatorPhone: newSubmission.creator_phone,
-      creatorHandle: newSubmission.creator_handle,
-      creatorBettingAccount: newSubmission.creator_betting_account,
-      message: newSubmission.message,
-      videoUrl: newSubmission.video_url,
-      videoFileName: newSubmission.video_file_name,
-      videoMimeType: newSubmission.video_mime_type,
-      videoSizeBytes: newSubmission.video_size_bytes,
-      status: newSubmission.status,
-      payoutStatus: newSubmission.payout_status,
-      submittedAt: newSubmission.submitted_at
-    };
-    
-    console.log('Created submission:', response.id);
-    res.status(201).json(response);
-    
+
+    // Create submission with authenticated user's information
+    const newSubmission = await storage.createSubmission({
+      briefId: submission.briefId,
+      creatorId: user.id, // Link to authenticated user
+      creatorName: `${influencer.firstName} ${influencer.lastName}`,
+      creatorEmail: influencer.email,
+      creatorPhone: influencer.phone,
+      creatorHandle: influencer.instagramHandle,
+      creatorBettingAccount: submission.creatorBettingAccount || null,
+      message: submission.message || null,
+      videoUrl: submission.videoUrl,
+      videoFileName: submission.videoFileName,
+      videoMimeType: submission.videoMimeType || 'video/mp4',
+      videoSizeBytes: submission.videoSizeBytes || 0,
+      status: 'RECEIVED',
+      payoutStatus: 'NOT_APPLICABLE'
+    });
+
+    console.log(`[Auth] Influencer ${user.email} - created submission ${newSubmission.id} for brief ${brief.title}`);
+    res.status(201).json(newSubmission);
+
   } catch (error) {
     console.error('Error creating submission:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create submission',
       message: error.message
     });
-  } finally {
-    if (pool) {
-      await pool.end();
-    }
   }
 }

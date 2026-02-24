@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, decimal, unique, index } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -257,3 +257,31 @@ export const insertInfluencerInviteSchema = createInsertSchema(influencerInvites
 export const selectInfluencerInviteSchema = createSelectSchema(influencerInvites);
 export type InsertInfluencerInvite = z.infer<typeof insertInfluencerInviteSchema>;
 export type InfluencerInvite = typeof influencerInvites.$inferSelect;
+
+// Brief assignments table - many-to-many relationship between briefs and influencers
+export const briefAssignments = pgTable("brief_assignments", {
+  id: serial("id").primaryKey(),
+  briefId: integer("brief_id").notNull().references(() => briefs.id, { onDelete: 'cascade' }),
+  influencerId: integer("influencer_id").notNull().references(() => influencers.id, { onDelete: 'cascade' }),
+  assignedBy: text("assigned_by").notNull(), // references users.id
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+  viewedAt: timestamp("viewed_at"),
+  status: text("status").notNull().default("assigned"), // 'assigned' | 'viewed' | 'submitted'
+}, (table) => {
+  return {
+    uniqueBriefInfluencer: unique().on(table.briefId, table.influencerId),
+    briefIdIdx: index("idx_brief_assignments_brief_id").on(table.briefId),
+    influencerIdIdx: index("idx_brief_assignments_influencer_id").on(table.influencerId),
+  };
+});
+
+export const insertBriefAssignmentSchema = createInsertSchema(briefAssignments, {
+  status: z.enum(["assigned", "viewed", "submitted"]).default("assigned"),
+}).omit({
+  id: true,
+  assignedAt: true,
+  viewedAt: true,
+});
+export const selectBriefAssignmentSchema = createSelectSchema(briefAssignments);
+export type InsertBriefAssignment = z.infer<typeof insertBriefAssignmentSchema>;
+export type BriefAssignment = typeof briefAssignments.$inferSelect;

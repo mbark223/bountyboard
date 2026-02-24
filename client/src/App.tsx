@@ -25,6 +25,8 @@ import LoginPage from "@/pages/auth/LoginPage";
 import AccountSettingsPage from "@/pages/account/AccountSettingsPage";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import InfluencerSubmissionPage from "@/pages/influencer/SubmissionPage";
+import InfluencerDashboard from "@/pages/influencer/InfluencerDashboard";
+import BriefAssignmentsPage from "@/pages/admin/BriefAssignmentsPage";
 
 function LoadingSpinner() {
   return (
@@ -52,6 +54,48 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!user) {
+    return <Redirect to="/login" />;
+  }
+
+  // Check if user is admin
+  if (user.userType !== 'admin' && user.role !== 'admin') {
+    return <Redirect to="/dashboard" />;
+  }
+
+  if (!user.isOnboarded) {
+    return <Redirect to="/onboarding" />;
+  }
+
+  return <>{children}</>;
+}
+
+function InfluencerRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!user) {
+    return <Redirect to="/login" />;
+  }
+
+  // Check if user is influencer
+  if (user.userType !== 'influencer') {
+    return <Redirect to="/admin" />;
+  }
+
+  return <>{children}</>;
+}
+
 function OnboardingRoute() {
   const { user, isLoading } = useAuth();
 
@@ -73,58 +117,91 @@ function OnboardingRoute() {
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={LoginPage} />
-      <Route path="/briefs" component={BriefsListPage} />
-      <Route path="/b/:slug" component={BriefPublicPage} />
-      <Route path="/b/:slug/submit" component={BriefSubmitPage} />
-      <Route path="/submission-status" component={SubmissionStatusPage} />
+      {/* Public routes */}
+      <Route path="/" component={LandingPage} />
+      <Route path="/login" component={LoginPage} />
       <Route path="/apply" component={ApplyPage} />
       <Route path="/apply/success" component={ApplySuccessPage} />
-      <Route path="/portal" component={InfluencerPortalPage} />
       <Route path="/welcome" component={LandingPage} />
-      <Route path="/login" component={LoginPage} />
       <Route path="/onboarding" component={OnboardingRoute} />
-      <Route path="/account/settings" component={AccountSettingsPage} />
-      <Route path="/influencer/submit/:briefId" component={InfluencerSubmissionPage} />
-      
+
+      {/* Admin routes */}
       <Route path="/admin">
-        <ProtectedRoute>
+        <AdminRoute>
           <AdminDashboard />
-        </ProtectedRoute>
+        </AdminRoute>
       </Route>
       <Route path="/admin/briefs">
-        <ProtectedRoute>
+        <AdminRoute>
           <AdminBriefs />
-        </ProtectedRoute>
+        </AdminRoute>
       </Route>
       <Route path="/admin/briefs/new">
-        <ProtectedRoute>
+        <AdminRoute>
           <CreateBriefPage />
-        </ProtectedRoute>
+        </AdminRoute>
       </Route>
       <Route path="/admin/briefs/:id/edit">
-        <ProtectedRoute>
+        <AdminRoute>
           <EditBriefPage />
-        </ProtectedRoute>
+        </AdminRoute>
       </Route>
       <Route path="/admin/briefs/:id">
-        {(params) => (
-          <ProtectedRoute>
-            <AdminBriefDetail />
-          </ProtectedRoute>
-        )}
+        <AdminRoute>
+          <AdminBriefDetail />
+        </AdminRoute>
+      </Route>
+      <Route path="/admin/briefs/:id/assignments">
+        <AdminRoute>
+          <BriefAssignmentsPage />
+        </AdminRoute>
       </Route>
       <Route path="/admin/influencers">
-        <ProtectedRoute>
+        <AdminRoute>
           <AdminInfluencers />
-        </ProtectedRoute>
+        </AdminRoute>
       </Route>
       <Route path="/admin/settings">
-        <ProtectedRoute>
+        <AdminRoute>
           <AdminSettings />
+        </AdminRoute>
+      </Route>
+
+      {/* Influencer routes */}
+      <Route path="/dashboard">
+        <InfluencerRoute>
+          <InfluencerDashboard />
+        </InfluencerRoute>
+      </Route>
+      <Route path="/briefs/:id">
+        <InfluencerRoute>
+          <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center text-white">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold mb-2">Brief Detail Page</h2>
+              <p className="text-slate-400">Coming soon - Click "Submit Video" from dashboard</p>
+            </div>
+          </div>
+        </InfluencerRoute>
+      </Route>
+      <Route path="/briefs/:id/submit">
+        <InfluencerRoute>
+          <InfluencerSubmissionPage />
+        </InfluencerRoute>
+      </Route>
+
+      {/* Protected account settings */}
+      <Route path="/account/settings">
+        <ProtectedRoute>
+          <AccountSettingsPage />
         </ProtectedRoute>
       </Route>
-      
+
+      {/* Public brief routes removed - now require authentication */}
+      {/* <Route path="/briefs" component={BriefsListPage} /> */}
+      {/* <Route path="/b/:slug" component={BriefPublicPage} /> */}
+      {/* <Route path="/b/:slug/submit" component={BriefSubmitPage} /> */}
+      {/* <Route path="/portal" component={InfluencerPortalPage} /> */}
+
       <Route component={NotFound} />
     </Switch>
   );
