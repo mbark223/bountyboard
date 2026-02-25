@@ -20,6 +20,14 @@
       "destination": "/api/admin-submissions-real"
     },
     {
+      "source": "/api/admin/brief-assignments",
+      "destination": "/api/admin/brief-assignments"
+    },
+    {
+      "source": "/api/influencers/register",
+      "destination": "/api/influencers/register"
+    },
+    {
       "source": "/api/briefs/by-slug/:slug",
       "destination": "/api/briefs-by-slug?slug=:slug"
     },
