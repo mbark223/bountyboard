@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,53 +7,57 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, Lock, Shield, Sparkles, CheckCircle, DollarSign, Gift, Clock, Video, ArrowRight, Building2, Users } from "lucide-react";
+import { Loader2, Lock, Shield, Sparkles, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
-import { cn, formatCurrency } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
-import { fetchBriefs } from "@/lib/api";
-import { transformBrief } from "@/lib/transformers";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [userType, setUserType] = useState<"creator" | "influencer">("creator");
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  const { data: briefsData, isLoading: briefsLoading, error: briefsError } = useQuery({
-    queryKey: ["briefs"],
-    queryFn: fetchBriefs,
-  });
-
-  // Log any errors for debugging
-  useEffect(() => {
-    if (briefsError) {
-      console.error("Failed to load briefs:", briefsError);
-    }
-  }, [briefsError]);
-
-  const briefs = briefsData?.map(transformBrief) || [];
-  const activeBriefs = briefs.slice(0, 3); // Show first 3 briefs
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
-    if (password !== "HardRockBet") {
-      setError("Invalid password");
-      setIsLoading(false);
-      return;
-    }
+    try {
+      // Call test login endpoint
+      const response = await fetch("/api/auth/test-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email }),
+      });
 
-    // For demo purposes, redirect to briefs list
-    setSuccess(true);
-    setTimeout(() => {
-      setLocation("/briefs");
-    }, 1000);
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Login failed");
+      }
+
+      const data = await response.json();
+
+      // Success! Show success message and redirect
+      setSuccess(true);
+
+      setTimeout(() => {
+        // Redirect based on user type
+        if (data.user.userType === "admin") {
+          setLocation("/admin");
+        } else if (data.user.userType === "influencer") {
+          setLocation("/dashboard");
+        } else {
+          setLocation("/");
+        }
+      }, 1000);
+    } catch (err: any) {
+      setError(err.message || "Failed to login");
+      setIsLoading(false);
+    }
   };
 
   if (success) {
@@ -80,87 +84,7 @@ export default function LoginPage() {
 
   return (
     <PublicLayout>
-      <div className="container mx-auto py-8">
-        {/* Active Briefs Section */}
-        {!briefsLoading && !briefsError && activeBriefs.length > 0 && (
-          <section className="mb-12">
-            <h2 className="text-2xl font-heading font-semibold mb-6">Active Briefs</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {activeBriefs.map((brief, index) => (
-                <motion.div
-                  key={brief.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  onClick={() => setLocation(`/b/${brief.slug}`)}
-                  className="cursor-pointer"
-                >
-                  <Card className="h-full flex flex-col border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden bg-card">
-                    <CardHeader className="pb-3 space-y-3">
-                      <div className="flex justify-between items-start">
-                        <Badge variant="outline" className="font-medium text-xs uppercase tracking-wider bg-secondary/50">
-                          {brief.orgName}
-                        </Badge>
-                        {brief.reward.type === 'CASH' ? (
-                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
-                            <DollarSign className="h-3 w-3 mr-1" />
-                            Cash
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800">
-                            <Gift className="h-3 w-3 mr-1" />
-                            Product
-                          </Badge>
-                        )}
-                      </div>
-                      <h3 className="text-xl font-heading font-bold leading-tight hover:text-primary transition-colors">
-                        {brief.title}
-                      </h3>
-                    </CardHeader>
-                    
-                    <CardContent className="flex-1 pb-4">
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                        {brief.overview}
-                      </p>
-                      
-                      <div className="space-y-2">
-                        <div className="flex items-center text-sm text-foreground/80">
-                          {brief.reward.type === 'OTHER' ? (
-                            <Gift className="h-4 w-4 text-purple-500 mr-2" />
-                          ) : (
-                            <DollarSign className="h-4 w-4 text-green-500 mr-2" />
-                          )}
-                          <span className="font-bold">
-                            {brief.reward.type === 'OTHER' 
-                              ? brief.reward.amount 
-                              : formatCurrency(brief.reward.amount as number, brief.reward.currency)}
-                          </span>
-                          <span className="text-muted-foreground ml-1 font-normal">
-                            Bounty
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center text-sm text-foreground/80">
-                          <Clock className="h-4 w-4 text-orange-500 mr-2" />
-                          <span>Due {new Date(brief.deadline).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-            <div className="mt-6 text-center">
-              <Button variant="link" onClick={() => setLocation("/briefs")}>
-                View all briefs
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </section>
-        )}
-
-        {/* Login Form */}
-        <div className="max-w-lg mx-auto">
+      <div className="container max-w-lg mx-auto py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -211,18 +135,21 @@ export default function LoginPage() {
                   </RadioGroup>
                 </div>
 
-                {/* Password Input */}
+                {/* Email Input */}
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="email">Email Address</Label>
                   <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={isLoading}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Test accounts: admin@test.com or influencer@test.com
+                  </p>
                 </div>
 
                 {error && (
@@ -231,21 +158,21 @@ export default function LoginPage() {
                   </Alert>
                 )}
 
-                <Button 
-                  type="submit" 
-                  className="w-full" 
+                <Button
+                  type="submit"
+                  className="w-full"
                   size="lg"
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Unlocking...
+                      Signing in...
                     </>
                   ) : (
                     <>
                       <Lock className="mr-2 h-4 w-4" />
-                      Unlock Briefs
+                      Sign In
                     </>
                   )}
                 </Button>
@@ -253,7 +180,6 @@ export default function LoginPage() {
             </CardContent>
           </Card>
         </motion.div>
-        </div>
       </div>
     </PublicLayout>
   );

@@ -5,6 +5,7 @@ import { createServer } from "http";
 import { pool } from "./db";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 import magicLinkRoutes from "./auth/magicLinkRoutes";
+import testLoginRoutes from "./auth/testLogin";
 
 const app = express();
 const httpServer = createServer(app);
@@ -87,6 +88,10 @@ app.use((req, res, next) => {
     // Add magic link authentication routes
     app.use("/api", magicLinkRoutes);
     log("Magic link authentication routes configured");
+
+    // Add test/dev login routes (for development only)
+    app.use("/api", testLoginRoutes);
+    log("Test login routes configured (dev only)");
 
     await registerRoutes(httpServer, app);
     log("Routes registered");
