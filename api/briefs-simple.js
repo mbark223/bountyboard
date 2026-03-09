@@ -1,7 +1,7 @@
 // Simple JavaScript version of briefs endpoint
 import { Pool } from 'pg';
-import { getUser } from './_lib/auth.ts';
-import { storage } from './_lib/storage.ts';
+import { getUser } from './_lib/auth.js';
+import { storage } from './_lib/storage.js';
 
 export default async function handler(req, res) {
   // Set CORS headers
