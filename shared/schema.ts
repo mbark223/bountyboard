@@ -31,6 +31,22 @@ export const briefs = pgTable("briefs", {
   password: text("password"), // optional password protection
   maxWinners: integer("max_winners").default(1),
   maxSubmissionsPerCreator: integer("max_submissions_per_creator").default(3),
+
+  // NEW PROJECT MANAGEMENT FIELDS
+  requester: text("requester"),
+  responsible: text("responsible"),
+  priority: text("priority").default("Medium"), // 'Low' | 'Medium' | 'High'
+  finalDeliverable: text("final_deliverable"),
+  campaignTopic: text("campaign_topic"),
+  platforms: text("platforms").array(), // ['Instagram', 'TikTok', 'YouTube', etc.]
+  creatorsNeeded: integer("creators_needed").default(1),
+
+  // AIR.INC INTEGRATION
+  airIncCampaignId: text("air_inc_campaign_id"), // ID from air.inc
+  airIncSyncStatus: text("air_inc_sync_status"), // 'pending' | 'synced' | 'failed'
+  airIncSyncedAt: timestamp("air_inc_synced_at"),
+  airIncSyncError: text("air_inc_sync_error"),
+
   ownerId: text("owner_id").notNull(), // references users.id
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -42,10 +58,14 @@ export const insertBriefSchema = createInsertSchema(briefs, {
   businessLine: z.enum(["PMR", "Casino", "Sportsbook"]).default("Sportsbook"),
   state: z.enum(["Florida", "New Jersey", "Michigan"]).default("Florida"),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).default("DRAFT"),
+  priority: z.enum(["Low", "Medium", "High"]).default("Medium"),
+  platforms: z.array(z.string()).optional(),
+  airIncSyncStatus: z.enum(["pending", "synced", "failed"]).optional(),
 }).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+  airIncSyncedAt: true,
 });
 
 export const selectBriefSchema = createSelectSchema(briefs);
@@ -75,6 +95,13 @@ export const submissions = pgTable("submissions", {
   reviewNotes: text("review_notes"),
   selectedAt: timestamp("selected_at"),
   paidAt: timestamp("paid_at"),
+
+  // FINANCE APPROVAL WORKFLOW
+  financeApprovalStatus: text("finance_approval_status").default("pending"), // 'pending' | 'approved' | 'rejected'
+  financeApprovedBy: text("finance_approved_by"), // references users.id
+  financeApprovedAt: timestamp("finance_approved_at"),
+  financeApprovalNotes: text("finance_approval_notes"),
+
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
   hasFeedback: integer("has_feedback").default(0), // 0 = false, 1 = true
   parentSubmissionId: integer("parent_submission_id"), // references submissions.id for resubmissions
@@ -85,11 +112,13 @@ export const submissions = pgTable("submissions", {
 export const insertSubmissionSchema = createInsertSchema(submissions, {
   status: z.enum(["RECEIVED", "IN_REVIEW", "SELECTED", "NOT_SELECTED"]).default("RECEIVED"),
   payoutStatus: z.enum(["NOT_APPLICABLE", "PENDING", "PAID"]).default("NOT_APPLICABLE"),
+  financeApprovalStatus: z.enum(["pending", "approved", "rejected"]).default("pending"),
 }).omit({
   id: true,
   submittedAt: true,
   selectedAt: true,
   paidAt: true,
+  financeApprovedAt: true,
 });
 
 export const selectSubmissionSchema = createSelectSchema(submissions);

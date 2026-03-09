@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Save, Loader2, AlertCircle } from "lucide-react";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { Separator } from "@/components/ui/separator";
+import { ArrowLeft, Save, Loader2, AlertCircle, Users, Target, Calculator, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { fetchBriefById } from "@/lib/api";
@@ -46,7 +48,15 @@ export default function EditBriefPage() {
     maxSubmissionsPerCreator: 3,
     businessLine: "",
     state: "",
-    status: "PUBLISHED"
+    status: "PUBLISHED",
+    // New project management fields
+    requester: "",
+    responsible: "",
+    priority: "Medium" as "Low" | "Medium" | "High",
+    finalDeliverable: "",
+    campaignTopic: "",
+    platforms: [] as string[],
+    creatorsNeeded: 1,
   });
 
   // Fetch brief data
@@ -74,7 +84,15 @@ export default function EditBriefPage() {
         maxSubmissionsPerCreator: brief.maxSubmissionsPerCreator || 3,
         businessLine: brief.businessLine || "",
         state: brief.state || "",
-        status: brief.status || "PUBLISHED"
+        status: brief.status || "PUBLISHED",
+        // New project management fields
+        requester: brief.requester || "",
+        responsible: brief.responsible || "",
+        priority: (brief.priority as "Low" | "Medium" | "High") || "Medium",
+        finalDeliverable: brief.finalDeliverable || "",
+        campaignTopic: brief.campaignTopic || "",
+        platforms: brief.platforms || [],
+        creatorsNeeded: brief.creatorsNeeded || 1,
       });
     }
   }, [brief]);
@@ -92,7 +110,15 @@ export default function EditBriefPage() {
             amount: data.rewardType === "CASH" ? parseFloat(data.rewardAmount) : data.rewardAmount,
             currency: data.rewardType === "CASH" ? "USD" : undefined,
             description: data.rewardType === "OTHER" ? data.rewardDescription : undefined
-          }
+          },
+          // Include new project management fields
+          requester: data.requester,
+          responsible: data.responsible,
+          priority: data.priority,
+          finalDeliverable: data.finalDeliverable,
+          campaignTopic: data.campaignTopic,
+          platforms: data.platforms,
+          creatorsNeeded: data.creatorsNeeded,
         }),
       });
       if (!response.ok) throw new Error("Failed to update brief");
@@ -283,6 +309,138 @@ export default function EditBriefPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Project Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Project Details</CardTitle>
+              <CardDescription>Campaign management and tracking information</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="requester">Requester</Label>
+                  <Input
+                    id="requester"
+                    value={formData.requester}
+                    onChange={(e) => setFormData({ ...formData, requester: e.target.value })}
+                    placeholder="Name of requester"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Person or team requesting this campaign
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="responsible">Responsible</Label>
+                  <Input
+                    id="responsible"
+                    value={formData.responsible}
+                    onChange={(e) => setFormData({ ...formData, responsible: e.target.value })}
+                    placeholder="Name of responsible party"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Person or team responsible for execution
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="priority" className="flex items-center gap-2">
+                    <Target className="h-4 w-4 text-[#7B5CFA]" />
+                    Priority
+                  </Label>
+                  <Select
+                    value={formData.priority}
+                    onValueChange={(value: "Low" | "Medium" | "High") => setFormData({ ...formData, priority: value })}
+                  >
+                    <SelectTrigger id="priority">
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Low">Low</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="High">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="creatorsNeeded" className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-[#7B5CFA]" />
+                    Creators Needed
+                  </Label>
+                  <Input
+                    id="creatorsNeeded"
+                    type="number"
+                    min="1"
+                    value={formData.creatorsNeeded}
+                    onChange={(e) => setFormData({ ...formData, creatorsNeeded: parseInt(e.target.value) || 1 })}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Number of creators needed for this campaign
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="campaignTopic">Campaign Topic</Label>
+                <Input
+                  id="campaignTopic"
+                  value={formData.campaignTopic}
+                  onChange={(e) => setFormData({ ...formData, campaignTopic: e.target.value })}
+                  placeholder="Campaign topic or theme"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="finalDeliverable">Final Deliverable</Label>
+                <Textarea
+                  id="finalDeliverable"
+                  value={formData.finalDeliverable}
+                  onChange={(e) => setFormData({ ...formData, finalDeliverable: e.target.value })}
+                  placeholder="Describe the final deliverable"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label>Platforms</Label>
+                <MultiSelect
+                  options={[
+                    { label: "Instagram", value: "Instagram" },
+                    { label: "TikTok", value: "TikTok" },
+                    { label: "YouTube", value: "YouTube" },
+                    { label: "Twitter/X", value: "Twitter" },
+                    { label: "Facebook", value: "Facebook" },
+                  ]}
+                  value={formData.platforms}
+                  onChange={(value) => setFormData({ ...formData, platforms: value })}
+                  placeholder="Select platforms"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Select which social platforms this campaign targets
+                </p>
+              </div>
+
+              <Separator className="my-4" />
+
+              <div className="bg-muted/50 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calculator className="h-4 w-4 text-muted-foreground" />
+                  <div className="text-sm text-muted-foreground">Total Campaign Budget</div>
+                </div>
+                <div className="text-3xl font-bold flex items-center gap-1">
+                  <DollarSign className="h-6 w-6" />
+                  {(parseFloat(formData.rewardAmount || '0') * formData.creatorsNeeded).toFixed(2)}
+                </div>
+                <div className="text-xs text-muted-foreground mt-2">
+                  {formData.creatorsNeeded} creators × ${formData.rewardAmount || '0'} each
                 </div>
               </div>
             </CardContent>

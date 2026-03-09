@@ -15,9 +15,10 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { formatCurrency } from "@/lib/utils";
-import { ArrowLeft, ExternalLink, Play, Check, X, DollarSign, Calendar, Users, MessageSquare, RefreshCw } from "lucide-react";
+import { formatCurrency, cn } from "@/lib/utils";
+import { ArrowLeft, ExternalLink, Play, Check, X, CheckCircle, XCircle, DollarSign, Calendar, Users, MessageSquare, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { FeedbackSection } from "@/components/FeedbackSection";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,7 @@ export default function AdminBriefDetail() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
@@ -100,6 +102,54 @@ export default function AdminBriefDetail() {
       queryClient.invalidateQueries({ queryKey: ["feedback", selectedSubmission?.id] });
     }
   });
+
+  // Mutation for finance approval
+  const financeApprovalMutation = useMutation({
+    mutationFn: async ({ submissionId, status, notes }: {
+      submissionId: number;
+      status: 'approved' | 'rejected';
+      notes?: string;
+    }) => {
+      const response = await fetch(`/api/submissions/${submissionId}/finance-approval`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          status,
+          notes,
+          userId: user?.id
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to update finance approval');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      refetchSubmissions();
+      if (data && typeof data.id === 'number') {
+        setSelectedSubmission(data);
+      }
+      toast({
+        title: 'Finance Approval Updated',
+        description: `Payment ${data.financeApprovalStatus === 'approved' ? 'approved' : 'rejected'}`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to update finance approval.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleFinanceApproval = (status: 'approved' | 'rejected') => {
+    if (!selectedSubmission) return;
+
+    financeApprovalMutation.mutate({
+      submissionId: selectedSubmission.id,
+      status,
+    });
+  };
 
   const handleStatusChange = (status: Submission['status']) => {
     if (!selectedSubmission) return;
@@ -318,6 +368,19 @@ export default function AdminBriefDetail() {
                           }>
                             {sub.status.replace('_', ' ')}
                           </Badge>
+                          {sub.status === 'SELECTED' && sub.financeApprovalStatus && (
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-xs",
+                                sub.financeApprovalStatus === 'approved' && 'bg-green-100 text-green-700 border-green-200',
+                                sub.financeApprovalStatus === 'rejected' && 'bg-red-100 text-red-700 border-red-200',
+                                sub.financeApprovalStatus === 'pending' && 'bg-amber-100 text-amber-700 border-amber-200'
+                              )}
+                            >
+                              Finance: {sub.financeApprovalStatus}
+                            </Badge>
+                          )}
                           {sub.status === 'NOT_SELECTED' && sub.reviewNotes && (
                             <div className="mt-1 p-2 bg-red-50 dark:bg-red-900/20 rounded-md">
                               <p className="text-xs text-red-700 dark:text-red-400">
@@ -491,7 +554,74 @@ export default function AdminBriefDetail() {
                     </Button>
                   </div>
                 )}
-                
+
+                {/* Finance Approval Section */}
+                {selectedSubmission?.status === 'SELECTED' && (
+                  <div className="mt-4 p-4 border rounded-lg space-y-3">
+                    <h4 className="text-sm font-semibold flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      Finance Approval
+                    </h4>
+
+                    {selectedSubmission.financeApprovalStatus === 'pending' && (
+                      <>
+                        <p className="text-sm text-muted-foreground">
+                          This submission requires finance approval before payment can be processed.
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                            onClick={() => handleFinanceApproval('approved')}
+                            disabled={financeApprovalMutation.isPending}
+                          >
+                            <Check className="mr-2 h-4 w-4" />
+                            Approve for Payment
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="flex-1"
+                            onClick={() => handleFinanceApproval('rejected')}
+                            disabled={financeApprovalMutation.isPending}
+                          >
+                            <X className="mr-2 h-4 w-4" />
+                            Reject Payment
+                          </Button>
+                        </div>
+                      </>
+                    )}
+
+                    {selectedSubmission.financeApprovalStatus === 'approved' && (
+                      <div className="p-3 bg-green-50 dark:bg-green-900/10 rounded-lg border border-green-200">
+                        <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                          <CheckCircle className="h-4 w-4" />
+                          <span className="text-sm font-medium">Payment Approved</span>
+                        </div>
+                        {selectedSubmission.financeApprovedAt && (
+                          <p className="text-xs text-green-600 dark:text-green-500 mt-1">
+                            Approved on {new Date(selectedSubmission.financeApprovedAt).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedSubmission.financeApprovalStatus === 'rejected' && (
+                      <div className="p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200">
+                        <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
+                          <XCircle className="h-4 w-4" />
+                          <span className="text-sm font-medium">Payment Rejected</span>
+                        </div>
+                        {selectedSubmission.financeApprovalNotes && (
+                          <p className="text-xs text-red-600 dark:text-red-500 mt-1">
+                            {selectedSubmission.financeApprovalNotes}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Feedback Section */}
                 {selectedSubmission && (
                   <div className="border-t pt-4">

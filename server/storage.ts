@@ -58,6 +58,7 @@ export interface IStorage {
   getBriefById(id: number): Promise<Brief | undefined>;
   getBriefsByOwnerId(ownerId: string): Promise<Brief[]>;
   createBrief(brief: InsertBrief): Promise<Brief>;
+  updateBrief(id: number, updates: Partial<Brief>): Promise<Brief>;
   updateBriefStatus(id: number, status: string): Promise<Brief>;
   
   getSubmissionsByBriefId(briefId: number): Promise<Submission[]>;
@@ -65,6 +66,7 @@ export interface IStorage {
   createSubmission(submission: InsertSubmission): Promise<Submission>;
   updateSubmissionStatus(id: number, status: string, selectedAt?: Date, allowsResubmission?: boolean, reviewNotes?: string): Promise<Submission>;
   updateSubmissionPayout(id: number, payoutStatus: string, paidAt?: Date, notes?: string): Promise<Submission>;
+  updateSubmissionFinanceApproval(id: number, status: 'approved' | 'rejected', approvedBy: string, notes?: string): Promise<Submission>;
   countSubmissionsByCreatorEmail(briefId: number, email: string): Promise<number>;
   
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
@@ -197,6 +199,15 @@ export class DatabaseStorage implements IStorage {
     return brief;
   }
 
+  async updateBrief(id: number, updates: Partial<Brief>): Promise<Brief> {
+    const [brief] = await db
+      .update(briefs)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(briefs.id, id))
+      .returning();
+    return brief;
+  }
+
   async updateBriefStatus(id: number, status: string): Promise<Brief> {
     const [brief] = await db
       .update(briefs)
@@ -261,7 +272,26 @@ export class DatabaseStorage implements IStorage {
     const updateData: any = { payoutStatus };
     if (paidAt) updateData.paidAt = paidAt;
     if (notes) updateData.payoutNotes = notes;
-    
+
+    const [submission] = await db
+      .update(submissions)
+      .set(updateData)
+      .where(eq(submissions.id, id))
+      .returning();
+    return submission;
+  }
+
+  async updateSubmissionFinanceApproval(id: number, status: 'approved' | 'rejected', approvedBy: string, notes?: string): Promise<Submission> {
+    const updateData: any = {
+      financeApprovalStatus: status,
+      financeApprovedBy: approvedBy,
+      financeApprovedAt: new Date(),
+    };
+
+    if (notes) {
+      updateData.financeApprovalNotes = notes;
+    }
+
     const [submission] = await db
       .update(submissions)
       .set(updateData)

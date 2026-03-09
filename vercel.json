@@ -64,6 +64,10 @@
       "destination": "/api/submissions/[id]/payout"
     },
     {
+      "source": "/api/submissions/:id/finance-approval",
+      "destination": "/api/submissions/[id]/finance-approval"
+    },
+    {
       "source": "/api/feedback/:id",
       "destination": "/api/feedback-delete?id=:id"
     },

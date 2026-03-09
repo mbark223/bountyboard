@@ -8,6 +8,13 @@
       "when": 1771943106379,
       "tag": "0000_stale_hannibal_king",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1772584958995,
+      "tag": "0001_jittery_warbound",
+      "breakpoints": true
     }
   ]
 }

@@ -45,8 +45,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Save, FileText, ChevronDown, Bookmark, Video, DollarSign, Calculator, Building2, MapPin } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, FileText, ChevronDown, Bookmark, Video, DollarSign, Calculator, Building2, MapPin, Users, Target } from "lucide-react";
 import type { PromptTemplate } from "@shared/schema";
 import { BUSINESS_LINES, STATES } from "@shared/schema";
 import { formatCurrency } from "@/lib/utils";
@@ -72,6 +73,14 @@ const briefSchema = z.object({
   deadline: z.string().min(1, "Deadline is required"),
   maxWinners: z.number().min(1).default(1),
   maxSubmissionsPerCreator: z.number().min(1).default(3),
+  // New project management fields
+  requester: z.string().optional(),
+  responsible: z.string().optional(),
+  priority: z.enum(["Low", "Medium", "High"]).default("Medium"),
+  finalDeliverable: z.string().optional(),
+  campaignTopic: z.string().optional(),
+  platforms: z.array(z.string()).min(1, "Select at least one platform"),
+  creatorsNeeded: z.number().min(1).default(1),
 });
 
 type BriefFormValues = z.infer<typeof briefSchema>;
@@ -204,6 +213,14 @@ export default function CreateBriefPage() {
       deadline: "",
       maxWinners: 1,
       maxSubmissionsPerCreator: 3,
+      // New project management fields
+      requester: "",
+      responsible: "",
+      priority: "Medium",
+      finalDeliverable: "",
+      campaignTopic: "",
+      platforms: [],
+      creatorsNeeded: 1,
     },
   });
 
@@ -309,7 +326,7 @@ export default function CreateBriefPage() {
   async function onSubmit(data: BriefFormValues) {
     const slug = generateSlug(data.title);
     const requirements = data.requirements.map(r => r.value).filter(v => v.length > 0);
-    
+
     createMutation.mutate({
       slug,
       title: data.title,
@@ -330,6 +347,14 @@ export default function CreateBriefPage() {
       ownerId: user?.id || "",
       maxWinners: data.maxWinners,
       maxSubmissionsPerCreator: data.maxSubmissionsPerCreator,
+      // New project management fields
+      requester: data.requester,
+      responsible: data.responsible,
+      priority: data.priority,
+      finalDeliverable: data.finalDeliverable,
+      campaignTopic: data.campaignTopic,
+      platforms: data.platforms,
+      creatorsNeeded: data.creatorsNeeded,
     });
   }
 
@@ -547,6 +572,175 @@ export default function CreateBriefPage() {
                     </FormItem>
                   )}
                 />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Details</CardTitle>
+                <CardDescription>Campaign management and tracking information</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="requester"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Requester</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Name of requester" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Person or team requesting this campaign
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="responsible"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Responsible</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Name of responsible party" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Person or team responsible for execution
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="priority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Target className="h-4 w-4 text-[#7B5CFA]" />
+                          Priority
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select priority" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Low">Low</SelectItem>
+                            <SelectItem value="Medium">Medium</SelectItem>
+                            <SelectItem value="High">High</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="creatorsNeeded"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-[#7B5CFA]" />
+                          Creators Needed
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="1"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Number of creators needed for this campaign
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="campaignTopic"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Campaign Topic</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Campaign topic or theme" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="finalDeliverable"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Final Deliverable</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Describe the final deliverable"
+                          className="resize-y min-h-[80px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="platforms"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Platforms</FormLabel>
+                      <FormControl>
+                        <MultiSelect
+                          options={[
+                            { label: "Instagram", value: "Instagram" },
+                            { label: "TikTok", value: "TikTok" },
+                            { label: "YouTube", value: "YouTube" },
+                            { label: "Twitter/X", value: "Twitter" },
+                            { label: "Facebook", value: "Facebook" },
+                          ]}
+                          value={field.value || []}
+                          onChange={field.onChange}
+                          placeholder="Select platforms"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Select which social platforms this campaign targets
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Separator className="my-4" />
+
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <div className="text-sm text-muted-foreground mb-2">Total Campaign Budget</div>
+                  <div className="text-3xl font-bold">
+                    ${(parseFloat(form.watch('reward.amount') || '0') * form.watch('creatorsNeeded')).toFixed(2)}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    {form.watch('creatorsNeeded')} creators × ${form.watch('reward.amount') || '0'} each
+                  </div>
+                </div>
               </CardContent>
             </Card>
 

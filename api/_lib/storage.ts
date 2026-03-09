@@ -189,7 +189,26 @@ class VercelDatabaseStorage extends DatabaseStorage {
     const updateData: any = { payoutStatus };
     if (paidAt) updateData.paidAt = paidAt;
     if (notes) updateData.payoutNotes = notes;
-    
+
+    const [submission] = await this.db
+      .update(submissions)
+      .set(updateData)
+      .where(eq(submissions.id, id))
+      .returning();
+    return submission;
+  }
+
+  async updateSubmissionFinanceApproval(id: number, status: 'approved' | 'rejected', approvedBy: string, notes?: string): Promise<Submission> {
+    const updateData: any = {
+      financeApprovalStatus: status,
+      financeApprovedBy: approvedBy,
+      financeApprovedAt: new Date(),
+    };
+
+    if (notes) {
+      updateData.financeApprovalNotes = notes;
+    }
+
     const [submission] = await this.db
       .update(submissions)
       .set(updateData)
@@ -609,8 +628,11 @@ class SafeStorage {
   async updateSubmissionStatus(id: number, status: string, selectedAt?: Date, allowsResubmission?: boolean, reviewNotes?: string) { 
     return this.storage.updateSubmissionStatus(id, status, selectedAt, allowsResubmission, reviewNotes); 
   }
-  async updateSubmissionPayout(id: number, payoutStatus: string, paidAt?: Date, notes?: string) { 
-    return this.storage.updateSubmissionPayout(id, payoutStatus, paidAt, notes); 
+  async updateSubmissionPayout(id: number, payoutStatus: string, paidAt?: Date, notes?: string) {
+    return this.storage.updateSubmissionPayout(id, payoutStatus, paidAt, notes);
+  }
+  async updateSubmissionFinanceApproval(id: number, status: 'approved' | 'rejected', approvedBy: string, notes?: string) {
+    return this.storage.updateSubmissionFinanceApproval(id, status, approvedBy, notes);
   }
   async countSubmissionsByCreatorEmail(briefId: number, email: string) { return this.storage.countSubmissionsByCreatorEmail(briefId, email); }
   async createFeedback(feedback: any) { return this.storage.createFeedback(feedback); }
