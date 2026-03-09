@@ -225,6 +225,5 @@ function getLegacyMockBriefs() {
             description: null
           }
         }
-      ]
   ];
 }
