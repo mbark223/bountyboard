@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import { z } from "zod";
-import { videoStorage } from "../_lib/video-storage";
-import { storage } from "../_lib/storage";
+import { videoStorage } from '../_lib/video-storage.js';
+import { storage } from '../_lib/storage.js';
 
 const uploadRequestSchema = z.object({
   fileName: z.string().min(1),

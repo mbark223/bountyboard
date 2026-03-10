@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { storage } from '../_lib/storage';
+import { storage } from '../_lib/storage.js';
 import { insertPromptTemplateSchema } from '../../shared/schema';
 
 // Mock user ID for demo - in production would get from session

@@ -1,6 +1,6 @@
 // Simple JavaScript handler for creating briefs
 import { Pool } from 'pg';
-import { airIncService } from '../server/services/airInc';
+import { airIncService } from '../server/services/airInc.js';
 
 export default async function handler(req, res) {
   // Set CORS headers

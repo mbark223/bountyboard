@@ -1,7 +1,7 @@
 // Admin endpoint for managing brief assignments
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getUser, requireAdmin } from '../_lib/auth';
-import { storage } from '../_lib/storage';
+import { getUser, requireAdmin } from '../_lib/auth.js';
+import { storage } from '../_lib/storage.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {

@@ -1,6 +1,6 @@
 // Public endpoint for influencer self-service registration
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { storage } from '../_lib/storage';
+import { storage } from '../_lib/storage.js';
 import { z } from 'zod';
 
 // Validation schema for influencer registration
