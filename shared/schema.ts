@@ -3,7 +3,7 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Re-export auth models
-export * from "./models/auth";
+export * from "./models/auth.js";
 
 // Business lines and states for filtering
 export const BUSINESS_LINES = ["PMR", "Casino", "Sportsbook"] as const;
