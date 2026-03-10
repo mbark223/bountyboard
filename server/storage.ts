@@ -20,7 +20,7 @@ import {
   influencers,
   briefAssignments
 } from "@shared/schema";
-import { db } from "./db";
+import { db } from "./db.js";
 import { eq, desc, and } from "drizzle-orm";
 
 export interface BriefWithOrg extends Brief {
@@ -524,7 +524,7 @@ export class DatabaseStorage implements IStorage {
 }
 
 // Create storage instance based on database availability
-import { MockStorage } from "./mock-storage";
+import { MockStorage } from "./mock-storage.js";
 
 function createStorage(): IStorage {
   if (!db) {

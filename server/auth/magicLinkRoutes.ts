@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requestMagicLink, verifyMagicLink, getCurrentUser } from "./magicLinkAuth";
+import { requestMagicLink, verifyMagicLink, getCurrentUser } from "./magicLinkAuth.js";
 
 const router = Router();
 

@@ -22,10 +22,10 @@ import {
   influencers,
   influencerInvites,
   briefAssignments
-} from "../../shared/schema";
-import { getDb } from "./db";
+} from "../shared/schema.js";
+import { getDb } from "./db.js";
 import { eq, desc, and } from "drizzle-orm";
-import { DatabaseStorage } from "../../server/storage";
+import { DatabaseStorage } from "../../server/storage.js";
 
 // Create a storage instance that uses the Vercel-compatible database connection
 class VercelDatabaseStorage extends DatabaseStorage {

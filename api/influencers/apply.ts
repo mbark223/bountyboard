@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import { z } from "zod";
 import { storage } from '../_lib/storage.js';
-import { insertInfluencerSchema } from "../../shared/schema";
+import { insertInfluencerSchema } from "../shared/schema.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {

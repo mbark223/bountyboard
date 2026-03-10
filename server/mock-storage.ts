@@ -12,7 +12,7 @@ import type {
   InsertFeedback,
   Influencer,
   InsertInfluencer,
-} from "./storage";
+} from "./storage.js";
 
 // Mock data
 const mockBriefs: Brief[] = [

@@ -2,7 +2,7 @@ import { VercelRequest, VercelResponse } from "@vercel/node";
 import { z } from "zod";
 import { storage } from '../_lib/storage.js';
 import { getUser } from '../_lib/auth.js';
-import { insertInfluencerInviteSchema } from "../../shared/schema";
+import { insertInfluencerInviteSchema } from "../shared/schema.js";
 import { sendEmail, generateInviteEmail } from '../_lib/email.js';
 
 // Generate a secure random invite code

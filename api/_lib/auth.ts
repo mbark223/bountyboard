@@ -1,6 +1,6 @@
 import { VercelRequest } from "@vercel/node";
-import type { User, Influencer } from "../../shared/schema";
-import { storage } from "./storage";
+import type { User, Influencer } from "../shared/schema.js";
+import { storage } from "./storage.js";
 
 interface SessionData {
   passport?: {
