@@ -1,4 +1,4 @@
-import type { Brief } from "../../shared/schema";
+import type { Brief } from "../../shared/schema.js";
 
 interface AirIncBrief {
   title: string;
