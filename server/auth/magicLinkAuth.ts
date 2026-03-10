@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { db } from "../db";
-import { users, magicLinks, type User } from "@shared/models/auth";
+import { users, magicLinks, type User } from "../../shared/models/auth.js";
 import { eq, and, gt } from "drizzle-orm";
 import crypto from "crypto";
 import { sendEmail } from "../../api/_lib/email";

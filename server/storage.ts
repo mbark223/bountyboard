@@ -19,7 +19,7 @@ import {
   feedback,
   influencers,
   briefAssignments
-} from "@shared/schema";
+} from "../shared/schema.js";
 import { db } from "./db.js";
 import { eq, desc, and } from "drizzle-orm";
 

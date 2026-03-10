@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage.js";
-import { insertBriefSchema, insertSubmissionSchema, insertPromptTemplateSchema, insertFeedbackSchema } from "@shared/schema";
+import { insertBriefSchema, insertSubmissionSchema, insertPromptTemplateSchema, insertFeedbackSchema } from "../shared/schema.js";
 import { isAuthenticated } from "./replit_integrations/auth";
 
 async function fetchBrandMetadata(url: string): Promise<{
