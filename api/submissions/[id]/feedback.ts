@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { storage } from '../_lib/storage.js';
-import { insertFeedbackSchema } from '../shared/schema.js';
+import { insertFeedbackSchema } from '../../../shared/schema.js';
 
 // Mock user for demo
 const DEMO_USER = {

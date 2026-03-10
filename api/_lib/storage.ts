@@ -22,7 +22,7 @@ import {
   influencers,
   influencerInvites,
   briefAssignments
-} from "../shared/schema.js";
+} from "../../shared/schema.js";
 import { getDb } from "./db.js";
 import { eq, desc, and } from "drizzle-orm";
 import { DatabaseStorage } from "../../server/storage.js";

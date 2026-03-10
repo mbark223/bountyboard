@@ -1,5 +1,5 @@
 import { VercelRequest } from "@vercel/node";
-import type { User, Influencer } from "../shared/schema.js";
+import type { User, Influencer } from "../../shared/schema.js";
 import { storage } from "./storage.js";
 
 interface SessionData {

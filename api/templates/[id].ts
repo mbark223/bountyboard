@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { storage } from '../_lib/storage.js';
-import { insertPromptTemplateSchema } from '../shared/schema.js';
+import { insertPromptTemplateSchema } from '../../shared/schema.js';
 
 // Mock user ID for demo - in production would get from session
 const DEMO_USER_ID = "demo-user-1";

@@ -1,4 +1,4 @@
-import type { User, Brief, Influencer } from "../shared/schema.js";
+import type { User, Brief, Influencer } from "../../shared/schema.js";
 import type { IStorage } from "./storage.js";
 
 export interface PermissionContext {
