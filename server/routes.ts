@@ -153,15 +153,19 @@ export async function registerRoutes(
   // POST /api/briefs - Create a new brief
   app.post("/api/briefs", async (req, res) => {
     try {
+      console.log("[POST /api/briefs] Received request body:", JSON.stringify(req.body, null, 2));
       const validatedData = insertBriefSchema.parse(req.body);
+      console.log("[POST /api/briefs] Validation passed, creating brief...");
       const brief = await storage.createBrief(validatedData);
+      console.log("[POST /api/briefs] Brief created successfully:", brief.id);
       res.status(201).json(brief);
     } catch (error: any) {
       console.error("Error creating brief:", error);
       if (error.name === "ZodError") {
+        console.error("Zod validation errors:", JSON.stringify(error.errors, null, 2));
         return res.status(400).json({ error: "Validation failed", details: error.errors });
       }
-      res.status(500).json({ error: "Failed to create brief" });
+      res.status(500).json({ error: "Failed to create brief", message: error.message });
     }
   });
 

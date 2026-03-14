@@ -15,8 +15,9 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    // For POST requests, return a simple error in demo mode
-    return res.status(400).json({ error: 'Creating briefs is not available in demo mode' });
+    // Forward to briefs-create handler
+    const createHandler = (await import('./briefs-create.js')).default;
+    return createHandler(req, res);
   }
 
   if (req.method !== 'GET') {

@@ -126,8 +126,7 @@ app.use((req, res, next) => {
       const server = httpServer.listen(
         {
           port,
-          host: "0.0.0.0",
-          reusePort: true,
+          host: "localhost",
         },
         () => {
           log(`Server successfully started on port ${port}`);

@@ -1,6 +1,5 @@
 // Simple JavaScript handler for creating briefs
 import { Pool } from 'pg';
-import { airIncService } from '../server/services/airInc.js';
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -137,57 +136,8 @@ export default async function handler(req, res) {
     const result = await pool.query(insertQuery, values);
 
     // Transform snake_case to camelCase
-    let row = result.rows[0];
+    const row = result.rows[0];
 
-    // Sync to air.inc if status is PUBLISHED
-    if ((status || 'PUBLISHED') === 'PUBLISHED' && airIncService.isConfigured()) {
-      console.log('[API] Syncing brief to air.inc...');
-
-      const syncResult = await airIncService.syncWithRetry({
-        id: row.id,
-        slug: row.slug,
-        title: row.title,
-        orgName: row.org_name,
-        overview: row.overview,
-        rewardAmount: row.reward_amount,
-        deadline: row.deadline,
-        platforms: row.platforms,
-        creatorsNeeded: row.creators_needed,
-        requester: row.requester,
-        responsible: row.responsible,
-        priority: row.priority,
-        campaignTopic: row.campaign_topic,
-      });
-
-      if (syncResult.success) {
-        console.log('[API] air.inc sync successful:', syncResult.campaignId);
-
-        // Update brief with sync status
-        const updateQuery = `
-          UPDATE briefs
-          SET air_inc_campaign_id = $1,
-              air_inc_sync_status = $2,
-              air_inc_synced_at = NOW()
-          WHERE id = $3
-          RETURNING *
-        `;
-        const updateResult = await pool.query(updateQuery, [syncResult.campaignId, 'synced', row.id]);
-        row = updateResult.rows[0];
-      } else {
-        console.error('[API] air.inc sync failed:', syncResult.error);
-
-        // Update brief with error status
-        const updateQuery = `
-          UPDATE briefs
-          SET air_inc_sync_status = $1,
-              air_inc_sync_error = $2
-          WHERE id = $3
-          RETURNING *
-        `;
-        const updateResult = await pool.query(updateQuery, ['failed', syncResult.error, row.id]);
-        row = updateResult.rows[0];
-      }
-    }
     const brief = {
       id: row.id,
       slug: row.slug,
@@ -220,11 +170,6 @@ export default async function handler(req, res) {
       campaignTopic: row.campaign_topic,
       platforms: row.platforms,
       creatorsNeeded: row.creators_needed,
-      // air.inc integration fields
-      airIncCampaignId: row.air_inc_campaign_id,
-      airIncSyncStatus: row.air_inc_sync_status,
-      airIncSyncedAt: row.air_inc_synced_at,
-      airIncSyncError: row.air_inc_sync_error,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };

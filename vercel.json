@@ -44,10 +44,6 @@
       "destination": "/api/briefs-handler?id=:id"
     },
     {
-      "source": "/api/briefs",
-      "destination": "/api/briefs-simple"
-    },
-    {
       "source": "/api/submissions",
       "destination": "/api/submissions-create"
     },
