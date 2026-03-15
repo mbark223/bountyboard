@@ -4,10 +4,10 @@
   "framework": null,
   "functions": {
     "api/*.ts": {
-      "maxDuration": 10
+      "maxDuration": 30
     },
     "api/*.js": {
-      "maxDuration": 10
+      "maxDuration": 30
     }
   },
   "rewrites": [
@@ -45,7 +45,7 @@
     },
     {
       "source": "/api/submissions",
-      "destination": "/api/submissions-create"
+      "destination": "/api/submissions"
     },
     {
       "source": "/api/submissions/:id/feedback",

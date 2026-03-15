@@ -29,13 +29,19 @@ import { DatabaseStorage } from "../../server/storage.js";
 
 // Create a storage instance that uses the Vercel-compatible database connection
 class VercelDatabaseStorage extends DatabaseStorage {
+  private static cachedDb: ReturnType<typeof getDb> | null = null;
+
   private get db() {
-    try {
-      return getDb();
-    } catch (error) {
-      console.error("Database connection error:", error);
-      throw new Error("Database service unavailable. Please check configuration.");
+    // Use cached db connection to avoid creating new connections per request
+    if (!VercelDatabaseStorage.cachedDb) {
+      try {
+        VercelDatabaseStorage.cachedDb = getDb();
+      } catch (error) {
+        console.error("Database connection error:", error);
+        throw new Error("Database service unavailable. Please check configuration.");
+      }
     }
+    return VercelDatabaseStorage.cachedDb;
   }
 
   async getUser(id: string): Promise<User | undefined> {

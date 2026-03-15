@@ -12,19 +12,32 @@ export function getDb() {
     console.error("DATABASE_URL not set - database operations will fail");
     throw new Error("Database not configured. Please set DATABASE_URL environment variable.");
   }
-  
+
   if (!pool) {
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      connectionTimeoutMillis: 10000,
-      idleTimeoutMillis: 30000,
-      max: 10,
+      max: 1, // Serverless needs minimal connections per function
+      idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 5000,
     });
   }
-  
+
   if (!db) {
     db = drizzle(pool, { schema });
   }
-  
+
   return db;
 }
+
+// Initialize db on module load if DATABASE_URL is set
+// This ensures the db export is available for dynamic imports
+if (process.env.DATABASE_URL) {
+  try {
+    db = getDb();
+  } catch (error) {
+    console.error("Failed to initialize database:", error);
+  }
+}
+
+// Export db constant for dynamic imports in auth.ts and other modules
+export { db };
