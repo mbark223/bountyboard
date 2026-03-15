@@ -40,15 +40,10 @@ export default async function handler(req, res) {
     }
 
     // Check permissions
-    // Admins can view briefs they own
+    // Admins can view all briefs (not just ones they own)
     if (user.userType === 'admin' || user.role === 'admin') {
-      if (brief.ownerId === user.id) {
-        console.log(`[Auth] Admin ${user.email} - viewing owned brief: ${brief.title}`);
-        return res.status(200).json(brief);
-      } else {
-        console.log(`[Auth] Admin ${user.email} - denied access to brief owned by ${brief.ownerId}`);
-        return res.status(403).json({ error: 'You do not own this brief' });
-      }
+      console.log(`[Auth] Admin ${user.email} - viewing brief: ${brief.title}`);
+      return res.status(200).json(brief);
     }
 
     // Influencers can only view assigned briefs
