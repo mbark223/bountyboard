@@ -13,11 +13,15 @@ export default async function handler(req, res) {
   }
   
   const { id } = req.query;
-  const briefId = parseInt(id, 10);
-  
-  if (!id || isNaN(briefId)) {
-    return res.status(400).json({ error: 'Invalid brief ID' });
+
+  if (!id) {
+    return res.status(400).json({ error: 'ID or slug parameter is required' });
   }
+
+  // Check if it's a numeric ID or a slug
+  const briefId = parseInt(id, 10);
+  const isNumericId = !isNaN(briefId);
+  const searchValue = isNumericId ? briefId : id; // Use numeric ID or slug string
   
   let pool;
   
@@ -36,32 +40,48 @@ export default async function handler(req, res) {
     
     if (req.method === 'GET') {
       // Handle GET request (fetch brief)
-      console.log('[API] Fetching brief with ID:', briefId);
-      
-      const query = `
-        SELECT 
-          b.*,
-          u.org_name as user_org_name,
-          u.org_slug,
-          u.org_logo_url,
-          u.org_website,
-          u.org_description
-        FROM briefs b
-        LEFT JOIN users u ON b.owner_id = u.id
-        WHERE b.id = $1
-      `;
-      
-      const result = await pool.query(query, [briefId]);
+      console.log('[API] Fetching brief with:', isNumericId ? `ID: ${briefId}` : `slug: ${searchValue}`);
+
+      const query = isNumericId
+        ? `
+          SELECT
+            b.*,
+            u.org_name as user_org_name,
+            u.org_slug,
+            u.org_logo_url,
+            u.org_website,
+            u.org_description
+          FROM briefs b
+          LEFT JOIN users u ON b.owner_id = u.id
+          WHERE b.id = $1
+        `
+        : `
+          SELECT
+            b.*,
+            u.org_name as user_org_name,
+            u.org_slug,
+            u.org_logo_url,
+            u.org_website,
+            u.org_description
+          FROM briefs b
+          LEFT JOIN users u ON b.owner_id = u.id
+          WHERE b.slug = $1
+        `;
+
+      const result = await pool.query(query, [searchValue]);
       
       if (result.rows.length === 0) {
-        console.log('[API] Brief not found for ID:', briefId);
+        console.log('[API] Brief not found for:', searchValue);
         return res.status(404).json({ error: 'Brief not found' });
       }
-      
+
+      // Get the actual brief ID from the result (in case we searched by slug)
+      const actualBriefId = result.rows[0].id;
+
       // Get submission count
       const countResult = await pool.query(
         'SELECT COUNT(*) as count FROM submissions WHERE brief_id = $1',
-        [briefId]
+        [actualBriefId]
       );
       const submissionCount = parseInt(countResult.rows[0].count);
       
@@ -103,11 +123,22 @@ export default async function handler(req, res) {
         }
       };
       
+      // Only allow viewing PUBLISHED briefs publicly (no auth check for simplicity)
+      // In production, you may want to add auth checks for DRAFT briefs
+      if (brief.status !== 'PUBLISHED') {
+        console.log('[API] Brief not published:', brief.slug, 'status:', brief.status);
+        return res.status(404).json({ error: 'Brief not found' });
+      }
+
       console.log('[API] Brief found:', { id: brief.id, title: brief.title });
       res.status(200).json(brief);
       
     } else if (req.method === 'PUT') {
-      // Handle PUT request (update brief)
+      // Handle PUT request (update brief) - only allow numeric IDs for updates
+      if (!isNumericId) {
+        return res.status(400).json({ error: 'Numeric brief ID required for updates' });
+      }
+
       console.log('[API] Updating brief:', briefId);
       
       const {
