@@ -52,7 +52,9 @@ export async function fetchBriefBySlug(slug: string): Promise<Brief> {
 }
 
 export async function fetchBriefById(id: string): Promise<Brief> {
-  const response = await fetch(`/api/briefs/id/${id}`);
+  const response = await fetch(`/api/briefs/id/${id}`, {
+    credentials: 'include',
+  });
   if (!response.ok) throw new Error("Failed to fetch brief");
   return response.json();
 }

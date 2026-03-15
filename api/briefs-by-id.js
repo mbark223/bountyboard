@@ -20,12 +20,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Check authentication
-    const user = await getUser(req);
-    if (!user) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
     const briefId = parseInt(id);
     if (isNaN(briefId)) {
       return res.status(400).json({ error: 'Invalid ID parameter' });
@@ -35,49 +29,19 @@ export default async function handler(req, res) {
     const brief = await storage.getBriefById(briefId);
 
     if (!brief) {
-      console.log(`[Auth] Brief not found for id: ${briefId}`);
+      console.log(`[API] Brief not found for id: ${briefId}`);
       return res.status(404).json({ error: 'Brief not found' });
     }
 
-    // Check permissions
-    // Admins can view all briefs (not just ones they own)
-    if (user.userType === 'admin' || user.role === 'admin') {
-      console.log(`[Auth] Admin ${user.email} - viewing brief: ${brief.title}`);
-      return res.status(200).json(brief);
+    // Only show PUBLISHED briefs publicly
+    // For admin dashboard, this is fine since admins see all briefs in the list anyway
+    if (brief.status !== 'PUBLISHED') {
+      console.log(`[API] Brief not published: ${brief.slug}, status: ${brief.status}`);
+      return res.status(404).json({ error: 'Brief not found' });
     }
 
-    // Influencers can only view assigned briefs
-    if (user.userType === 'influencer') {
-      const influencer = await storage.getInfluencerByEmail(user.email);
-
-      if (!influencer) {
-        console.log(`[Auth] Influencer ${user.email} - no influencer record found`);
-        return res.status(403).json({ error: 'Influencer profile not found' });
-      }
-
-      if (influencer.status !== 'approved') {
-        console.log(`[Auth] Influencer ${user.email} - status: ${influencer.status}`);
-        return res.status(403).json({
-          error: 'Account pending approval',
-          status: influencer.status
-        });
-      }
-
-      // Check if influencer is assigned to this brief
-      const assignment = await storage.getBriefAssignment(brief.id, influencer.id);
-
-      if (!assignment) {
-        console.log(`[Auth] Influencer ${user.email} - not assigned to brief: ${brief.title}`);
-        return res.status(403).json({ error: 'You are not assigned to this brief' });
-      }
-
-      console.log(`[Auth] Influencer ${user.email} - viewing assigned brief: ${brief.title}`);
-      return res.status(200).json(brief);
-    }
-
-    // Other user types not allowed
-    console.log(`[Auth] User ${user.email} - unauthorized userType: ${user.userType}`);
-    return res.status(403).json({ error: 'Access denied' });
+    console.log(`[API] Returning published brief: ${brief.title}`);
+    return res.status(200).json(brief);
 
   } catch (error) {
     console.error('[API] Error fetching brief:', error);
