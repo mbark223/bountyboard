@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,13 @@ import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
+  const searchParams = new URLSearchParams(useSearch());
+  const typeParam = searchParams.get('type');
+
   const [email, setEmail] = useState("");
-  const [userType, setUserType] = useState<"creator" | "influencer">("creator");
+  const [userType, setUserType] = useState<"creator" | "influencer">(
+    typeParam === 'influencer' ? 'influencer' : 'creator'
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
