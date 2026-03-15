@@ -33,9 +33,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Check if we're in production and test login is disabled
-    if (process.env.NODE_ENV === 'production' && process.env.ENABLE_TEST_LOGIN !== 'true') {
+    // For demo purposes, test login is enabled by default
+    // Set DISABLE_TEST_LOGIN=true to disable it
+    if (process.env.DISABLE_TEST_LOGIN === 'true') {
       return res.status(403).json({
-        error: 'Test login is disabled in production'
+        error: 'Test login is disabled'
       });
     }
 
