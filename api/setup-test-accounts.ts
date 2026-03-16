@@ -68,9 +68,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status,
         id_verified,
         bank_verified,
-        approved_at,
-        created_at,
-        updated_at
+        applied_at,
+        approved_at
       )
       VALUES (
         'Test',
@@ -84,15 +83,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         1,
         1,
         NOW(),
-        NOW(),
         NOW()
       )
       ON CONFLICT (email) DO UPDATE SET
         status = 'approved',
         id_verified = 1,
         bank_verified = 1,
-        approved_at = NOW(),
-        updated_at = NOW()
+        approved_at = NOW()
     `);
 
     console.log('[Setup] Influencer record created/updated');
