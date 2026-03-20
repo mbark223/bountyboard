@@ -41,6 +41,18 @@ export default function LoginPage() {
 
       if (!response.ok) {
         const data = await response.json();
+
+        // Handle 403 with specific influencer status messages
+        if (response.status === 403 && data.status) {
+          const statusMessages = {
+            pending: "Your application is pending review. We'll notify you once it's been approved!",
+            rejected: "Your application was not approved. If you have questions, please contact support.",
+            suspended: "Your account has been suspended. Please contact support for assistance."
+          };
+
+          throw new Error(statusMessages[data.status as keyof typeof statusMessages] || data.error);
+        }
+
         throw new Error(data.error || "Login failed");
       }
 

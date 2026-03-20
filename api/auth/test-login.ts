@@ -85,6 +85,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log(`[Test Login] User found: ${email} (${user.user_type})`);
 
+    // Check influencer approval status before allowing login
+    if (user.user_type === 'influencer') {
+      const influencerQuery = `
+        SELECT status, rejection_reason
+        FROM influencers
+        WHERE email = $1
+      `;
+      const influencerResult = await pool.query(influencerQuery, [email]);
+
+      if (influencerResult.rows.length === 0) {
+        console.log(`[Test Login] Influencer profile not found for: ${email}`);
+        return res.status(403).json({
+          error: 'Influencer profile not found'
+        });
+      }
+
+      const influencer = influencerResult.rows[0];
+      console.log(`[Test Login] Influencer status: ${influencer.status}`);
+
+      // Block login if not approved
+      if (influencer.status !== 'approved') {
+        const errorMessages = {
+          pending: 'Your application is pending review. We\'ll notify you once approved.',
+          rejected: 'Your application was not approved. Please contact support for details.',
+          suspended: 'Your account has been suspended. Please contact support.'
+        };
+
+        console.log(`[Test Login] Login blocked - status: ${influencer.status}`);
+        return res.status(403).json({
+          error: errorMessages[influencer.status] || 'Access denied',
+          status: influencer.status
+        });
+      }
+    }
+
     // For Vercel serverless, we'll return user data and let the client handle state
     // In a real app, we'd create a session or JWT token here
     return res.status(200).json({
