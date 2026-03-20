@@ -2,6 +2,24 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Pool } from 'pg';
 
 /**
+ * Parse cookies from cookie header string
+ */
+function parseCookies(cookieHeader: string | undefined): Record<string, string> {
+  if (!cookieHeader) return {};
+
+  return cookieHeader
+    .split(';')
+    .map(c => c.trim())
+    .reduce((acc, cookie) => {
+      const [key, value] = cookie.split('=');
+      if (key && value) {
+        acc[key] = decodeURIComponent(value);
+      }
+      return acc;
+    }, {} as Record<string, string>);
+}
+
+/**
  * Get current authenticated user from test-login session
  * This endpoint is called by the frontend to check authentication status
  */
@@ -24,9 +42,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let pool: Pool | null = null;
 
   try {
-    // Get user email from query parameter (set by test-login)
-    // In a real app, this would come from a session or JWT token
-    const email = req.cookies?.['user_email'];
+    // Parse cookies from header
+    const cookies = parseCookies(req.headers.cookie);
+    const email = cookies['user_email'];
 
     if (!email) {
       return res.status(401).json({ error: 'Not authenticated' });
