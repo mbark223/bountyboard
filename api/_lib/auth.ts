@@ -23,8 +23,19 @@ interface SessionData {
  */
 export async function getUser(req: VercelRequest): Promise<User | null> {
   try {
-    // Parse session cookie
+    // Parse cookies
     const cookies = parseCookies(req.headers.cookie);
+
+    // Check for simple cookie-based auth (used by test-login)
+    const userEmail = cookies['user_email'];
+    if (userEmail) {
+      const user = await storage.getUserByEmail(decodeURIComponent(userEmail));
+      if (user) {
+        return user;
+      }
+    }
+
+    // Fall back to session-based auth (used by OAuth/production)
     const sessionId = cookies['connect.sid'];
 
     if (!sessionId) {

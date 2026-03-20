@@ -65,6 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         user_type,
         role,
         is_onboarded,
+        influencer_id,
         org_name,
         org_slug,
         org_logo_url
@@ -120,8 +121,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // For Vercel serverless, we'll return user data and let the client handle state
-    // In a real app, we'd create a session or JWT token here
+    // Set cookie to maintain session (simple auth for demo)
+    // In production, use proper session management or JWT
+    res.setHeader('Set-Cookie', [
+      `user_email=${encodeURIComponent(email)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`
+    ]);
+
+    console.log(`[Test Login] Session created for ${email}`);
+
+    // For Vercel serverless, we'll return user data and set a cookie
+    // In a real app, we'd create a proper session or JWT token here
     return res.status(200).json({
       success: true,
       user: {
@@ -132,6 +141,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         userType: user.user_type,
         role: user.role,
         isOnboarded: user.is_onboarded,
+        influencerId: user.influencer_id,
         orgName: user.org_name,
         orgSlug: user.org_slug,
         orgLogoUrl: user.org_logo_url
