@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, Lock, Shield, Sparkles, CheckCircle } from "lucide-react";
+import { Loader2, Lock, Shield, Sparkles, CheckCircle, UserPlus, UserCheck, Crown } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -17,8 +17,8 @@ export default function LoginPage() {
   const typeParam = searchParams.get('type');
 
   const [email, setEmail] = useState("");
-  const [userType, setUserType] = useState<"creator" | "influencer">(
-    typeParam === 'influencer' ? 'influencer' : 'creator'
+  const [userType, setUserType] = useState<"new-influencer" | "approved-influencer" | "admin">(
+    typeParam === 'influencer' ? 'approved-influencer' : 'admin'
   );
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -31,6 +31,12 @@ export default function LoginPage() {
     setError("");
 
     try {
+      // If New Influencer is selected, redirect to apply page
+      if (userType === "new-influencer") {
+        setLocation("/apply");
+        return;
+      }
+
       // Call test login endpoint
       const response = await fetch("/api/auth/test-login", {
         method: "POST",
@@ -121,31 +127,46 @@ export default function LoginPage() {
                   <RadioGroup value={userType} onValueChange={(value: any) => setUserType(value)}>
                     <div className={cn(
                       "flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-colors",
-                      userType === "creator" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                      userType === "new-influencer" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                     )}>
-                      <RadioGroupItem value="creator" id="creator" className="mt-0.5" />
-                      <label htmlFor="creator" className="flex-1 cursor-pointer">
+                      <RadioGroupItem value="new-influencer" id="new-influencer" className="mt-0.5" />
+                      <label htmlFor="new-influencer" className="flex-1 cursor-pointer">
                         <div className="flex items-center gap-2 mb-1">
-                          <Sparkles className="h-4 w-4" />
-                          <span className="font-semibold">Content Creator</span>
+                          <UserPlus className="h-4 w-4" />
+                          <span className="font-semibold">New Influencer</span>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Create content, submit to briefs, and earn rewards
+                          Apply to join the platform and get verified
                         </p>
                       </label>
                     </div>
                     <div className={cn(
                       "flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-colors",
-                      userType === "influencer" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                      userType === "approved-influencer" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                     )}>
-                      <RadioGroupItem value="influencer" id="influencer" className="mt-0.5" />
-                      <label htmlFor="influencer" className="flex-1 cursor-pointer">
+                      <RadioGroupItem value="approved-influencer" id="approved-influencer" className="mt-0.5" />
+                      <label htmlFor="approved-influencer" className="flex-1 cursor-pointer">
                         <div className="flex items-center gap-2 mb-1">
-                          <Shield className="h-4 w-4" />
-                          <span className="font-semibold">Vetted Influencer</span>
+                          <UserCheck className="h-4 w-4" />
+                          <span className="font-semibold">Approved Influencer</span>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Access exclusive briefs and premium opportunities
+                          Login to access your assigned briefs
+                        </p>
+                      </label>
+                    </div>
+                    <div className={cn(
+                      "flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-colors",
+                      userType === "admin" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                    )}>
+                      <RadioGroupItem value="admin" id="admin" className="mt-0.5" />
+                      <label htmlFor="admin" className="flex-1 cursor-pointer">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Crown className="h-4 w-4" />
+                          <span className="font-semibold">Admin</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Manage briefs, influencers, and assignments
                         </p>
                       </label>
                     </div>
@@ -158,14 +179,20 @@ export default function LoginPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={
+                      userType === "new-influencer" ? "Enter your email to apply" :
+                      userType === "admin" ? "admin@test.com" :
+                      "influencer@test.com"
+                    }
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    required
+                    required={userType !== "new-influencer"}
                     disabled={isLoading}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Test accounts: admin@test.com or influencer@test.com
+                    {userType === "new-influencer" && "Click Sign In to go to the application form"}
+                    {userType === "approved-influencer" && "Test account: influencer@test.com"}
+                    {userType === "admin" && "Test account: admin@test.com"}
                   </p>
                 </div>
 
@@ -184,12 +211,21 @@ export default function LoginPage() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in...
+                      {userType === "new-influencer" ? "Redirecting..." : "Signing in..."}
                     </>
                   ) : (
                     <>
-                      <Lock className="mr-2 h-4 w-4" />
-                      Sign In
+                      {userType === "new-influencer" ? (
+                        <>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Apply Now
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="mr-2 h-4 w-4" />
+                          Sign In
+                        </>
+                      )}
                     </>
                   )}
                 </Button>

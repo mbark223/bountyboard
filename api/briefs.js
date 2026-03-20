@@ -17,6 +17,14 @@ export default async function handler(req, res) {
   // Handle GET requests (list briefs)
   if (req.method === 'GET') {
     const user = await getUser(req);
+    console.log('[Briefs API] User data:', JSON.stringify({
+      id: user?.id,
+      email: user?.email,
+      userType: user?.userType,
+      role: user?.role,
+      influencerId: user?.influencerId
+    }));
+
     if (!user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
