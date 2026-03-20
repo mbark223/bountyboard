@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
 import { Link, useLocation } from "wouter";
-import { MoreHorizontal, Plus, Search, Eye, Edit, Archive, ArrowUpRight, Building2, MapPin } from "lucide-react";
+import { MoreHorizontal, Plus, Search, Eye, Edit, Archive, ArrowUpRight, Building2, MapPin, Users } from "lucide-react";
 import { BUSINESS_LINES, STATES } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAdminBriefs } from "@/lib/api";
@@ -182,6 +182,9 @@ export default function AdminBriefs() {
                       <DropdownMenuContent align="end" className="bg-[#1A1A1A] border-[#2A2A2A]">
                         <DropdownMenuItem onClick={() => setLocation(`/admin/briefs/${brief.id}`)} className="text-gray-300 focus:text-white focus:bg-[#2A2A2A]">
                           <Eye className="mr-2 h-4 w-4" /> View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setLocation(`/admin/briefs/${brief.id}/assignments`)} className="text-gray-300 focus:text-white focus:bg-[#2A2A2A]">
+                          <Users className="mr-2 h-4 w-4" /> Manage Assignments
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setLocation(`/b/${brief.slug}`)} className="text-gray-300 focus:text-white focus:bg-[#2A2A2A]">
                           <ArrowUpRight className="mr-2 h-4 w-4" /> View Public Page

@@ -4,7 +4,11 @@ import { Pool } from 'pg';
 /**
  * Setup Test Accounts Endpoint
  *
- * Creates admin@test.com and influencer@test.com accounts for demo purposes
+ * Creates complete demo environment:
+ * - admin@test.com account
+ * - influencer@test.com account (approved)
+ * - Demo brief "Spring Product Launch Campaign"
+ * - Assigns the brief to test influencer
  *
  * Usage: GET /api/setup-test-accounts
  */
@@ -121,6 +125,104 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log('[Setup] Influencer user account created/updated');
 
+    // Get admin user ID for brief ownership
+    const adminResult = await pool.query(`
+      SELECT id FROM users WHERE email = 'admin@test.com'
+    `);
+    const adminId = adminResult.rows[0]?.id;
+
+    // Create a demo brief
+    await pool.query(`
+      INSERT INTO briefs (
+        slug,
+        title,
+        org_name,
+        business_line,
+        overview,
+        requirements,
+        deliverable_ratio,
+        deliverable_length,
+        deliverable_format,
+        reward_type,
+        reward_amount,
+        reward_currency,
+        reward_description,
+        deadline,
+        status,
+        max_winners,
+        max_submissions_per_creator,
+        owner_id,
+        priority,
+        creators_needed,
+        platforms,
+        created_at,
+        updated_at
+      )
+      VALUES (
+        'demo-campaign-2024',
+        'Spring Product Launch Campaign',
+        'BountyBoard Demo',
+        'Marketing',
+        'Create engaging social media content showcasing our new spring product line. Focus on authentic storytelling and lifestyle shots that resonate with our target demographic.',
+        ARRAY['Show product in use', 'Include call-to-action', 'Use provided brand hashtags', 'Follow brand guidelines'],
+        '9:16',
+        '30-60 seconds',
+        'Vertical video',
+        'CASH',
+        500,
+        'USD',
+        '$500 per approved video',
+        NOW() + INTERVAL '30 days',
+        'PUBLISHED',
+        5,
+        3,
+        $1,
+        'High',
+        5,
+        ARRAY['Instagram', 'TikTok'],
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT (slug) DO UPDATE SET
+        title = EXCLUDED.title,
+        overview = EXCLUDED.overview,
+        deadline = EXCLUDED.deadline,
+        status = 'PUBLISHED',
+        updated_at = NOW()
+    `, [adminId]);
+
+    console.log('[Setup] Demo brief created/updated');
+
+    // Get brief and influencer IDs for assignment
+    const briefResult = await pool.query(`
+      SELECT id FROM briefs WHERE slug = 'demo-campaign-2024'
+    `);
+    const briefId = briefResult.rows[0]?.id;
+
+    const influencerResult = await pool.query(`
+      SELECT id FROM influencers WHERE email = 'influencer@test.com'
+    `);
+    const influencerId = influencerResult.rows[0]?.id;
+
+    // Assign brief to test influencer
+    if (briefId && influencerId && adminId) {
+      await pool.query(`
+        INSERT INTO brief_assignments (
+          brief_id,
+          influencer_id,
+          assigned_by,
+          assigned_at,
+          status
+        )
+        VALUES ($1, $2, $3, NOW(), 'assigned')
+        ON CONFLICT (brief_id, influencer_id) DO UPDATE SET
+          assigned_at = NOW(),
+          status = 'assigned'
+      `, [briefId, influencerId, adminId]);
+
+      console.log('[Setup] Brief assigned to test influencer');
+    }
+
     // Verify accounts
     const result = await pool.query(`
       SELECT email, first_name, last_name, user_type, role
@@ -131,11 +233,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({
       success: true,
-      message: 'Test accounts created/updated successfully',
+      message: 'Test accounts, brief, and assignment created successfully',
       accounts: result.rows,
       credentials: {
         admin: 'admin@test.com',
         influencer: 'influencer@test.com'
+      },
+      brief: {
+        slug: 'demo-campaign-2024',
+        title: 'Spring Product Launch Campaign',
+        assignedTo: 'influencer@test.com'
       }
     });
 
