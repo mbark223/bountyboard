@@ -27,7 +27,8 @@ export async function fetchBriefs(): Promise<Brief[]> {
 }
 
 export async function fetchAdminBriefs(): Promise<Brief[]> {
-  const response = await fetch("/api/admin/briefs", {
+  // Use same endpoint as fetchBriefs - backend filters by user type
+  const response = await fetch("/api/briefs", {
     headers: getAuthHeaders(),
   });
   if (!response.ok) throw new Error("Failed to fetch admin briefs");
