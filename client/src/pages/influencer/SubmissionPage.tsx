@@ -37,6 +37,8 @@ interface BriefDetails {
   orgName: string;
   overview: string;
   requirements: string[];
+  dos?: string[];
+  donts?: string[];
   deliverableRatio: string;
   deliverableLength: string;
   deliverableFormat: string;
@@ -310,6 +312,45 @@ export default function InfluencerSubmissionPage() {
                     ))}
                   </ul>
                 </div>
+
+                {/* Do's and Don'ts */}
+                {(brief.dos && brief.dos.length > 0) || (brief.donts && brief.donts.length > 0) ? (
+                  <div className="space-y-4 pt-4 border-t">
+                    {brief.dos && brief.dos.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 text-sm font-medium text-green-600 mb-2">
+                          <span className="text-lg">✓</span>
+                          <span>Do's</span>
+                        </div>
+                        <ul className="text-sm space-y-1">
+                          {brief.dos.map((item, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <span className="text-green-600 mt-1">•</span>
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {brief.donts && brief.donts.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 text-sm font-medium text-red-600 mb-2">
+                          <span className="text-lg">✗</span>
+                          <span>Don'ts</span>
+                        </div>
+                        <ul className="text-sm space-y-1">
+                          {brief.donts.map((item, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <span className="text-red-600 mt-1">•</span>
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
           </div>

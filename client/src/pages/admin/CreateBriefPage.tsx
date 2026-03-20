@@ -59,6 +59,8 @@ const briefSchema = z.object({
   state: z.enum(["Florida", "New Jersey", "Michigan"]).default("Florida"),
   overview: z.string().min(20, "Overview must be at least 20 characters"),
   requirements: z.array(z.object({ value: z.string().min(1, "Requirement cannot be empty") })),
+  dos: z.array(z.object({ value: z.string().min(1) })).optional(),
+  donts: z.array(z.object({ value: z.string().min(1) })).optional(),
   deliverables: z.object({
     ratio: z.string().min(1, "Aspect ratio is required"),
     length: z.string().min(1, "Length is required"),
@@ -199,6 +201,8 @@ export default function CreateBriefPage() {
       state: "Florida",
       overview: "",
       requirements: [{ value: "" }, { value: "" }, { value: "" }],
+      dos: [{ value: "" }],
+      donts: [{ value: "" }],
       deliverables: {
         ratio: "9:16 (Vertical)",
         length: "15-30 seconds",
@@ -226,6 +230,16 @@ export default function CreateBriefPage() {
 
   const { fields, append, remove, replace } = useFieldArray({
     name: "requirements",
+    control: form.control,
+  });
+
+  const { fields: dosFields, append: appendDo, remove: removeDo } = useFieldArray({
+    name: "dos",
+    control: form.control,
+  });
+
+  const { fields: dontsFields, append: appendDont, remove: removeDont } = useFieldArray({
+    name: "donts",
     control: form.control,
   });
 
@@ -326,6 +340,8 @@ export default function CreateBriefPage() {
   async function onSubmit(data: BriefFormValues) {
     const slug = generateSlug(data.title);
     const requirements = data.requirements.map(r => r.value).filter(v => v.length > 0);
+    const dos = data.dos ? data.dos.map(d => d.value).filter(v => v.length > 0) : [];
+    const donts = data.donts ? data.donts.map(d => d.value).filter(v => v.length > 0) : [];
 
     createMutation.mutate({
       slug,
@@ -335,6 +351,8 @@ export default function CreateBriefPage() {
       state: data.state,
       overview: data.overview,
       requirements,
+      dos,
+      donts,
       deliverableRatio: data.deliverables.ratio,
       deliverableLength: data.deliverables.length,
       deliverableFormat: data.deliverables.format,
@@ -845,6 +863,108 @@ export default function CreateBriefPage() {
                     )}
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Do's & Don'ts</CardTitle>
+                <CardDescription>Clear guidance for influencers on what to include and avoid.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-green-600">✓ Do's (Best Practices)</h4>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => appendDo({ value: "" })}
+                    >
+                      <Plus className="h-3 w-3 mr-1" /> Add Do
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {dosFields.map((field, index) => (
+                      <div key={field.id} className="flex gap-2">
+                        <FormField
+                          control={form.control}
+                          name={`dos.${index}.value`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input
+                                  placeholder={`e.g. Show genuine enthusiasm for the product`}
+                                  {...field}
+                                  className="border-green-200 focus-visible:ring-green-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive"
+                          onClick={() => removeDo(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-red-600">✗ Don'ts (Things to Avoid)</h4>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => appendDont({ value: "" })}
+                    >
+                      <Plus className="h-3 w-3 mr-1" /> Add Don't
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {dontsFields.map((field, index) => (
+                      <div key={field.id} className="flex gap-2">
+                        <FormField
+                          control={form.control}
+                          name={`donts.${index}.value`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input
+                                  placeholder={`e.g. Don't mention competitor brands`}
+                                  {...field}
+                                  className="border-red-200 focus-visible:ring-red-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive"
+                          onClick={() => removeDont(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </CardContent>
             </Card>
 

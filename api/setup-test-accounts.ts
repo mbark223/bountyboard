@@ -140,6 +140,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         business_line,
         overview,
         requirements,
+        dos,
+        donts,
         deliverable_ratio,
         deliverable_length,
         deliverable_format,
@@ -165,6 +167,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'Marketing',
         'Create engaging social media content showcasing our new spring product line. Focus on authentic storytelling and lifestyle shots that resonate with our target demographic.',
         ARRAY['Show product in use', 'Include call-to-action', 'Use provided brand hashtags', 'Follow brand guidelines'],
+        ARRAY['Show genuine enthusiasm', 'Feature products in good lighting', 'Include lifestyle shots', 'Be authentic and relatable'],
+        ARRAY['Don''t mention competitors', 'Avoid negative language', 'Don''t use copyrighted music', 'No misleading claims'],
         '9:16',
         '30-60 seconds',
         'Vertical video',
@@ -186,6 +190,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ON CONFLICT (slug) DO UPDATE SET
         title = EXCLUDED.title,
         overview = EXCLUDED.overview,
+        dos = EXCLUDED.dos,
+        donts = EXCLUDED.donts,
         deadline = EXCLUDED.deadline,
         status = 'PUBLISHED',
         updated_at = NOW()

@@ -19,6 +19,8 @@ export const briefs = pgTable("briefs", {
   state: text("state").notNull().default("Florida"), // 'Florida' | 'New Jersey' | 'Michigan'
   overview: text("overview").notNull(),
   requirements: text("requirements").array().notNull(),
+  dos: text("dos").array(),
+  donts: text("donts").array(),
   deliverableRatio: text("deliverable_ratio").notNull(),
   deliverableLength: text("deliverable_length").notNull(),
   deliverableFormat: text("deliverable_format").notNull(),
@@ -54,6 +56,8 @@ export const briefs = pgTable("briefs", {
 
 export const insertBriefSchema = createInsertSchema(briefs, {
   requirements: z.array(z.string().min(1)),
+  dos: z.array(z.string()).optional(),
+  donts: z.array(z.string()).optional(),
   rewardType: z.enum(["CASH", "BONUS_BETS", "OTHER"]),
   businessLine: z.enum(["PMR", "Casino", "Sportsbook"]).default("Sportsbook"),
   state: z.enum(["Florida", "New Jersey", "Michigan"]).default("Florida"),
