@@ -64,6 +64,9 @@ export default function LoginPage() {
 
       const data = await response.json();
 
+      // Store user data in localStorage for session persistence
+      localStorage.setItem("auth_user", JSON.stringify(data.user));
+
       // Success! Show success message and redirect
       setSuccess(true);
 

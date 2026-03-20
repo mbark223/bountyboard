@@ -95,14 +95,17 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 )}
               </div>
             </div>
-            <a 
-              href="/api/logout" 
+            <button
+              onClick={() => {
+                localStorage.removeItem("auth_user");
+                window.location.href = "/login";
+              }}
               className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 w-full transition-colors"
               data-testid="button-logout"
             >
               <LogOut className="h-4 w-4" />
               Sign Out
-            </a>
+            </button>
           </div>
         )}
       </aside>

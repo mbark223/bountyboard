@@ -1,14 +1,35 @@
 import type { Brief, Submission, InsertBrief, InsertSubmission, Feedback } from "@shared/schema";
 
+// Helper to get auth headers from localStorage
+function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {};
+  const storedUser = localStorage.getItem("auth_user");
+  if (storedUser) {
+    try {
+      const user = JSON.parse(storedUser);
+      if (user.email) {
+        headers["x-user-email"] = user.email;
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+  }
+  return headers;
+}
+
 // Briefs API
 export async function fetchBriefs(): Promise<Brief[]> {
-  const response = await fetch("/api/briefs");
+  const response = await fetch("/api/briefs", {
+    headers: getAuthHeaders(),
+  });
   if (!response.ok) throw new Error("Failed to fetch briefs");
   return response.json();
 }
 
 export async function fetchAdminBriefs(): Promise<Brief[]> {
-  const response = await fetch("/api/admin/briefs");
+  const response = await fetch("/api/admin/briefs", {
+    headers: getAuthHeaders(),
+  });
   if (!response.ok) throw new Error("Failed to fetch admin briefs");
   return response.json();
 }

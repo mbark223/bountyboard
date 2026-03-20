@@ -16,7 +16,17 @@ export default async function handler(req, res) {
 
   // Handle GET requests (list briefs)
   if (req.method === 'GET') {
-    const user = await getUser(req);
+    // Try to get user from session/cookie first
+    let user = await getUser(req);
+
+    // For demo/test: accept email from query parameter or header
+    if (!user) {
+      const email = req.query.email || req.headers['x-user-email'];
+      if (email) {
+        user = await storage.getUserByEmail(email);
+      }
+    }
+
     console.log('[Briefs API] User data:', JSON.stringify({
       id: user?.id,
       email: user?.email,

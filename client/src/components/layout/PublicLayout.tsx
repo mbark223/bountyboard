@@ -86,11 +86,15 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-border" />
-                  <DropdownMenuItem asChild>
-                    <a href="/api/logout" className="flex items-center gap-2 text-destructive cursor-pointer">
-                      <LogOut className="h-4 w-4" />
-                      Sign Out
-                    </a>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      localStorage.removeItem("auth_user");
+                      window.location.href = "/login";
+                    }}
+                    className="flex items-center gap-2 text-destructive cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

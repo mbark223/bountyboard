@@ -34,8 +34,26 @@ interface Brief {
 }
 
 async function fetchAssignedBriefs() {
+  // Get user email from localStorage for authentication
+  const storedUser = localStorage.getItem("auth_user");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (storedUser) {
+    try {
+      const user = JSON.parse(storedUser);
+      if (user.email) {
+        headers["x-user-email"] = user.email;
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+  }
+
   const response = await fetch("/api/briefs", {
     credentials: "include",
+    headers,
   });
 
   if (!response.ok) {
