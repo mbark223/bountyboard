@@ -128,10 +128,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllBriefs(): Promise<Brief[]> {
-    return await db
+    const allBriefs = await db
       .select()
       .from(briefs)
       .orderBy(desc(briefs.createdAt));
+
+    // Add submission count to each brief
+    const briefsWithCounts = await Promise.all(
+      allBriefs.map(async (brief) => {
+        const submissionCount = await db
+          .select()
+          .from(submissions)
+          .where(eq(submissions.briefId, brief.id));
+        return {
+          ...brief,
+          submissionCount: submissionCount.length
+        };
+      })
+    );
+
+    return briefsWithCounts as Brief[];
   }
 
   async getBriefBySlug(slug: string): Promise<BriefWithOrg | undefined> {
