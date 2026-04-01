@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
 import { Link, useLocation } from "wouter";
-import { MoreHorizontal, Plus, Search, Eye, Edit, Archive, ArrowUpRight, Building2, MapPin, Users } from "lucide-react";
+import { MoreHorizontal, Plus, Search, Eye, Edit, Archive, ArrowUpRight, Building2, MapPin, Users, CheckCircle2 } from "lucide-react";
 import { BUSINESS_LINES, STATES } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAdminBriefs } from "@/lib/api";
@@ -38,6 +38,7 @@ export default function AdminBriefs() {
   const [searchTerm, setSearchTerm] = useState("");
   const [businessLineFilter, setBusinessLineFilter] = useState<string>("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Fetch briefs from API
   const { data: briefs = [], isLoading } = useQuery({
@@ -49,7 +50,8 @@ export default function AdminBriefs() {
     const matchesSearch = b.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesBusinessLine = businessLineFilter === "all" || (b as any).businessLine === businessLineFilter;
     const matchesState = stateFilter === "all" || (b as any).state === stateFilter;
-    return matchesSearch && matchesBusinessLine && matchesState;
+    const matchesStatus = statusFilter === "all" || b.status === statusFilter;
+    return matchesSearch && matchesBusinessLine && matchesState && matchesStatus;
   });
 
   if (isLoading) {
@@ -113,6 +115,19 @@ export default function AdminBriefs() {
                   {STATES.map((state) => (
                     <SelectItem key={state} value={state}>{state}</SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[160px] bg-[#1A1A1A] border-[#2A2A2A] text-white" data-testid="select-status">
+                  <CheckCircle2 className="h-4 w-4 mr-2 text-[#7B5CFA]" />
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1A1A1A] border-[#2A2A2A]">
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="PUBLISHED">Published</SelectItem>
+                  <SelectItem value="DRAFT">Draft</SelectItem>
+                  <SelectItem value="ARCHIVED">Archived</SelectItem>
                 </SelectContent>
               </Select>
             </div>
