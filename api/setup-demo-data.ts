@@ -71,7 +71,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await pool.query(`
       INSERT INTO briefs (
         slug, title, org_name, business_line, state, overview, requirements,
-        dos, donts,
         deliverable_ratio, deliverable_length, deliverable_format,
         reward_type, reward_amount, reward_currency, reward_description,
         deadline, status, max_winners, max_submissions_per_creator, owner_id,
@@ -85,8 +84,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'Florida',
         'Celebrate the New Year with Hard Rock Bet! Create engaging content showcasing your New Year betting traditions and resolutions.',
         ARRAY['Mention Hard Rock Bet app', 'Show responsible gaming message', 'Include #HardRockNewYear', 'Must be 21+ to participate'],
-        ARRAY['Show genuine excitement', 'Feature the app prominently', 'Include New Year themed content'],
-        ARRAY['Don''t encourage problem gambling', 'No underage participants', 'Avoid excessive drinking'],
         '9:16', '15-30 seconds', 'MP4 / 1080p',
         'BONUS_BETS', 1000, 'USD', 'in Free Bets',
         NOW() + INTERVAL '30 days', 'PUBLISHED', 5, 1, $1,
@@ -101,7 +98,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await pool.query(`
       INSERT INTO briefs (
         slug, title, org_name, business_line, state, overview, requirements,
-        dos, donts,
         deliverable_ratio, deliverable_length, deliverable_format,
         reward_type, reward_amount, reward_currency,
         deadline, status, max_winners, max_submissions_per_creator, owner_id,
@@ -115,8 +111,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'New Jersey',
         'Get fans pumped for the NFL playoffs! Show your game day setup and predictions for the wild card weekend.',
         ARRAY['Wear your team colors', 'Show FanDuel app on screen', 'Share your playoff predictions', 'High energy required', 'Include #FanDuelPlayoffs'],
-        ARRAY['Show team spirit', 'Feature the FanDuel app', 'Share betting tips'],
-        ARRAY['Don''t promote irresponsible betting', 'No competitor mentions', 'Avoid negative content'],
         '16:9 or 9:16', '30-60 seconds', 'MP4 / 4K preferred',
         'CASH', 750, 'USD',
         NOW() + INTERVAL '45 days', 'PUBLISHED', 10, 2, $1,
@@ -131,7 +125,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await pool.query(`
       INSERT INTO briefs (
         slug, title, org_name, business_line, state, overview, requirements,
-        dos, donts,
         deliverable_ratio, deliverable_length, deliverable_format,
         reward_type, reward_amount, reward_currency, reward_description,
         deadline, status, max_winners, max_submissions_per_creator, owner_id,
@@ -145,8 +138,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'Michigan',
         'Showcase the excitement of our Big Bad Wolf slot game! Create fairy tale themed content that highlights the thrill of the chase.',
         ARRAY['Reference the Three Little Pigs story', 'Show BetMGM Casino app', 'Mention the bonus features', 'Family-friendly content only', 'Use #HuffAndPuffBig'],
-        ARRAY['Make it fun and engaging', 'Show the game interface', 'Keep it family-friendly'],
-        ARRAY['No gambling addiction references', 'Avoid scary content', 'Don''t mention competitors'],
         '1:1', '15 seconds', 'MP4 / 1080p',
         'OTHER', 500, 'USD', '$500 in Casino Credits + Wolf Pack Merch',
         NOW() + INTERVAL '60 days', 'PUBLISHED', 7, 3, $1,
