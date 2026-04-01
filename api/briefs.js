@@ -40,10 +40,10 @@ export default async function handler(req, res) {
     }
 
     try {
-      // For admins: return briefs they own
+      // For admins: return ALL briefs (not just owned)
       if (user.userType === 'admin' || user.role === 'admin') {
-        const briefs = await storage.getBriefsByOwnerId(user.id);
-        console.log(`[Auth] Admin ${user.email} - returning ${briefs.length} owned briefs`);
+        const briefs = await storage.getAllBriefs();
+        console.log(`[Auth] Admin ${user.email} - returning ${briefs.length} briefs`);
         return res.status(200).json(briefs);
       }
 
