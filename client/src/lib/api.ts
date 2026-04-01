@@ -27,8 +27,8 @@ export async function fetchBriefs(): Promise<Brief[]> {
 }
 
 export async function fetchAdminBriefs(): Promise<Brief[]> {
-  // Use same endpoint as fetchBriefs - backend filters by user type
-  const response = await fetch("/api/briefs", {
+  // Use dedicated admin endpoint with direct database query
+  const response = await fetch("/api/briefs-admin", {
     headers: getAuthHeaders(),
   });
   if (!response.ok) throw new Error("Failed to fetch admin briefs");
