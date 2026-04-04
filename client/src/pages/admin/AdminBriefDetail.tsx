@@ -142,6 +142,39 @@ export default function AdminBriefDetail() {
     },
   });
 
+  // Mutation for marking as paid
+  const markAsPaidMutation = useMutation({
+    mutationFn: async (submissionId: number) => {
+      const response = await fetch(`/api/submissions/${submissionId}/mark-paid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          userId: user?.id
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to mark submission as paid');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      refetchSubmissions();
+      if (data && typeof data.id === 'number') {
+        setSelectedSubmission(data);
+      }
+      toast({
+        title: 'Payment Completed',
+        description: 'Submission marked as paid successfully',
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to mark submission as paid.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const handleFinanceApproval = (status: 'approved' | 'rejected') => {
     if (!selectedSubmission) return;
 
@@ -149,6 +182,11 @@ export default function AdminBriefDetail() {
       submissionId: selectedSubmission.id,
       status,
     });
+  };
+
+  const handleMarkAsPaid = () => {
+    if (!selectedSubmission) return;
+    markAsPaidMutation.mutate(selectedSubmission.id);
   };
 
   const handleStatusChange = (status: Submission['status']) => {
@@ -381,6 +419,14 @@ export default function AdminBriefDetail() {
                               Finance: {sub.financeApprovalStatus}
                             </Badge>
                           )}
+                          {sub.status === 'SELECTED' && sub.payoutStatus === 'PAID' && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs bg-blue-100 text-blue-700 border-blue-200"
+                            >
+                              💰 Talent Paid
+                            </Badge>
+                          )}
                           {sub.status === 'NOT_SELECTED' && sub.reviewNotes && (
                             <div className="mt-1 p-2 bg-red-50 dark:bg-red-900/20 rounded-md">
                               <p className="text-xs text-red-700 dark:text-red-400">
@@ -544,14 +590,51 @@ export default function AdminBriefDetail() {
                 </div>
 
                 {selectedSubmission?.status === 'SELECTED' && brief && (
-                  <div className="p-4 border rounded-lg bg-green-50 dark:bg-green-900/10 border-green-200">
-                    <h4 className="text-sm font-semibold text-green-800 dark:text-green-300 mb-2">Bounty Eligible</h4>
-                    <p className="text-sm text-green-700 dark:text-green-400 mb-3">
-                      This submission is now eligible for the <strong>{formatCurrency(brief.reward.amount as number)}</strong> bounty.
+                  <div className={`p-4 border rounded-lg ${
+                    selectedSubmission.payoutStatus === 'PAID'
+                      ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200'
+                      : 'bg-green-50 dark:bg-green-900/10 border-green-200'
+                  }`}>
+                    <h4 className={`text-sm font-semibold mb-2 ${
+                      selectedSubmission.payoutStatus === 'PAID'
+                        ? 'text-blue-800 dark:text-blue-300'
+                        : 'text-green-800 dark:text-green-300'
+                    }`}>
+                      {selectedSubmission.payoutStatus === 'PAID' ? 'Payment Complete' : 'Bounty Eligible'}
+                    </h4>
+                    <p className={`text-sm mb-3 ${
+                      selectedSubmission.payoutStatus === 'PAID'
+                        ? 'text-blue-700 dark:text-blue-400'
+                        : 'text-green-700 dark:text-green-400'
+                    }`}>
+                      {selectedSubmission.payoutStatus === 'PAID' ? (
+                        <>
+                          Talent has been paid <strong>{formatCurrency(brief.reward.amount as number)}</strong>
+                          {selectedSubmission.paidAt && (
+                            <> on {new Date(selectedSubmission.paidAt).toLocaleDateString()}</>
+                          )}
+                        </>
+                      ) : (
+                        <>This submission is now eligible for the <strong>{formatCurrency(brief.reward.amount as number)}</strong> bounty.</>
+                      )}
                     </p>
-                    <Button size="sm" variant="outline" className="w-full bg-white dark:bg-black">
-                      Mark as Paid
-                    </Button>
+                    {selectedSubmission.payoutStatus !== 'PAID' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full bg-white dark:bg-black"
+                        onClick={handleMarkAsPaid}
+                        disabled={markAsPaidMutation.isPending || selectedSubmission.financeApprovalStatus !== 'approved'}
+                      >
+                        {markAsPaidMutation.isPending ? 'Processing...' : 'Mark as Paid'}
+                      </Button>
+                    )}
+                    {selectedSubmission.payoutStatus === 'PAID' && (
+                      <div className="flex items-center justify-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-300">
+                        <Check className="h-4 w-4" />
+                        Talent Paid
+                      </div>
+                    )}
                   </div>
                 )}
 

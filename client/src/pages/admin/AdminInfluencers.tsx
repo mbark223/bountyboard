@@ -110,13 +110,13 @@ export default function AdminInfluencers() {
       setReviewNotes("");
       toast({
         title: "Status Updated",
-        description: "Influencer status has been updated successfully.",
+        description: "Talent status has been updated successfully.",
       });
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to update influencer status.",
+        description: "Failed to update talent status.",
         variant: "destructive",
       });
     },
@@ -189,8 +189,8 @@ export default function AdminInfluencers() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-semibold">Influencer Management</h1>
-            <p className="text-muted-foreground">Review and manage influencer applications</p>
+            <h1 className="text-2xl font-semibold">Talent Management</h1>
+            <p className="text-muted-foreground">Review and manage talent applications</p>
           </div>
           <Button onClick={() => setInviteDialog(true)} className="gap-2">
             <Send className="h-4 w-4" />
@@ -212,7 +212,7 @@ export default function AdminInfluencers() {
             ) : influencers.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-12">
-                  <p className="text-muted-foreground">No {selectedTab === "all" ? "" : selectedTab} influencers found</p>
+                  <p className="text-muted-foreground">No {selectedTab === "all" ? "" : selectedTab} talent found</p>
                 </CardContent>
               </Card>
             ) : (
@@ -364,9 +364,9 @@ export default function AdminInfluencers() {
       <Dialog open={inviteDialog} onOpenChange={setInviteDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Send Influencer Invite</DialogTitle>
+            <DialogTitle>Send Talent Invite</DialogTitle>
             <DialogDescription>
-              Create an invite link for a new influencer
+              Create an invite link for new talent
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -377,7 +377,7 @@ export default function AdminInfluencers() {
                 type="email"
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="influencer@example.com"
+                placeholder="talent@example.com"
               />
             </div>
             <div>

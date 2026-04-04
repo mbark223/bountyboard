@@ -12,7 +12,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/briefs", label: "Briefs", icon: FileText },
-    { href: "/admin/influencers", label: "Influencers", icon: Users },
+    { href: "/admin/influencers", label: "Talent", icon: Users },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
 
