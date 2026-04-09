@@ -869,7 +869,7 @@ export default function CreateBriefPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Do's & Don'ts</CardTitle>
-                <CardDescription>Clear guidance for influencers on what to include and avoid.</CardDescription>
+                <CardDescription>Clear guidance for talent on what to include and avoid.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
 

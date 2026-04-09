@@ -70,7 +70,7 @@ export default function AccountSettingsPage() {
       case "admin":
         return "Administrator";
       case "influencer":
-        return "Vetted Influencer";
+        return "Vetted Talent";
       case "creator":
         return "Content Creator";
       default:

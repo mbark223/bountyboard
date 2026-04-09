@@ -71,14 +71,14 @@ export default function LandingPage() {
                     Admin Login
                   </Button>
                 </Link>
-                <Link href="/login?type=influencer">
+                <Link href="/login?type=talent">
                   <Button
                     size="lg"
                     variant="outline"
                     className="w-64 border-[#7B5CFA] text-[#7B5CFA] hover:bg-[#7B5CFA] hover:text-white text-lg h-14 font-medium transition-all hover:scale-105"
                   >
                     <Zap className="mr-2 h-5 w-5" />
-                    Influencer Portal
+                    Talent Portal
                   </Button>
                 </Link>
               </div>

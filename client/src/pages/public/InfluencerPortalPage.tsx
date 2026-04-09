@@ -26,8 +26,8 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-interface InfluencerPortalData {
-  influencer: {
+interface TalentPortalData {
+  talent: {
     id: number;
     firstName: string;
     lastName: string;
@@ -38,8 +38,8 @@ interface InfluencerPortalData {
   briefs: any[];
 }
 
-async function fetchPortalData(email: string): Promise<InfluencerPortalData> {
-  const response = await fetch(`/api/influencers/portal?email=${encodeURIComponent(email)}`);
+async function fetchPortalData(email: string): Promise<TalentPortalData> {
+  const response = await fetch(`/api/talents/portal?email=${encodeURIComponent(email)}`);
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || "Failed to fetch portal data");
@@ -47,7 +47,7 @@ async function fetchPortalData(email: string): Promise<InfluencerPortalData> {
   return response.json();
 }
 
-export default function InfluencerPortalPage() {
+export default function TalentPortalPage() {
   const [, setLocation] = useLocation();
   const searchParams = new URLSearchParams(useSearch() || "");
   const emailParam = searchParams.get("email");
@@ -55,7 +55,7 @@ export default function InfluencerPortalPage() {
   const [submittedEmail, setSubmittedEmail] = useState(emailParam || "");
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["influencer-portal", submittedEmail],
+    queryKey: ["talent-portal", submittedEmail],
     queryFn: () => fetchPortalData(submittedEmail),
     enabled: !!submittedEmail,
     retry: false,
@@ -76,7 +76,7 @@ export default function InfluencerPortalPage() {
         <div className="container max-w-2xl mx-auto px-4 py-16">
           <Card>
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Influencer Portal</CardTitle>
+              <CardTitle className="text-2xl">Talent Portal</CardTitle>
               <CardDescription>
                 Access your exclusive briefs and track your submissions
               </CardDescription>
@@ -94,7 +94,7 @@ export default function InfluencerPortalPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="influencer@example.com"
+                      placeholder="talent@example.com"
                       className="pl-9"
                       required
                     />
@@ -151,7 +151,7 @@ export default function InfluencerPortalPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-heading font-bold flex items-center gap-3">
-                Welcome back, {data?.influencer.firstName}!
+                Welcome back, {data?.talent.firstName}!
                 <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Approved Creator
@@ -160,11 +160,11 @@ export default function InfluencerPortalPage() {
               <div className="flex items-center gap-4 mt-2 text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <User className="h-4 w-4" />
-                  {data?.influencer.email}
+                  {data?.talent.email}
                 </span>
                 <span className="flex items-center gap-1">
                   <Instagram className="h-4 w-4" />
-                  @{data?.influencer.instagramHandle}
+                  @{data?.talent.instagramHandle}
                 </span>
               </div>
             </div>
@@ -250,7 +250,7 @@ export default function InfluencerPortalPage() {
                   <CardFooter className="pt-0 flex-col gap-2">
                     <Button 
                       className="w-full gap-2" 
-                      onClick={() => setLocation(`/influencer/submit/${brief.id}`)}
+                      onClick={() => setLocation(`/talent/submit/${brief.id}`)}
                     >
                       <Upload className="h-4 w-4" />
                       Submit Video

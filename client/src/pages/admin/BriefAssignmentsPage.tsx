@@ -20,7 +20,7 @@ import {
   ArrowLeft
 } from "lucide-react";
 
-interface Influencer {
+interface Talent {
   id: number;
   firstName: string;
   lastName: string;
@@ -33,18 +33,18 @@ interface Influencer {
 interface Assignment {
   id: number;
   briefId: number;
-  influencerId: number;
+  talentId: number;
   assignedAt: string;
-  influencer: Influencer;
+  talent: Talent;
 }
 
-async function fetchApprovedInfluencers() {
-  const response = await fetch("/api/influencers?status=approved", {
+async function fetchApprovedTalents() {
+  const response = await fetch("/api/talents?status=approved", {
     credentials: "include",
   });
 
   if (!response.ok) {
-    throw new Error("Failed to fetch influencers");
+    throw new Error("Failed to fetch talents");
   }
 
   return response.json();
@@ -62,28 +62,28 @@ async function fetchAssignments(briefId: string) {
   return response.json();
 }
 
-async function assignInfluencer(briefId: number, influencerId: number) {
+async function assignTalent(briefId: number, talentId: number) {
   const response = await fetch("/api/admin/brief-assignments", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ briefId, influencerId }),
+    body: JSON.stringify({ briefId, talentId }),
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || "Failed to assign influencer");
+    throw new Error(error.error || "Failed to assign talent");
   }
 
   return response.json();
 }
 
-async function removeAssignment(briefId: number, influencerId: number) {
+async function removeAssignment(briefId: number, talentId: number) {
   const response = await fetch("/api/admin/brief-assignments", {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ briefId, influencerId }),
+    body: JSON.stringify({ briefId, talentId }),
   });
 
   if (!response.ok) {
@@ -102,9 +102,9 @@ export default function BriefAssignmentsPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: influencers, isLoading: loadingInfluencers } = useQuery<Influencer[]>({
-    queryKey: ["approved-influencers"],
-    queryFn: fetchApprovedInfluencers,
+  const { data: talents, isLoading: loadingTalents } = useQuery<Talent[]>({
+    queryKey: ["approved-talents"],
+    queryFn: fetchApprovedTalents,
   });
 
   const { data: assignments, isLoading: loadingAssignments } = useQuery<Assignment[]>({
@@ -113,13 +113,13 @@ export default function BriefAssignmentsPage() {
   });
 
   const assignMutation = useMutation({
-    mutationFn: ({ influencerId }: { influencerId: number }) =>
-      assignInfluencer(parseInt(briefId), influencerId),
+    mutationFn: ({ talentId }: { talentId: number }) =>
+      assignTalent(parseInt(briefId), talentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["brief-assignments", briefId] });
       toast({
         title: "Success",
-        description: "Influencer assigned successfully",
+        description: "Talent assigned successfully",
       });
     },
     onError: (error: Error) => {
@@ -132,8 +132,8 @@ export default function BriefAssignmentsPage() {
   });
 
   const removeMutation = useMutation({
-    mutationFn: ({ influencerId }: { influencerId: number }) =>
-      removeAssignment(parseInt(briefId), influencerId),
+    mutationFn: ({ talentId }: { talentId: number }) =>
+      removeAssignment(parseInt(briefId), talentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["brief-assignments", briefId] });
       toast({
@@ -150,19 +150,19 @@ export default function BriefAssignmentsPage() {
     },
   });
 
-  const isAssigned = (influencerId: number) => {
-    return assignments?.some((a) => a.influencerId === influencerId);
+  const isAssigned = (talentId: number) => {
+    return assignments?.some((a) => a.talentId === talentId);
   };
 
-  const toggleAssignment = (influencerId: number) => {
-    if (isAssigned(influencerId)) {
-      removeMutation.mutate({ influencerId });
+  const toggleAssignment = (talentId: number) => {
+    if (isAssigned(talentId)) {
+      removeMutation.mutate({ talentId });
     } else {
-      assignMutation.mutate({ influencerId });
+      assignMutation.mutate({ talentId });
     }
   };
 
-  const filteredInfluencers = influencers?.filter((inf) => {
+  const filteredTalents = talents?.filter((inf) => {
     const searchLower = searchTerm.toLowerCase();
     return (
       inf.firstName.toLowerCase().includes(searchLower) ||
@@ -173,7 +173,7 @@ export default function BriefAssignmentsPage() {
   });
 
   const assignedCount = assignments?.length || 0;
-  const totalInfluencers = influencers?.length || 0;
+  const totalTalents = talents?.length || 0;
 
   return (
     <AdminLayout>
@@ -189,7 +189,7 @@ export default function BriefAssignmentsPage() {
           </Button>
           <h1 className="text-3xl font-heading font-bold mb-2">Manage Assignments</h1>
           <p className="text-muted-foreground">
-            Assign influencers who can view and submit to this brief
+            Assign talents who can view and submit to this brief
           </p>
         </div>
 
@@ -198,7 +198,7 @@ export default function BriefAssignmentsPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm text-muted-foreground">
-                Assigned Influencers
+                Assigned Talents
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -209,11 +209,11 @@ export default function BriefAssignmentsPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm text-muted-foreground">
-                Available Influencers
+                Available Talents
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{totalInfluencers}</div>
+              <div className="text-3xl font-bold">{totalTalents}</div>
             </CardContent>
           </Card>
 
@@ -225,8 +225,8 @@ export default function BriefAssignmentsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {totalInfluencers > 0
-                  ? Math.round((assignedCount / totalInfluencers) * 100)
+                {totalTalents > 0
+                  ? Math.round((assignedCount / totalTalents) * 100)
                   : 0}
                 %
               </div>
@@ -237,8 +237,8 @@ export default function BriefAssignmentsPage() {
         {/* Search */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Search Influencers</CardTitle>
-            <CardDescription>Find influencers by name, email, or Instagram handle</CardDescription>
+            <CardTitle>Search Talents</CardTitle>
+            <CardDescription>Find talents by name, email, or Instagram handle</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="relative">
@@ -254,60 +254,60 @@ export default function BriefAssignmentsPage() {
         </Card>
 
         {/* Loading State */}
-        {(loadingInfluencers || loadingAssignments) && (
+        {(loadingTalents || loadingAssignments) && (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
 
-        {/* Influencers List */}
-        {!loadingInfluencers && !loadingAssignments && filteredInfluencers && (
+        {/* Talents List */}
+        {!loadingTalents && !loadingAssignments && filteredTalents && (
           <Card>
             <CardHeader>
-              <CardTitle>Influencers</CardTitle>
+              <CardTitle>Talents</CardTitle>
               <CardDescription>
-                {filteredInfluencers.length} influencer{filteredInfluencers.length !== 1 ? "s" : ""} found
+                {filteredTalents.length} talent{filteredTalents.length !== 1 ? "s" : ""} found
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {filteredInfluencers.length === 0 ? (
+              {filteredTalents.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-                  No influencers found
+                  No talents found
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {filteredInfluencers.map((influencer) => {
-                    const assigned = isAssigned(influencer.id);
+                  {filteredTalents.map((talent) => {
+                    const assigned = isAssigned(talent.id);
                     const isProcessing =
                       assignMutation.isPending || removeMutation.isPending;
 
                     return (
                       <div
-                        key={influencer.id}
+                        key={talent.id}
                         className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
                       >
                         <div className="flex items-center gap-4">
                           <Checkbox
                             checked={assigned}
-                            onCheckedChange={() => toggleAssignment(influencer.id)}
+                            onCheckedChange={() => toggleAssignment(talent.id)}
                             disabled={isProcessing}
                           />
                           <div>
                             <div className="font-semibold">
-                              {influencer.firstName} {influencer.lastName}
+                              {talent.firstName} {talent.lastName}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {influencer.email}
+                              {talent.email}
                             </div>
                             <div className="flex items-center gap-2 mt-1">
                               <Instagram className="h-3 w-3 text-pink-500" />
                               <span className="text-xs text-muted-foreground">
-                                {influencer.instagramHandle}
+                                {talent.instagramHandle}
                               </span>
-                              {influencer.instagramFollowers && (
+                              {talent.instagramFollowers && (
                                 <span className="text-xs text-muted-foreground">
-                                  • {influencer.instagramFollowers.toLocaleString()} followers
+                                  • {talent.instagramFollowers.toLocaleString()} followers
                                 </span>
                               )}
                             </div>
@@ -325,7 +325,7 @@ export default function BriefAssignmentsPage() {
                           <Button
                             size="sm"
                             variant={assigned ? "destructive" : "default"}
-                            onClick={() => toggleAssignment(influencer.id)}
+                            onClick={() => toggleAssignment(talent.id)}
                             disabled={isProcessing}
                           >
                             {isProcessing ? (
