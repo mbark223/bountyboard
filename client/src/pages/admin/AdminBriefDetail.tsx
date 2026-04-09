@@ -554,13 +554,13 @@ export default function AdminBriefDetail() {
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <h4 className="text-sm font-semibold mb-2">Review Status</h4>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button 
+                    <Button
                       variant={selectedSubmission?.status === 'SELECTED' ? 'default' : 'outline'}
                       className={selectedSubmission?.status === 'SELECTED' ? 'bg-green-600 hover:bg-green-700' : ''}
                       onClick={() => handleStatusChange('SELECTED')}
                       disabled={!selectedSubmission}
                     >
-                      <Check className="mr-2 h-4 w-4" /> Select
+                      <Check className="mr-2 h-4 w-4" /> Approve
                     </Button>
                     <Button 
                       variant={selectedSubmission?.status === 'NOT_SELECTED' ? 'destructive' : 'outline'}
