@@ -18,6 +18,7 @@ import InfluencerPortalPage from "@/pages/public/InfluencerPortalPage";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminBriefs from "@/pages/admin/AdminBriefs";
 import AdminBriefDetail from "@/pages/admin/AdminBriefDetail";
+import AdminFinance from "@/pages/admin/AdminFinance";
 import CreateBriefPage from "@/pages/admin/CreateBriefPage";
 import EditBriefPage from "@/pages/admin/EditBriefPage";
 import AdminInfluencers from "@/pages/admin/AdminInfluencers";
@@ -154,6 +155,11 @@ function Router() {
       <Route path="/admin/briefs/:id/assignments">
         <AdminRoute>
           <BriefAssignmentsPage />
+        </AdminRoute>
+      </Route>
+      <Route path="/admin/finance">
+        <AdminRoute>
+          <AdminFinance />
         </AdminRoute>
       </Route>
       <Route path="/admin/influencers">

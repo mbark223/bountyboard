@@ -128,6 +128,47 @@ export async function updateSubmissionPayout(id: number, payoutStatus: string, n
   return response.json();
 }
 
+// Finance Dashboard API
+export interface FinanceSubmission {
+  id: number;
+  creatorName: string;
+  creatorEmail: string;
+  creatorHandle: string;
+  briefId: number;
+  briefTitle: string;
+  status: string;
+  payoutStatus: string;
+  financeApprovalStatus: string | null;
+  financeApprovedBy: string | null;
+  financeApprovedAt: string | null;
+  paidAt: string | null;
+  selectedAt: string;
+  payoutNotes: string | null;
+  rewardType: string;
+  rewardAmount: string;
+  rewardCurrency: string;
+  rewardDescription: string;
+}
+
+export interface FinanceSubmissionsResponse {
+  submissions: FinanceSubmission[];
+  stats: {
+    awaitingFinance: number;
+    readyToPay: number;
+    paidToday: number;
+    totalPendingAmount: string;
+  };
+}
+
+export async function fetchFinanceSubmissions(status?: string): Promise<FinanceSubmissionsResponse> {
+  const url = status
+    ? `/api/admin/finance-submissions?status=${status}`
+    : '/api/admin/finance-submissions';
+  const response = await fetch(url, { headers: getAuthHeaders() });
+  if (!response.ok) throw new Error('Failed to fetch finance submissions');
+  return response.json();
+}
+
 // Feedback API
 export async function fetchFeedback(submissionId: number): Promise<Feedback[]> {
   const response = await fetch(`/api/submissions/${submissionId}/feedback`);

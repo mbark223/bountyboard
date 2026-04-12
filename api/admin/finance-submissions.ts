@@ -1,0 +1,145 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { Pool } from 'pg';
+import { getUser } from '../_lib/auth';
+
+/**
+ * Get all submissions that need finance review or payment
+ * GET /api/admin/finance-submissions?status=all|pending|approved|paid
+ */
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-user-email');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  let pool: Pool | null = null;
+
+  try {
+    // Check authentication
+    const user = await getUser(req);
+
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (user.userType !== 'admin' && user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL not configured');
+    }
+
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: 1,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    const { status } = req.query;
+
+    console.log(`[Finance Submissions] Fetching submissions with status filter: ${status}`);
+
+    // Get all SELECTED submissions with brief details
+    const result = await pool.query(`
+      SELECT
+        s.id,
+        s.creator_name as "creatorName",
+        s.creator_email as "creatorEmail",
+        s.creator_handle as "creatorHandle",
+        s.brief_id as "briefId",
+        b.title as "briefTitle",
+        s.status,
+        s.payout_status as "payoutStatus",
+        s.finance_approval_status as "financeApprovalStatus",
+        s.finance_approved_by as "financeApprovedBy",
+        s.finance_approved_at as "financeApprovedAt",
+        s.paid_at as "paidAt",
+        s.selected_at as "selectedAt",
+        s.payout_notes as "payoutNotes",
+        b.reward_type as "rewardType",
+        b.reward_amount as "rewardAmount",
+        b.reward_currency as "rewardCurrency",
+        b.reward_description as "rewardDescription"
+      FROM submissions s
+      LEFT JOIN briefs b ON s.brief_id = b.id
+      WHERE s.status = 'SELECTED'
+      ORDER BY s.selected_at DESC
+    `);
+
+    let submissions = result.rows;
+
+    // Filter based on status parameter
+    if (status && status !== 'all') {
+      if (status === 'pending') {
+        submissions = submissions.filter(s =>
+          s.financeApprovalStatus === 'pending' || s.financeApprovalStatus === null
+        );
+      } else if (status === 'approved') {
+        submissions = submissions.filter(s =>
+          s.financeApprovalStatus === 'approved' && s.payoutStatus === 'PENDING'
+        );
+      } else if (status === 'paid') {
+        submissions = submissions.filter(s => s.payoutStatus === 'PAID');
+      }
+    }
+
+    // Calculate summary stats
+    const awaitingFinance = submissions.filter(s =>
+      s.financeApprovalStatus === 'pending' || s.financeApprovalStatus === null
+    ).length;
+
+    const readyToPay = submissions.filter(s =>
+      s.financeApprovalStatus === 'approved' && s.payoutStatus === 'PENDING'
+    ).length;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const paidToday = submissions.filter(s => {
+      if (!s.paidAt) return false;
+      const paidDate = new Date(s.paidAt);
+      paidDate.setHours(0, 0, 0, 0);
+      return paidDate.getTime() === today.getTime();
+    }).length;
+
+    const totalPendingAmount = submissions
+      .filter(s => s.payoutStatus === 'PENDING' || s.payoutStatus === null)
+      .reduce((sum, s) => {
+        const amount = parseFloat(s.rewardAmount) || 0;
+        return sum + amount;
+      }, 0);
+
+    console.log(`[Finance Submissions] Returning ${submissions.length} submissions`);
+    console.log(`[Finance Submissions] Stats - Awaiting: ${awaitingFinance}, Ready: ${readyToPay}, Paid Today: ${paidToday}, Total Pending: $${totalPendingAmount}`);
+
+    return res.status(200).json({
+      submissions,
+      stats: {
+        awaitingFinance,
+        readyToPay,
+        paidToday,
+        totalPendingAmount: totalPendingAmount.toFixed(2)
+      }
+    });
+
+  } catch (error: any) {
+    console.error('[Finance Submissions] Error:', error);
+    return res.status(500).json({
+      error: 'Failed to fetch finance submissions',
+      message: error.message
+    });
+  } finally {
+    if (pool) {
+      await pool.end();
+    }
+  }
+}
