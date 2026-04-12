@@ -176,18 +176,19 @@ class VercelDatabaseStorage extends DatabaseStorage {
       updateData.selectedAt = selectedAt;
       if (status === "SELECTED") {
         updateData.payoutStatus = "PENDING";
+        updateData.financeApprovalStatus = "pending";
       }
     }
     // If rejecting, set whether resubmission is allowed
     if (status === "NOT_SELECTED" && allowsResubmission !== undefined) {
       updateData.allowsResubmission = allowsResubmission ? 1 : 0;
     }
-    
+
     // Add review notes if provided
     if (reviewNotes !== undefined) {
       updateData.reviewNotes = reviewNotes;
     }
-    
+
     const [submission] = await this.db
       .update(submissions)
       .set(updateData)

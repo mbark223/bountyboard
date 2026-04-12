@@ -103,100 +103,26 @@ export default function AdminBriefDetail() {
     }
   });
 
-  // Mutation for finance approval
-  const financeApprovalMutation = useMutation({
-    mutationFn: async ({ submissionId, status, notes }: {
-      submissionId: number;
-      status: 'approved' | 'rejected';
-      notes?: string;
-    }) => {
-      const response = await fetch(`/api/submissions/${submissionId}/finance-approval`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          status,
-          notes,
-          userId: user?.id
-        }),
-      });
-      if (!response.ok) throw new Error('Failed to update finance approval');
-      return response.json();
-    },
-    onSuccess: (data) => {
-      refetchSubmissions();
-      if (data && typeof data.id === 'number') {
-        setSelectedSubmission(data);
-      }
-      toast({
-        title: 'Finance Approval Updated',
-        description: `Payment ${data.financeApprovalStatus === 'approved' ? 'approved' : 'rejected'}`,
-      });
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to update finance approval.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Mutation for marking as paid
-  const markAsPaidMutation = useMutation({
-    mutationFn: async (submissionId: number) => {
-      const response = await fetch(`/api/submissions/${submissionId}/mark-paid`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          userId: user?.id
-        }),
-      });
-      if (!response.ok) throw new Error('Failed to mark submission as paid');
-      return response.json();
-    },
-    onSuccess: (data) => {
-      refetchSubmissions();
-      if (data && typeof data.id === 'number') {
-        setSelectedSubmission(data);
-      }
-      toast({
-        title: 'Payment Completed',
-        description: 'Submission marked as paid successfully',
-      });
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to mark submission as paid.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const handleFinanceApproval = (status: 'approved' | 'rejected') => {
-    if (!selectedSubmission) return;
-
-    financeApprovalMutation.mutate({
-      submissionId: selectedSubmission.id,
-      status,
-    });
-  };
-
-  const handleMarkAsPaid = () => {
-    if (!selectedSubmission) return;
-    markAsPaidMutation.mutate(selectedSubmission.id);
-  };
 
   const handleStatusChange = (status: Submission['status']) => {
     if (!selectedSubmission) return;
-    
+
     if (status === 'NOT_SELECTED') {
       // Show rejection dialog
       setShowRejectionDialog(true);
-    } else {
+    } else if (status === 'SELECTED') {
       // Direct status update for selection
+      statusMutation.mutate({
+        submissionId: selectedSubmission.id,
+        status
+      });
+      // Show notification that it's been sent to Finance
+      toast({
+        title: "Submission Approved",
+        description: "This submission has been sent to the Finance Dashboard for payment processing.",
+      });
+    } else {
+      // Direct status update for other statuses
       statusMutation.mutate({
         submissionId: selectedSubmission.id,
         status
@@ -593,18 +519,39 @@ export default function AdminBriefDetail() {
                   <div className={`p-4 border rounded-lg ${
                     selectedSubmission.payoutStatus === 'PAID'
                       ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200'
+                      : selectedSubmission.financeApprovalStatus === 'approved'
+                      ? 'bg-purple-50 dark:bg-purple-900/10 border-purple-200'
                       : 'bg-green-50 dark:bg-green-900/10 border-green-200'
                   }`}>
-                    <h4 className={`text-sm font-semibold mb-2 ${
+                    <h4 className={`text-sm font-semibold mb-2 flex items-center gap-2 ${
                       selectedSubmission.payoutStatus === 'PAID'
                         ? 'text-blue-800 dark:text-blue-300'
+                        : selectedSubmission.financeApprovalStatus === 'approved'
+                        ? 'text-purple-800 dark:text-purple-300'
                         : 'text-green-800 dark:text-green-300'
                     }`}>
-                      {selectedSubmission.payoutStatus === 'PAID' ? 'Payment Complete' : 'Bounty Eligible'}
+                      {selectedSubmission.payoutStatus === 'PAID' ? (
+                        <>
+                          <Check className="h-4 w-4" />
+                          Payment Complete
+                        </>
+                      ) : selectedSubmission.financeApprovalStatus === 'approved' ? (
+                        <>
+                          <DollarSign className="h-4 w-4" />
+                          Approved for Payment
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-4 w-4" />
+                          Sent to Finance
+                        </>
+                      )}
                     </h4>
-                    <p className={`text-sm mb-3 ${
+                    <p className={`text-sm ${
                       selectedSubmission.payoutStatus === 'PAID'
                         ? 'text-blue-700 dark:text-blue-400'
+                        : selectedSubmission.financeApprovalStatus === 'approved'
+                        ? 'text-purple-700 dark:text-purple-400'
                         : 'text-green-700 dark:text-green-400'
                     }`}>
                       {selectedSubmission.payoutStatus === 'PAID' ? (
@@ -614,86 +561,21 @@ export default function AdminBriefDetail() {
                             <> on {new Date(selectedSubmission.paidAt).toLocaleDateString()}</>
                           )}
                         </>
+                      ) : selectedSubmission.financeApprovalStatus === 'approved' ? (
+                        <>
+                          This submission has been approved for payment of <strong>{formatCurrency(brief.reward.amount as number)}</strong>. Payment processing is handled in the Finance Dashboard.
+                        </>
                       ) : (
-                        <>This submission is now eligible for the <strong>{formatCurrency(brief.reward.amount as number)}</strong> bounty.</>
+                        <>
+                          This submission is eligible for the <strong>{formatCurrency(brief.reward.amount as number)}</strong> bounty and has been sent to the Finance Dashboard for payment approval and processing.
+                        </>
                       )}
                     </p>
-                    {selectedSubmission.payoutStatus !== 'PAID' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full bg-white dark:bg-black"
-                        onClick={handleMarkAsPaid}
-                        disabled={markAsPaidMutation.isPending || selectedSubmission.financeApprovalStatus !== 'approved'}
-                      >
-                        {markAsPaidMutation.isPending ? 'Processing...' : 'Mark as Paid'}
-                      </Button>
-                    )}
-                    {selectedSubmission.payoutStatus === 'PAID' && (
-                      <div className="flex items-center justify-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-300">
-                        <Check className="h-4 w-4" />
-                        Talent Paid
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Finance Approval Section */}
-                {selectedSubmission?.status === 'SELECTED' && (
-                  <div className="mt-4 p-4 border rounded-lg space-y-3">
-                    <h4 className="text-sm font-semibold flex items-center gap-2">
-                      <DollarSign className="h-4 w-4" />
-                      Finance Approval
-                    </h4>
-
-                    {selectedSubmission.financeApprovalStatus === 'pending' && (
-                      <>
-                        <p className="text-sm text-muted-foreground">
-                          This submission requires finance approval before payment can be processed.
-                        </p>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            className="flex-1 bg-green-600 hover:bg-green-700"
-                            onClick={() => handleFinanceApproval('approved')}
-                            disabled={financeApprovalMutation.isPending}
-                          >
-                            <Check className="mr-2 h-4 w-4" />
-                            Approve for Payment
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            className="flex-1"
-                            onClick={() => handleFinanceApproval('rejected')}
-                            disabled={financeApprovalMutation.isPending}
-                          >
-                            <X className="mr-2 h-4 w-4" />
-                            Reject Payment
-                          </Button>
-                        </div>
-                      </>
-                    )}
-
-                    {selectedSubmission.financeApprovalStatus === 'approved' && (
-                      <div className="p-3 bg-green-50 dark:bg-green-900/10 rounded-lg border border-green-200">
-                        <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
-                          <CheckCircle className="h-4 w-4" />
-                          <span className="text-sm font-medium">Payment Approved</span>
-                        </div>
-                        {selectedSubmission.financeApprovedAt && (
-                          <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-                            Approved on {new Date(selectedSubmission.financeApprovedAt).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                    )}
-
                     {selectedSubmission.financeApprovalStatus === 'rejected' && (
-                      <div className="p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200">
+                      <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200">
                         <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
                           <XCircle className="h-4 w-4" />
-                          <span className="text-sm font-medium">Payment Rejected</span>
+                          <span className="text-sm font-medium">Payment Rejected by Finance</span>
                         </div>
                         {selectedSubmission.financeApprovalNotes && (
                           <p className="text-xs text-red-600 dark:text-red-500 mt-1">
