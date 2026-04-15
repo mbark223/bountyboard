@@ -24,16 +24,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let pool: Pool | null = null;
 
   try {
-    // TEMPORARY: Bypass auth for debugging
-    console.log('[Finance Submissions] BYPASSING AUTH FOR DEBUG');
-    // const user = await getUser(req);
-    // if (!user) {
-    //   return res.status(401).json({ error: 'Authentication required' });
-    // }
-    // if (user.userType !== 'admin' && user.role !== 'admin') {
-    //   return res.status(403).json({ error: 'Admin access required' });
-    // }
-    const user = { email: 'debug@test.com', userType: 'admin' };
+    // Check authentication
+    const user = await getUser(req);
+
+    if (!user) {
+      console.log('[Finance Submissions] No user found - authentication required');
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (user.userType !== 'admin' && user.role !== 'admin') {
+      console.log('[Finance Submissions] User is not admin:', user.email, user.userType);
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    console.log('[Finance Submissions] User authenticated:', user.email);
 
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL not configured');

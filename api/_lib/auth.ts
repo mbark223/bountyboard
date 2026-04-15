@@ -26,9 +26,15 @@ export async function getUser(req: VercelRequest): Promise<User | null> {
     // Check for header-based auth first (used by client localStorage auth)
     const headerEmail = req.headers['x-user-email'] as string;
     if (headerEmail) {
-      const user = await storage.getUserByEmail(decodeURIComponent(headerEmail));
-      if (user) {
-        return user;
+      try {
+        const user = await storage.getUserByEmail(decodeURIComponent(headerEmail));
+        if (user) {
+          console.log('[Auth] User authenticated via x-user-email header:', user.email);
+          return user;
+        }
+      } catch (error) {
+        console.error('[Auth] Error checking x-user-email header:', error);
+        // Continue to other auth methods
       }
     }
 
@@ -38,9 +44,15 @@ export async function getUser(req: VercelRequest): Promise<User | null> {
     // Check for simple cookie-based auth (used by test-login)
     const userEmail = cookies['user_email'];
     if (userEmail) {
-      const user = await storage.getUserByEmail(decodeURIComponent(userEmail));
-      if (user) {
-        return user;
+      try {
+        const user = await storage.getUserByEmail(decodeURIComponent(userEmail));
+        if (user) {
+          console.log('[Auth] User authenticated via user_email cookie:', user.email);
+          return user;
+        }
+      } catch (error) {
+        console.error('[Auth] Error checking user_email cookie:', error);
+        // Continue to other auth methods
       }
     }
 
@@ -51,52 +63,62 @@ export async function getUser(req: VercelRequest): Promise<User | null> {
       return null;
     }
 
-    // Clean session ID (remove s: prefix and signature)
-    const cleanSessionId = sessionId.startsWith('s:')
-      ? sessionId.slice(2).split('.')[0]
-      : sessionId.split('.')[0];
+    try {
+      // Clean session ID (remove s: prefix and signature)
+      const cleanSessionId = sessionId.startsWith('s:')
+        ? sessionId.slice(2).split('.')[0]
+        : sessionId.split('.')[0];
 
-    // Get session from database
-    const { db } = await import("./db");
-    const { sessions } = await import("../../shared/models/auth");
-    const { eq } = await import("drizzle-orm");
+      // Get session from database
+      const { db } = await import("./db");
+      const { sessions } = await import("../../shared/models/auth");
+      const { eq } = await import("drizzle-orm");
 
-    const [session] = await db
-      .select()
-      .from(sessions)
-      .where(eq(sessions.sid, cleanSessionId));
+      const [session] = await db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.sid, cleanSessionId));
 
-    if (!session) {
+      if (!session) {
+        return null;
+      }
+
+      // Check if session is expired
+      if (new Date(session.expire) < new Date()) {
+        return null;
+      }
+
+      // Parse session data
+      const sessionData = session.sess as unknown as SessionData;
+      const passportUser = sessionData?.passport?.user;
+
+      if (!passportUser) {
+        return null;
+      }
+
+      // Extract user ID from session
+      // Handle both Replit auth (claims.sub) and magic link auth (id)
+      const userId = passportUser.claims?.sub || passportUser.id;
+
+      if (!userId) {
+        return null;
+      }
+
+      // Get user from database
+      const user = await storage.getUser(userId);
+
+      if (user) {
+        console.log('[Auth] User authenticated via session:', user.email);
+      }
+
+      return user || null;
+    } catch (sessionError) {
+      console.error('[Auth] Error checking session-based auth:', sessionError);
+      // Session auth failed, but don't crash - just return null
       return null;
     }
-
-    // Check if session is expired
-    if (new Date(session.expire) < new Date()) {
-      return null;
-    }
-
-    // Parse session data
-    const sessionData = session.sess as unknown as SessionData;
-    const passportUser = sessionData?.passport?.user;
-
-    if (!passportUser) {
-      return null;
-    }
-
-    // Extract user ID from session
-    // Handle both Replit auth (claims.sub) and magic link auth (id)
-    const userId = passportUser.claims?.sub || passportUser.id;
-
-    if (!userId) {
-      return null;
-    }
-
-    // Get user from database
-    const user = await storage.getUser(userId);
-
-    return user || null;
   } catch (error) {
-    console.error('[Auth] Error getting user:', error);
+    console.error('[Auth] Error in getUser:', error);
     return null;
   }
 }
