@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearch, useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
 import { transformBrief } from "@/lib/transformers";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -18,7 +18,6 @@ import {
   Loader2,
   Building2,
   Users,
-  LogIn,
   User,
   Instagram,
   CheckCircle,
@@ -49,69 +48,42 @@ async function fetchPortalData(email: string): Promise<TalentPortalData> {
 
 export default function TalentPortalPage() {
   const [, setLocation] = useLocation();
-  const searchParams = new URLSearchParams(useSearch() || "");
-  const emailParam = searchParams.get("email");
-  const [email, setEmail] = useState(emailParam || "");
-  const [submittedEmail, setSubmittedEmail] = useState(emailParam || "");
+  const { user, isLoading: isAuthLoading } = useAuth();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["talent-portal", submittedEmail],
-    queryFn: () => fetchPortalData(submittedEmail),
-    enabled: !!submittedEmail,
+    queryKey: ["talent-portal", user?.email],
+    queryFn: () => fetchPortalData(user!.email!),
+    enabled: !!user?.email,
     retry: false,
   });
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      setSubmittedEmail(email);
-      // Update URL with email parameter
-      setLocation(`/portal?email=${encodeURIComponent(email)}`);
-    }
-  };
+  // Redirect to login if not authenticated
+  if (!isAuthLoading && !user) {
+    setLocation("/login?type=talent");
+    return null;
+  }
 
-  if (!submittedEmail) {
+  // Check if user is influencer type
+  if (!isAuthLoading && user && user.userType !== "influencer") {
     return (
       <PublicLayout>
         <div className="container max-w-2xl mx-auto px-4 py-16">
-          <Card>
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Talent Portal</CardTitle>
-              <CardDescription>
-                Access your exclusive briefs and track your submissions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleEmailSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="email" className="text-sm font-medium mb-2 block">
-                    Enter your registered email
-                  </label>
-                  <div className="relative">
-                    <LogIn className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="talent@example.com"
-                      className="pl-9"
-                      required
-                    />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full">
-                  Access Portal
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+          <Alert variant="destructive">
+            <AlertDescription>
+              Access denied. This portal is only for approved talent. Please login with a talent account.
+            </AlertDescription>
+          </Alert>
+          <div className="mt-4 text-center">
+            <Button variant="outline" onClick={() => setLocation("/login?type=talent")}>
+              Go to Login
+            </Button>
+          </div>
         </div>
       </PublicLayout>
     );
   }
 
-  if (isLoading) {
+  if (isAuthLoading || isLoading) {
     return (
       <PublicLayout>
         <div className="flex items-center justify-center py-20">
@@ -129,12 +101,8 @@ export default function TalentPortalPage() {
             <AlertDescription>{error.message}</AlertDescription>
           </Alert>
           <div className="mt-4 text-center">
-            <Button variant="outline" onClick={() => {
-              setSubmittedEmail("");
-              setEmail("");
-              setLocation("/portal");
-            }}>
-              Try Again
+            <Button variant="outline" onClick={() => setLocation("/login?type=talent")}>
+              Back to Login
             </Button>
           </div>
         </div>

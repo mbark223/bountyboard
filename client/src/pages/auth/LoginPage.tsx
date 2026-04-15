@@ -69,7 +69,7 @@ export default function LoginPage() {
         if (data.user.userType === "admin") {
           setLocation("/admin");
         } else if (data.user.userType === "influencer") {
-          setLocation("/dashboard");
+          setLocation("/portal");
         } else {
           setLocation("/");
         }
