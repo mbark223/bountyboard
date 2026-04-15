@@ -81,10 +81,18 @@ export default function AdminBriefDetail() {
       setShowRejectionDialog(false);
       setRejectionFeedback("");
 
-      toast({
-        title: "Status Updated",
-        description: `Submission marked as ${data.status}`,
-      });
+      // Show appropriate message based on status
+      if (data.status === 'SELECTED') {
+        toast({
+          title: "Submission Approved",
+          description: "Sent to finance for payment",
+        });
+      } else {
+        toast({
+          title: "Status Updated",
+          description: `Submission marked as ${data.status}`,
+        });
+      }
     },
     onError: (error) => {
       console.error('[AdminBriefDetail] Error updating submission:', error);
@@ -118,14 +126,10 @@ export default function AdminBriefDetail() {
       setShowRejectionDialog(true);
     } else if (status === 'SELECTED') {
       // Direct status update for selection
+      // Toast will be shown in statusMutation.onSuccess
       statusMutation.mutate({
         submissionId: selectedSubmission.id,
         status
-      });
-      // Show notification that it's been sent to Finance
-      toast({
-        title: "Submission Approved",
-        description: "This submission has been sent to the Finance Dashboard for payment processing.",
       });
     } else {
       // Direct status update for other statuses
