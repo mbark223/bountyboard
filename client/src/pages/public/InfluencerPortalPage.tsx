@@ -38,7 +38,7 @@ interface TalentPortalData {
 }
 
 async function fetchPortalData(email: string): Promise<TalentPortalData> {
-  const response = await fetch(`/api/influencers/portal?email=${encodeURIComponent(email)}`);
+  const response = await fetch(`/api/influencer-portal?email=${encodeURIComponent(email)}`);
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || "Failed to fetch portal data");
