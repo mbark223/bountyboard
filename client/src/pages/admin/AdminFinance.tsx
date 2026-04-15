@@ -40,6 +40,23 @@ import {
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
+// Helper to get auth headers
+function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const storedUser = localStorage.getItem("auth_user");
+  if (storedUser) {
+    try {
+      const user = JSON.parse(storedUser);
+      if (user.email) {
+        headers["x-user-email"] = user.email;
+      }
+    } catch (e) {
+      console.error('[Finance] Failed to parse auth user:', e);
+    }
+  }
+  return headers;
+}
+
 interface FinanceSubmission {
   id: number;
   creatorName: string;
@@ -69,12 +86,22 @@ interface FinanceStats {
 }
 
 async function fetchFinanceSubmissions(status: string = 'all') {
+  const headers = getAuthHeaders();
+  delete headers['Content-Type']; // Not needed for GET
+
+  console.log('[Finance] Fetching with headers:', headers);
+
   const response = await fetch(`/api/admin/finance-submissions?status=${status}`, {
     credentials: 'include',
+    headers,
   });
 
+  console.log('[Finance] Response status:', response.status);
+
   if (!response.ok) {
-    throw new Error('Failed to fetch finance submissions');
+    const errorText = await response.text();
+    console.error('[Finance] Error response:', errorText);
+    throw new Error(`Failed to fetch finance submissions: ${response.status} ${errorText}`);
   }
 
   return response.json() as Promise<{
@@ -126,7 +153,7 @@ export default function AdminFinance() {
     mutationFn: async ({ submissionId, status }: { submissionId: number; status: 'approved' | 'rejected' }) => {
       const response = await fetch(`/api/submissions/${submissionId}/finance-approval`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         credentials: 'include',
         body: JSON.stringify({
           status,
@@ -157,7 +184,7 @@ export default function AdminFinance() {
     mutationFn: async (submissionId: number) => {
       const response = await fetch(`/api/submissions/${submissionId}/mark-paid`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         credentials: 'include',
         body: JSON.stringify({
           userId: user?.id
