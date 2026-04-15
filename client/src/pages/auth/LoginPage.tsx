@@ -32,7 +32,7 @@ export default function LoginPage() {
 
     try {
       // Call test login endpoint
-      const response = await fetch("/api/auth/test-login", {
+      const response = await fetch("/api/test-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
