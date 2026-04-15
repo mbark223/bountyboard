@@ -51,31 +51,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log(`[Finance Submissions] User: ${user.email}, UserType: ${user.userType}`);
 
     // Get all SELECTED submissions with brief details
-    const result = await pool.query(`
-      SELECT
-        s.id,
-        s.creator_name as "creatorName",
-        s.creator_email as "creatorEmail",
-        s.creator_handle as "creatorHandle",
-        s.brief_id as "briefId",
-        b.title as "briefTitle",
-        s.status,
-        s.payout_status as "payoutStatus",
-        s.finance_approval_status as "financeApprovalStatus",
-        s.finance_approved_by as "financeApprovedBy",
-        s.finance_approved_at as "financeApprovedAt",
-        s.paid_at as "paidAt",
-        s.selected_at as "selectedAt",
-        s.payout_notes as "payoutNotes",
-        b.reward_type as "rewardType",
-        b.reward_amount as "rewardAmount",
-        b.reward_currency as "rewardCurrency",
-        b.reward_description as "rewardDescription"
-      FROM submissions s
-      LEFT JOIN briefs b ON s.brief_id = b.id
-      WHERE s.status = 'SELECTED'
-      ORDER BY s.selected_at DESC
-    `);
+    let result;
+    try {
+      result = await pool.query(`
+        SELECT
+          s.id,
+          s.creator_name as "creatorName",
+          s.creator_email as "creatorEmail",
+          s.creator_handle as "creatorHandle",
+          s.brief_id as "briefId",
+          b.title as "briefTitle",
+          s.status,
+          s.payout_status as "payoutStatus",
+          s.finance_approval_status as "financeApprovalStatus",
+          s.finance_approved_by as "financeApprovedBy",
+          s.finance_approved_at as "financeApprovedAt",
+          s.paid_at as "paidAt",
+          s.selected_at as "selectedAt",
+          s.payout_notes as "payoutNotes",
+          b.reward_type as "rewardType",
+          b.reward_amount as "rewardAmount",
+          b.reward_currency as "rewardCurrency",
+          b.reward_description as "rewardDescription"
+        FROM submissions s
+        LEFT JOIN briefs b ON s.brief_id = b.id
+        WHERE s.status = 'SELECTED'
+        ORDER BY s.selected_at DESC
+      `);
+    } catch (queryError: any) {
+      console.error('[Finance Submissions] Query error:', queryError);
+      console.error('[Finance Submissions] Query error code:', queryError.code);
+      console.error('[Finance Submissions] Query error message:', queryError.message);
+      throw new Error(`Database query failed: ${queryError.message} (code: ${queryError.code})`);
+    }
 
     let submissions = result.rows;
 
@@ -140,13 +148,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   } catch (error: any) {
     console.error('[Finance Submissions] Error:', error);
+    console.error('[Finance Submissions] Error stack:', error.stack);
     return res.status(500).json({
       error: 'Failed to fetch finance submissions',
-      message: error.message
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint
     });
   } finally {
     if (pool) {
-      await pool.end();
+      try {
+        await pool.end();
+      } catch (poolError) {
+        console.error('[Finance Submissions] Error closing pool:', poolError);
+      }
     }
   }
 }
