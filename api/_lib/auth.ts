@@ -23,6 +23,15 @@ interface SessionData {
  */
 export async function getUser(req: VercelRequest): Promise<User | null> {
   try {
+    // Check for header-based auth first (used by client localStorage auth)
+    const headerEmail = req.headers['x-user-email'] as string;
+    if (headerEmail) {
+      const user = await storage.getUserByEmail(decodeURIComponent(headerEmail));
+      if (user) {
+        return user;
+      }
+    }
+
     // Parse cookies
     const cookies = parseCookies(req.headers.cookie);
 
