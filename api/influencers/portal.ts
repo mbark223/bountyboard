@@ -30,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log(`[Influencer Portal] Returning ${briefs.length} assigned briefs for ${email}`);
 
     res.status(200).json({
-      influencer: {
+      talent: {
         id: influencer.id,
         firstName: influencer.firstName,
         lastName: influencer.lastName,
