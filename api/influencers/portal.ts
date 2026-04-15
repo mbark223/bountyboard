@@ -8,27 +8,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { email } = req.query;
-    
+
     if (!email || typeof email !== 'string') {
       return res.status(400).json({ error: "Email is required" });
     }
 
     // Check if influencer exists and is approved
     const influencer = await storage.getInfluencerByEmail(email);
-    
+
     if (!influencer) {
       return res.status(404).json({ error: "Influencer not found" });
     }
-    
+
     if (influencer.status !== "approved") {
       return res.status(403).json({ error: "Access denied. Your application is still under review." });
     }
 
-    // Get all published briefs
-    const briefs = await storage.getAllPublishedBriefs();
+    // Get only assigned briefs for this influencer (not all briefs)
+    const briefs = await storage.getAssignedBriefs(influencer.id);
 
-    // Update last active time - this would be done in production
-    // await storage.updateInfluencer(influencer.id, { lastActiveAt: new Date() });
+    console.log(`[Influencer Portal] Returning ${briefs.length} assigned briefs for ${email}`);
 
     res.status(200).json({
       influencer: {
