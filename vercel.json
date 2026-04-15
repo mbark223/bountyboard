@@ -80,6 +80,10 @@
       "destination": "/api/influencers/[id]/status"
     },
     {
+      "source": "/api/influencers/portal",
+      "destination": "/api/influencers/portal"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
