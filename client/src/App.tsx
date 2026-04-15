@@ -202,11 +202,13 @@ function Router() {
         </ProtectedRoute>
       </Route>
 
+      {/* Talent Portal - shows only assigned briefs */}
+      <Route path="/portal" component={InfluencerPortalPage} />
+
       {/* Public brief routes removed - now require authentication */}
       {/* <Route path="/briefs" component={BriefsListPage} /> */}
       {/* <Route path="/b/:slug" component={BriefPublicPage} /> */}
       {/* <Route path="/b/:slug/submit" component={BriefSubmitPage} /> */}
-      {/* <Route path="/portal" component={InfluencerPortalPage} /> */}
 
       <Route component={NotFound} />
     </Switch>
