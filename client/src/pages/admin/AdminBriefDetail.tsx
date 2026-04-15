@@ -67,6 +67,11 @@ export default function AdminBriefDetail() {
       return updateSubmissionStatus(submissionId, status, allowsResubmission, reviewNotes);
     },
     onSuccess: (data) => {
+      console.log('[AdminBriefDetail] Submission updated:', data);
+      console.log('[AdminBriefDetail] Status:', data.status);
+      console.log('[AdminBriefDetail] Finance Approval Status:', data.financeApprovalStatus);
+      console.log('[AdminBriefDetail] Payout Status:', data.payoutStatus);
+
       // Refresh submissions list
       refetchSubmissions();
       // Ensure data has the correct structure before setting
@@ -75,13 +80,14 @@ export default function AdminBriefDetail() {
       }
       setShowRejectionDialog(false);
       setRejectionFeedback("");
-      
+
       toast({
         title: "Status Updated",
         description: `Submission marked as ${data.status}`,
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('[AdminBriefDetail] Error updating submission:', error);
       toast({
         title: "Error",
         description: "Failed to update submission status",

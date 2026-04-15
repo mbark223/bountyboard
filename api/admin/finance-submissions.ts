@@ -48,6 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { status } = req.query;
 
     console.log(`[Finance Submissions] Fetching submissions with status filter: ${status}`);
+    console.log(`[Finance Submissions] User: ${user.email}, UserType: ${user.userType}`);
 
     // Get all SELECTED submissions with brief details
     const result = await pool.query(`
@@ -78,6 +79,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     let submissions = result.rows;
 
+    console.log(`[Finance Submissions] Found ${submissions.length} SELECTED submissions from database`);
+    submissions.forEach(s => {
+      console.log(`  - ID: ${s.id}, Creator: ${s.creatorName}, Finance Status: ${s.financeApprovalStatus}, Payout: ${s.payoutStatus}`);
+    });
+
     // Filter based on status parameter
     if (status && status !== 'all') {
       if (status === 'pending') {
@@ -91,6 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       } else if (status === 'paid') {
         submissions = submissions.filter(s => s.payoutStatus === 'PAID');
       }
+      console.log(`[Finance Submissions] After filtering by '${status}': ${submissions.length} submissions`);
     }
 
     // Calculate summary stats

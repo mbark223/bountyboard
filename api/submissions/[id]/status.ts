@@ -10,20 +10,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (isNaN(submissionId)) {
         return res.status(400).json({ error: "Invalid submission ID" });
       }
-      
+
       const { status, allowsResubmission, reviewNotes } = req.body;
       if (!status) {
         return res.status(400).json({ error: "Status is required" });
       }
-      
+
+      console.log(`[Status Update] Updating submission ${submissionId} to status: ${status}`);
+
       const selectedAt = status === "SELECTED" ? new Date() : undefined;
       const updatedSubmission = await storage.updateSubmissionStatus(
-        submissionId, 
-        status, 
+        submissionId,
+        status,
         selectedAt,
         status === "NOT_SELECTED" ? allowsResubmission : undefined,
         reviewNotes
       );
+
+      console.log(`[Status Update] Updated submission ${submissionId}:`, {
+        status: updatedSubmission.status,
+        financeApprovalStatus: updatedSubmission.financeApprovalStatus,
+        payoutStatus: updatedSubmission.payoutStatus,
+        selectedAt: updatedSubmission.selectedAt
+      });
+
       res.status(200).json(updatedSubmission);
     } catch (error) {
       console.error("Error updating submission status:", error);

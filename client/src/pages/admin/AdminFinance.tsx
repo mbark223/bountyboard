@@ -100,7 +100,14 @@ export default function AdminFinance() {
   // Fetch submissions
   const { data, isLoading } = useQuery({
     queryKey: ['financeSubmissions', statusFilter],
-    queryFn: () => fetchFinanceSubmissions(statusFilter),
+    queryFn: async () => {
+      console.log('[Finance Dashboard] Fetching submissions with filter:', statusFilter);
+      const result = await fetchFinanceSubmissions(statusFilter);
+      console.log('[Finance Dashboard] Received data:', result);
+      console.log('[Finance Dashboard] Submissions count:', result.submissions.length);
+      console.log('[Finance Dashboard] Stats:', result.stats);
+      return result;
+    },
   });
 
   const submissions = data?.submissions || [];
@@ -110,6 +117,9 @@ export default function AdminFinance() {
     paidToday: 0,
     totalPendingAmount: '0.00'
   };
+
+  console.log('[Finance Dashboard] Rendering with', submissions.length, 'submissions');
+  console.log('[Finance Dashboard] Filter:', statusFilter);
 
   // Finance approval mutation
   const financeApprovalMutation = useMutation({
