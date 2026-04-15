@@ -64,6 +64,10 @@
       "destination": "/api/submissions/[id]/finance-approval"
     },
     {
+      "source": "/api/submissions/:id/mark-paid",
+      "destination": "/api/submissions/[id]/mark-paid"
+    },
+    {
       "source": "/api/feedback/:id",
       "destination": "/api/feedback-delete?id=:id"
     },
