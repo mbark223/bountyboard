@@ -384,7 +384,7 @@ export default function AdminFinance() {
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   <DollarSign className="mr-2 h-4 w-4" />
-                  Mark as Paid ({selectedIds.length})
+                  Paid Talent ({selectedIds.length})
                 </Button>
               </div>
             </div>
@@ -452,7 +452,14 @@ export default function AdminFinance() {
                       {getStatusBadge(submission)}
                     </TableCell>
                     <TableCell className="text-gray-400">
-                      {new Date(submission.selectedAt).toLocaleDateString()}
+                      <div className="flex items-center gap-2">
+                        {new Date(submission.selectedAt).toLocaleDateString()}
+                        {submission.payoutStatus === 'PAID' && (
+                          <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200">
+                            💰 Paid
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
@@ -491,7 +498,7 @@ export default function AdminFinance() {
         <DialogContent className="bg-[#0F0F0F] border-[#1A1A1A] text-white">
           <DialogHeader>
             <DialogTitle>
-              {confirmDialog.action === 'approve' ? 'Approve Finance' : 'Mark as Paid'}
+              {confirmDialog.action === 'approve' ? 'Approve Finance' : 'Paid Talent'}
             </DialogTitle>
             <DialogDescription className="text-gray-400">
               {confirmDialog.action === 'approve'
@@ -511,7 +518,7 @@ export default function AdminFinance() {
               onClick={confirmDialog.action === 'approve' ? handleBulkApprove : handleBulkMarkPaid}
               className={confirmDialog.action === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}
             >
-              {confirmDialog.action === 'approve' ? 'Approve' : 'Mark as Paid'}
+              {confirmDialog.action === 'approve' ? 'Approve' : 'Paid Talent'}
             </Button>
           </DialogFooter>
         </DialogContent>
