@@ -24,6 +24,14 @@
       "destination": "/api/admin/brief-assignments"
     },
     {
+      "source": "/api/admin/brief-assignments/assign",
+      "destination": "/api/admin-brief-assignments-assign"
+    },
+    {
+      "source": "/api/admin/influencers/update-info",
+      "destination": "/api/admin-influencers-update-info"
+    },
+    {
       "source": "/api/influencers/register",
       "destination": "/api/influencers/register"
     },
