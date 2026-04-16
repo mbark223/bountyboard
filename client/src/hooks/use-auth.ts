@@ -14,7 +14,7 @@ async function fetchUser(): Promise<User | null> {
   }
 
   // Fall back to API call (for production OAuth/session auth)
-  const response = await fetch("/api/auth/user", {
+  const response = await fetch("/api/auth-user", {
     credentials: "include",
   });
 
@@ -31,7 +31,7 @@ async function fetchUser(): Promise<User | null> {
 
 export function useAuth() {
   const { data: user, isLoading } = useQuery<User | null>({
-    queryKey: ["/api/auth/user"],
+    queryKey: ["/api/auth-user"],
     queryFn: fetchUser,
     retry: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
