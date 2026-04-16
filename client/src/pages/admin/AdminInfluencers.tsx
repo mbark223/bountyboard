@@ -98,7 +98,8 @@ async function fetchPublishedBriefs() {
   const response = await fetch("/api/admin/briefs");
   if (!response.ok) throw new Error("Failed to fetch briefs");
   const data = await response.json();
-  return data.briefs || [];
+  // API returns array directly, not wrapped in { briefs: [] }
+  return Array.isArray(data) ? data : (data.briefs || []);
 }
 
 async function assignBriefToTalent(briefId: number, influencerId: number) {
@@ -235,10 +236,14 @@ export default function AdminInfluencers() {
         description: "Brief has been assigned to talent successfully.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      // Don't show error if brief is already assigned
+      if (error.message?.includes("already assigned")) {
+        return;
+      }
       toast({
         title: "Error",
-        description: "Failed to assign brief.",
+        description: error.message || "Failed to assign brief.",
         variant: "destructive",
       });
     },
@@ -303,6 +308,33 @@ export default function AdminInfluencers() {
     assignBriefMutation.mutate({
       briefId: selectedBriefId,
       influencerId: selectedInfluencer.id,
+    });
+  };
+
+  const handleAssignAllBriefs = async () => {
+    if (!selectedInfluencer || briefs.length === 0) return;
+
+    let successCount = 0;
+    let skipCount = 0;
+
+    // Assign all briefs sequentially
+    for (const brief of briefs) {
+      try {
+        await assignBriefToTalent(brief.id, selectedInfluencer.id);
+        successCount++;
+      } catch (error: any) {
+        if (error.message?.includes("already assigned")) {
+          skipCount++;
+        }
+      }
+    }
+
+    setAssignBriefDialog(false);
+    setSelectedBriefId(null);
+
+    toast({
+      title: "Briefs Assigned",
+      description: `Assigned ${successCount} brief${successCount !== 1 ? 's' : ''} to ${selectedInfluencer.firstName}${skipCount > 0 ? ` (${skipCount} already assigned)` : ''}`,
     });
   };
 
@@ -685,7 +717,19 @@ export default function AdminInfluencers() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Select Brief</Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label>Select Brief</Label>
+                {briefs.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAssignAllBriefs}
+                    disabled={assignBriefMutation.isPending}
+                  >
+                    Assign All ({briefs.length})
+                  </Button>
+                )}
+              </div>
               <div className="space-y-2 mt-2 max-h-[400px] overflow-y-auto">
                 {briefs.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No published briefs available</p>
