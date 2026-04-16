@@ -71,11 +71,15 @@ export default function TalentPortalPage() {
           <Alert variant="destructive">
             <AlertDescription>
               Access denied. This portal is only for approved talent. Please login with a talent account.
+              {user && <div className="mt-2 text-xs">Current user type: {user.userType || 'unknown'}</div>}
             </AlertDescription>
           </Alert>
-          <div className="mt-4 text-center">
-            <Button variant="outline" onClick={() => setLocation("/login?type=talent")}>
-              Go to Login
+          <div className="mt-4 text-center space-x-2">
+            <Button variant="outline" onClick={() => {
+              localStorage.removeItem("auth_user");
+              setLocation("/login?type=talent");
+            }}>
+              Logout & Try Again
             </Button>
           </div>
         </div>
