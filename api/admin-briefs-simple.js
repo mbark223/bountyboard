@@ -51,16 +51,17 @@ const MOCK_BRIEFS = [
     id: 2,
     slug: "nfl-playoffs-hype",
     title: "NFL Playoffs Hype",
-    orgName: "FanDuel",
+    orgName: "Hard Rock Bet",
     businessLine: "Sportsbook",
-    state: "New Jersey",
-    overview: "Get fans pumped for the NFL playoffs! Show your game day setup and predictions for the wild card weekend.",
+    state: "Florida",
+    overview: "Get fans pumped for the NFL playoffs! Show your game day setup and predictions for the wild card weekend with Hard Rock Bet.",
     requirements: [
       "Wear your team colors",
-      "Show FanDuel app on screen",
+      "Show Hard Rock Bet app on screen",
       "Share your playoff predictions",
       "High energy required",
-      "Include #FanDuelPlayoffs"
+      "Include #HardRockPlayoffs",
+      "Must be 21+ to participate"
     ],
     deliverableRatio: "16:9 or 9:16",
     deliverableLength: "30-60 seconds",
@@ -85,7 +86,7 @@ const MOCK_BRIEFS = [
       description: null
     },
     organization: {
-      name: "FanDuel",
+      name: "Hard Rock Bet",
       slug: null,
       logoUrl: null,
       website: null,
@@ -94,25 +95,26 @@ const MOCK_BRIEFS = [
   },
   {
     id: 3,
-    slug: "huff-n-even-more-puff",
-    title: "Huff N Even More Puff",
-    orgName: "BetMGM",
+    slug: "casino-legends-series",
+    title: "Casino Legends Series",
+    orgName: "Hard Rock Bet",
     businessLine: "Casino",
-    state: "Michigan",
-    overview: "Showcase the excitement of our Big Bad Wolf slot game! Create fairy tale themed content that highlights the thrill of the chase.",
+    state: "Florida",
+    overview: "Showcase the excitement of Hard Rock Casino! Create content that highlights the thrill and legendary gaming experience.",
     requirements: [
-      "Reference the Three Little Pigs story",
-      "Show BetMGM Casino app",
-      "Mention the bonus features",
-      "Family-friendly content only",
-      "Use #HuffAndPuffBig"
+      "Feature Hard Rock Casino app",
+      "Show slots or table games",
+      "High energy and excitement",
+      "Show responsible gaming message",
+      "Include #HardRockCasino",
+      "Must be 21+ to participate"
     ],
     deliverableRatio: "1:1 (Square)",
     deliverableLength: "15 seconds",
     deliverableFormat: "MP4 / 1080p",
     rewardType: "OTHER",
     rewardAmount: "Casino Credits",
-    rewardDescription: "$500 in Casino Credits + Wolf Pack Merch",
+    rewardDescription: "$500 in Casino Credits + Hard Rock Merch",
     deadline: new Date("2025-01-15T23:59:00Z"),
     status: "PUBLISHED",
     password: null,
@@ -126,10 +128,10 @@ const MOCK_BRIEFS = [
       type: "OTHER",
       amount: "Casino Credits",
       currency: "USD",
-      description: "$500 in Casino Credits + Wolf Pack Merch"
+      description: "$500 in Casino Credits + Hard Rock Merch"
     },
     organization: {
-      name: "BetMGM",
+      name: "Hard Rock Bet",
       slug: null,
       logoUrl: null,
       website: null,
