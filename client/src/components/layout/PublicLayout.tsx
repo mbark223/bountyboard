@@ -139,7 +139,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               </a>
             </div>
             <p className="text-xs text-muted-foreground">
-              &copy; 2025 Hard Rock Bet. All rights reserved.
+              &copy; 2026 Hard Rock Bet. All rights reserved.
             </p>
           </div>
         </div>
