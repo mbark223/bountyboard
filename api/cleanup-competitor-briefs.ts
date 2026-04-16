@@ -22,19 +22,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     client = await pool.connect();
 
-    // Delete all briefs from BetMGM and FanDuel
-    const deleteResult = await client.query(`
-      DELETE FROM briefs
-      WHERE org_name IN ('BetMGM', 'FanDuel')
-      RETURNING id, title, org_name
+    // Update BetMGM briefs to Hard Rock Bet
+    const updateBetMGM = await client.query(`
+      UPDATE briefs
+      SET
+        org_name = 'Hard Rock Bet',
+        state = 'Florida',
+        title = CASE
+          WHEN title LIKE '%Puff%' THEN 'Casino Legends Series'
+          ELSE title
+        END,
+        slug = CASE
+          WHEN slug LIKE '%puff%' THEN 'casino-legends-series'
+          ELSE slug
+        END
+      WHERE org_name = 'BetMGM'
+      RETURNING id, title
     `);
 
-    console.log(`[Cleanup] Deleted ${deleteResult.rows.length} competitor briefs`);
+    // Update FanDuel briefs to Hard Rock Bet
+    const updateFanDuel = await client.query(`
+      UPDATE briefs
+      SET
+        org_name = 'Hard Rock Bet',
+        state = 'Florida'
+      WHERE org_name = 'FanDuel'
+      RETURNING id, title
+    `);
+
+    const totalUpdated = updateBetMGM.rows.length + updateFanDuel.rows.length;
+    console.log(`[Cleanup] Updated ${totalUpdated} competitor briefs to Hard Rock Bet`);
 
     return res.status(200).json({
       success: true,
-      message: `Deleted ${deleteResult.rows.length} competitor briefs`,
-      deletedBriefs: deleteResult.rows
+      message: `Updated ${totalUpdated} briefs to Hard Rock Bet`,
+      updatedBriefs: [...updateBetMGM.rows, ...updateFanDuel.rows]
     });
 
   } catch (error: any) {
