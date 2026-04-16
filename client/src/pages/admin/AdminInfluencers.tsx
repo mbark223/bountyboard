@@ -26,7 +26,9 @@ import {
   Youtube,
   Hash,
   AlertCircle,
-  Send
+  Send,
+  Edit,
+  FileText
 } from "lucide-react";
 
 interface Influencer {
@@ -82,6 +84,37 @@ async function createInvite(email: string, message?: string, sendEmailInvite?: b
   return response.json();
 }
 
+async function updateInfluencerInfo(id: number, data: any) {
+  const response = await fetch("/api/admin/influencers/update-info", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ influencerId: id, ...data }),
+  });
+  if (!response.ok) throw new Error("Failed to update influencer info");
+  return response.json();
+}
+
+async function fetchPublishedBriefs() {
+  const response = await fetch("/api/admin/briefs");
+  if (!response.ok) throw new Error("Failed to fetch briefs");
+  const data = await response.json();
+  return data.briefs || [];
+}
+
+async function assignBriefToTalent(briefId: number, influencerId: number) {
+  // Get user email from localStorage
+  const storedUser = localStorage.getItem("auth_user");
+  const assignedBy = storedUser ? JSON.parse(storedUser).email : "admin";
+
+  const response = await fetch("/api/admin/brief-assignments/assign", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ briefId, influencerId, assignedBy }),
+  });
+  if (!response.ok) throw new Error("Failed to assign brief");
+  return response.json();
+}
+
 export default function AdminInfluencers() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -89,11 +122,25 @@ export default function AdminInfluencers() {
   const [selectedInfluencer, setSelectedInfluencer] = useState<Influencer | null>(null);
   const [reviewDialog, setReviewDialog] = useState(false);
   const [inviteDialog, setInviteDialog] = useState(false);
+  const [editDialog, setEditDialog] = useState(false);
+  const [assignBriefDialog, setAssignBriefDialog] = useState(false);
   const [reviewNotes, setReviewNotes] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteMessage, setInviteMessage] = useState("");
   const [sendEmailInvite, setSendEmailInvite] = useState(false);
   const [fromEmail, setFromEmail] = useState("");
+
+  // Edit form state
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editInstagramHandle, setEditInstagramHandle] = useState("");
+  const [editInstagramFollowers, setEditInstagramFollowers] = useState("");
+  const [editTiktokHandle, setEditTiktokHandle] = useState("");
+
+  // Brief assignment state
+  const [selectedBriefId, setSelectedBriefId] = useState<number | null>(null);
 
   const { data: influencers = [], isLoading } = useQuery({
     queryKey: ["influencers", selectedTab],
@@ -123,8 +170,8 @@ export default function AdminInfluencers() {
   });
 
   const inviteMutation = useMutation({
-    mutationFn: ({ email, message, sendEmailInvite, fromEmail }: { 
-      email: string; 
+    mutationFn: ({ email, message, sendEmailInvite, fromEmail }: {
+      email: string;
       message?: string;
       sendEmailInvite?: boolean;
       fromEmail?: string;
@@ -138,7 +185,7 @@ export default function AdminInfluencers() {
       setFromEmail("");
       toast({
         title: "Invite Created",
-        description: data.emailSent 
+        description: data.emailSent
           ? `Invite email sent to ${inviteEmail}`
           : `Invite link: ${data.inviteUrl}`,
       });
@@ -147,6 +194,51 @@ export default function AdminInfluencers() {
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to create invite.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const { data: briefs = [] } = useQuery({
+    queryKey: ["admin-briefs"],
+    queryFn: fetchPublishedBriefs,
+  });
+
+  const updateInfoMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
+      updateInfluencerInfo(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["influencers"] });
+      setEditDialog(false);
+      toast({
+        title: "Updated",
+        description: "Talent information updated successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update talent information.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const assignBriefMutation = useMutation({
+    mutationFn: ({ briefId, influencerId }: { briefId: number; influencerId: number }) =>
+      assignBriefToTalent(briefId, influencerId),
+    onSuccess: () => {
+      setAssignBriefDialog(false);
+      setSelectedBriefId(null);
+      toast({
+        title: "Brief Assigned",
+        description: "Brief has been assigned to talent successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to assign brief.",
         variant: "destructive",
       });
     },
@@ -168,6 +260,49 @@ export default function AdminInfluencers() {
       message: inviteMessage,
       sendEmailInvite,
       fromEmail: fromEmail || undefined,
+    });
+  };
+
+  const handleEditClick = (influencer: Influencer) => {
+    setSelectedInfluencer(influencer);
+    setEditFirstName(influencer.firstName);
+    setEditLastName(influencer.lastName);
+    setEditEmail(influencer.email);
+    setEditPhone(influencer.phone || "");
+    setEditInstagramHandle(influencer.instagramHandle.replace('@', ''));
+    setEditInstagramFollowers(influencer.instagramFollowers?.toString() || "");
+    setEditTiktokHandle(influencer.tiktokHandle || "");
+    setEditDialog(true);
+  };
+
+  const handleUpdateInfo = () => {
+    if (!selectedInfluencer) return;
+
+    updateInfoMutation.mutate({
+      id: selectedInfluencer.id,
+      data: {
+        firstName: editFirstName,
+        lastName: editLastName,
+        email: editEmail,
+        phone: editPhone || null,
+        instagramHandle: editInstagramHandle.startsWith('@') ? editInstagramHandle : `@${editInstagramHandle}`,
+        instagramFollowers: editInstagramFollowers ? parseInt(editInstagramFollowers) : null,
+        tiktokHandle: editTiktokHandle || null,
+      },
+    });
+  };
+
+  const handleAssignBriefClick = (influencer: Influencer) => {
+    setSelectedInfluencer(influencer);
+    setAssignBriefDialog(true);
+  };
+
+  const handleAssignBrief = () => {
+    if (!selectedInfluencer || !selectedBriefId) return;
+
+    assignBriefMutation.mutate({
+      briefId: selectedBriefId,
+      influencerId: selectedInfluencer.id,
     });
   };
 
@@ -299,8 +434,8 @@ export default function AdminInfluencers() {
                         </div>
                       )}
 
-                      {influencer.status === "pending" && (
-                        <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
+                        {influencer.status === "pending" && (
                           <Button
                             size="sm"
                             onClick={() => {
@@ -310,8 +445,29 @@ export default function AdminInfluencers() {
                           >
                             Review Application
                           </Button>
-                        </div>
-                      )}
+                        )}
+                        {influencer.status === "approved" && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditClick(influencer)}
+                              className="gap-1"
+                            >
+                              <Edit className="h-3 w-3" />
+                              Edit Info
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleAssignBriefClick(influencer)}
+                              className="gap-1"
+                            >
+                              <FileText className="h-3 w-3" />
+                              Assign Brief
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -422,6 +578,168 @@ export default function AdminInfluencers() {
               disabled={!inviteEmail || inviteMutation.isPending}
             >
               Create Invite
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Talent Info Dialog */}
+      <Dialog open={editDialog} onOpenChange={setEditDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Talent Information</DialogTitle>
+            <DialogDescription>
+              Update information for {selectedInfluencer?.firstName} {selectedInfluencer?.lastName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="editFirstName">First Name</Label>
+              <Input
+                id="editFirstName"
+                value={editFirstName}
+                onChange={(e) => setEditFirstName(e.target.value)}
+                placeholder="First name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="editLastName">Last Name</Label>
+              <Input
+                id="editLastName"
+                value={editLastName}
+                onChange={(e) => setEditLastName(e.target.value)}
+                placeholder="Last name"
+              />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="editEmail">Email</Label>
+              <Input
+                id="editEmail"
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                placeholder="email@example.com"
+              />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="editPhone">Phone</Label>
+              <Input
+                id="editPhone"
+                type="tel"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                placeholder="(555) 123-4567"
+              />
+            </div>
+            <div>
+              <Label htmlFor="editInstagramHandle">Instagram Handle</Label>
+              <Input
+                id="editInstagramHandle"
+                value={editInstagramHandle}
+                onChange={(e) => setEditInstagramHandle(e.target.value)}
+                placeholder="username"
+              />
+            </div>
+            <div>
+              <Label htmlFor="editInstagramFollowers">Instagram Followers</Label>
+              <Input
+                id="editInstagramFollowers"
+                type="number"
+                value={editInstagramFollowers}
+                onChange={(e) => setEditInstagramFollowers(e.target.value)}
+                placeholder="10000"
+              />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="editTiktokHandle">TikTok Handle (Optional)</Label>
+              <Input
+                id="editTiktokHandle"
+                value={editTiktokHandle}
+                onChange={(e) => setEditTiktokHandle(e.target.value)}
+                placeholder="@username"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateInfo}
+              disabled={updateInfoMutation.isPending || !editFirstName || !editLastName || !editEmail || !editInstagramHandle}
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Brief Dialog */}
+      <Dialog open={assignBriefDialog} onOpenChange={setAssignBriefDialog}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Assign Brief to Talent</DialogTitle>
+            <DialogDescription>
+              Select a brief to assign to {selectedInfluencer?.firstName} {selectedInfluencer?.lastName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Select Brief</Label>
+              <div className="space-y-2 mt-2 max-h-[400px] overflow-y-auto">
+                {briefs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No published briefs available</p>
+                ) : (
+                  briefs.map((brief: any) => (
+                    <Card
+                      key={brief.id}
+                      className={`cursor-pointer transition-all ${
+                        selectedBriefId === brief.id
+                          ? "border-primary bg-primary/5"
+                          : "hover:border-primary/50"
+                      }`}
+                      onClick={() => setSelectedBriefId(brief.id)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={selectedBriefId === brief.id}
+                            onCheckedChange={() => setSelectedBriefId(brief.id)}
+                          />
+                          <div className="flex-1">
+                            <h4 className="font-medium text-sm">{brief.title}</h4>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {brief.orgName} • {brief.businessLine} • {brief.state}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge variant="outline" className="text-xs">
+                                {brief.rewardType}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                Due {new Date(brief.deadline).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setAssignBriefDialog(false);
+              setSelectedBriefId(null);
+            }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAssignBrief}
+              disabled={!selectedBriefId || assignBriefMutation.isPending}
+            >
+              Assign Brief
             </Button>
           </DialogFooter>
         </DialogContent>
